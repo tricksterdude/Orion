@@ -1,7 +1,11 @@
+from config.version import VERSION
+
+
 def show_banner():
-    print("=" * 50)
-    print("            ORION v0.0.1")
-    print("      Home Cinema Operating System")
-    print("=" * 50)
+
     print()
-    
+    print("=" * 60)
+    print("                 ORION")
+    print(f"          Home Cinema OS  v{VERSION}")
+    print("=" * 60)
+    print()
