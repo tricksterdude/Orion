@@ -1,3 +1,6 @@
+import webbrowser
+
+
 class ServiceView:
 
     def show_list(self, services):
@@ -44,6 +47,7 @@ class ServiceView:
             print("2. Stop Container")
             print("3. Start Container")
             print("4. View Logs")
+            print("5. Open Web UI")
             print("0. Back")
             print()
 
@@ -82,6 +86,14 @@ class ServiceView:
                 print()
 
                 print(docker.logs(service.container))
+
+                input("Press ENTER...")
+
+            elif choice == "5":
+
+                logger.log(f"Opening {service.url}")
+
+                webbrowser.open(service.url)
 
                 input("Press ENTER...")
 

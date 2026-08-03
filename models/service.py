@@ -9,12 +9,5 @@ class Service:
 
         self.running = False
         self.healthy = False
-
-        self.response_time = None
-        self.status_code = None
-
-    def __str__(self):
-
-        status = "Running" if self.running else "Stopped"
-
-        return f"{self.name} ({status})"
+        self.status_code = 0
+        self.response_time = 0
