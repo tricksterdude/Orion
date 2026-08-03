@@ -40,7 +40,10 @@ class Orion:
             system = {
                 "computer": self.system.get_hostname(),
                 "os": f"{self.system.get_os()} {self.system.get_release()}",
-                "python": self.system.get_python_version()
+                "python": self.system.get_python_version(),
+                "cpu": self.system.get_cpu_usage(),
+                "memory": self.system.get_memory_usage(),
+                "disk": self.system.get_disk_usage()
             }
 
             report = self.report_manager.build(

@@ -16,7 +16,16 @@ class Dashboard:
         logger.log("")
         print("├" + "─" * 58 + "┤")
 
-        logger.log(f" Healthy Services  : {report.statistics['healthy']} / {report.statistics['total']}")
+        logger.log(f" CPU Usage         : {report.system['cpu']}%")
+        logger.log(f" Memory Usage      : {report.system['memory']}%")
+        logger.log(f" Disk Usage        : {report.system['disk']}%")
+
+        logger.log("")
+        print("├" + "─" * 58 + "┤")
+
+        logger.log(
+            f" Healthy Services  : {report.statistics['healthy']} / {report.statistics['total']}"
+        )
         logger.log(f" Excellent         : {report.statistics['excellent']}")
         logger.log(f" Good              : {report.statistics['good']}")
         logger.log(f" Slow              : {report.statistics['slow']}")
