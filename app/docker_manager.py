@@ -1,4 +1,5 @@
 import subprocess
+import json
 
 
 class DockerManager:
@@ -6,16 +7,78 @@ class DockerManager:
     def get_running_containers(self):
 
         result = subprocess.run(
-            ["docker", "ps", "--format", "{{.Names}}"],
+            [
+                "docker",
+                "ps",
+                "--format",
+                "{{.Names}}"
+            ],
             capture_output=True,
             text=True
         )
 
-        if result.returncode != 0:
-            return []
+        return result.stdout.splitlines()
 
-        return result.stdout.strip().splitlines()
+    def is_running(self, container):
 
-    def is_running(self, container_name):
+        return container in self.get_running_containers()
 
-        return container_name in self.get_running_containers()
+    def inspect(self, container):
+
+        result = subprocess.run(
+            [
+                "docker",
+                "inspect",
+                container
+            ],
+            capture_output=True,
+            text=True
+        )
+
+        return json.loads(result.stdout)[0]
+
+    def restart(self, container):
+
+        subprocess.run(
+            [
+                "docker",
+                "restart",
+                container
+            ]
+        )
+
+    def stop(self, container):
+
+        subprocess.run(
+            [
+                "docker",
+                "stop",
+                container
+            ]
+        )
+
+    def start(self, container):
+
+        subprocess.run(
+            [
+                "docker",
+                "start",
+                container
+            ]
+        )
+
+    def logs(self, container, lines=50):
+
+        result = subprocess.run(
+            [
+                "docker",
+                "logs",
+                "--tail",
+                str(lines),
+                container
+            ],
+            capture_output=True,
+            text=True
+        )
+
+        return result.stdout

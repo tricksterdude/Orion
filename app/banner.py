@@ -1,11 +1,13 @@
-from config.version import VERSION
+class Banner:
 
+    def show(self):
 
-def show_banner():
-
-    print()
-    print("=" * 60)
-    print("                 ORION")
-    print(f"          Home Cinema OS  v{VERSION}")
-    print("=" * 60)
-    print()
+        print()
+        print("╔══════════════════════════════════════════════════════════╗")
+        print("║                                                          ║")
+        print("║                        ORION                             ║")
+        print("║              Home Cinema Operations Console              ║")
+        print("║                         v0.4.0                           ║")
+        print("║                                                          ║")
+        print("╚══════════════════════════════════════════════════════════╝")
+        print()
