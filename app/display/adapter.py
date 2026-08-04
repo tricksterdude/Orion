@@ -1,9 +1,8 @@
 import ctypes
 from ctypes import wintypes
 
+from app.display.constants import ENUM_CURRENT_SETTINGS
 from app.display.devmode import DEVMODE
-
-ENUM_CURRENT_SETTINGS = -1
 
 
 class DisplayAdapter:
