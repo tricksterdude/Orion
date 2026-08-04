@@ -10,7 +10,12 @@ switcher = DisplaySwitcher()
 original = adapter.current_mode()
 
 print()
-print("ORIGINAL")
+print("=" * 60)
+print("ORION LIVE DISPLAY SWITCH TEST")
+print("=" * 60)
+print()
+
+print("Original:")
 print(original)
 
 target = DisplayMode(
@@ -20,18 +25,33 @@ target = DisplayMode(
     refresh=60,
 )
 
-print()
-print("SWITCHING TO 60 Hz...")
+try:
 
-success = switcher.switch(target)
+    print()
+    print("Switching to 60 Hz...")
 
-print("Success:", success)
+    success = switcher.switch(target)
 
-time.sleep(5)
+    print("Switch result:", success)
 
-print()
-print("RESTORING...")
+    current = adapter.current_mode()
 
-switcher.switch(original)
+    print("Current mode:", current)
 
-print("DONE")
+    print()
+    print("Waiting 5 seconds...")
+
+    time.sleep(5)
+
+finally:
+
+    print()
+    print("Restoring original mode...")
+
+    switcher.switch(original)
+
+    print("Restored.")
+
+    current = adapter.current_mode()
+
+    print("Current mode:", current)
