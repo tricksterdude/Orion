@@ -1,22 +1,37 @@
+import time
+
 from app.display.adapter import DisplayAdapter
+from app.display.mode import DisplayMode
+from app.display.switcher import DisplaySwitcher
 
 adapter = DisplayAdapter()
+switcher = DisplaySwitcher()
+
+original = adapter.current_mode()
 
 print()
-print("LIVE SWITCH TEST")
-print("----------------")
+print("ORIGINAL")
+print(original)
 
-print("Current Mode")
-
-print(adapter.current_mode())
+target = DisplayMode(
+    width=original.width,
+    height=original.height,
+    bits=original.bits,
+    refresh=60,
+)
 
 print()
+print("SWITCHING TO 60 Hz...")
 
-print("Target")
+success = switcher.switch(target)
 
-print({
-    "width": 3840,
-    "height": 2160,
-    "bits": 32,
-    "refresh": 60
-})
+print("Success:", success)
+
+time.sleep(5)
+
+print()
+print("RESTORING...")
+
+switcher.switch(original)
+
+print("DONE")
