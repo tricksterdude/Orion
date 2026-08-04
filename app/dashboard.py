@@ -1,10 +1,11 @@
-class Dashboard:
+from ui.screen import Screen
 
-    def show(self, report, logger):
 
-        print("┌" + "─" * 58 + "┐")
-        print("│                    SYSTEM STATUS                    │")
-        print("├" + "─" * 58 + "┤")
+class Dashboard(Screen):
+
+    def show(self, report, alerts, logger):
+
+        self.title("SYSTEM STATUS")
 
         logger.log(f" Overall Health    : {report.overall_health}%")
         logger.log("")
@@ -13,15 +14,13 @@ class Dashboard:
         logger.log(f" Operating System  : {report.system['os']}")
         logger.log(f" Python            : {report.system['python']}")
 
-        logger.log("")
-        print("├" + "─" * 58 + "┤")
+        print()
 
         logger.log(f" CPU Usage         : {report.system['cpu']}%")
         logger.log(f" Memory Usage      : {report.system['memory']}%")
         logger.log(f" Disk Usage        : {report.system['disk']}%")
 
-        logger.log("")
-        print("├" + "─" * 58 + "┤")
+        print()
 
         logger.log(
             f" Healthy Services  : {report.statistics['healthy']} / {report.statistics['total']}"
@@ -31,5 +30,17 @@ class Dashboard:
         logger.log(f" Slow              : {report.statistics['slow']}")
         logger.log(f" Offline           : {report.statistics['offline']}")
 
-        print("└" + "─" * 58 + "┘")
+        print()
+        self.title("ALERTS")
+
+        if not alerts:
+
+            self.success("✓ No alerts")
+            print("System operating normally.")
+
+        else:
+
+            for alert in alerts:
+                self.warning(f"⚠ {alert}")
+
         print()

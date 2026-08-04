@@ -1,3 +1,5 @@
+import json
+
 from models.service import Service
 
 
@@ -8,50 +10,22 @@ class ServiceManager:
 
     def register_defaults(self):
 
-        self.services.append(
-            Service(
-                "NZBDAV",
-                "nzbdav",
-                8080,
-                "http://localhost:8080"
-            )
-        )
+        self.services.clear()
 
-        self.services.append(
-            Service(
-                "UsenetStreamer",
-                "usenetstreamer",
-                7001,
-                "http://localhost:7001"
-            )
-        )
+        with open("config/services.json", "r") as file:
 
-        self.services.append(
-            Service(
-                "NZBHydra2",
-                "nzbhydra2",
-                5076,
-                "http://localhost:5076"
-            )
-        )
+            data = json.load(file)
 
-        self.services.append(
-            Service(
-                "AIOMetadata",
-                "aiometadata",
-                3232,
-                "http://localhost:3232"
-            )
-        )
+        for item in data["services"]:
 
-        self.services.append(
-            Service(
-                "AIOStreams",
-                "aiostreams",
-                3000,
-                "http://localhost:3000"
+            self.services.append(
+                Service(
+                    item["name"],
+                    item["container"],
+                    item["port"],
+                    item["url"]
+                )
             )
-        )
 
     def get_all(self):
         return self.services

@@ -1,0 +1,34 @@
+{
+    "services": [
+        {
+            "name": "NZBDAV",
+            "container": "nzbdav",
+            "port": 8080,
+            "url": "http://localhost:8080"
+        },
+        {
+            "name": "UsenetStreamer",
+            "container": "usenetstreamer",
+            "port": 7001,
+            "url": "http://localhost:7001"
+        },
+        {
+            "name": "NZBHydra2",
+            "container": "nzbhydra2",
+            "port": 5076,
+            "url": "http://localhost:5076"
+        },
+        {
+            "name": "AIOMetadata",
+            "container": "aiometadata",
+            "port": 3232,
+            "url": "http://localhost:3232"
+        },
+        {
+            "name": "AIOStreams",
+            "container": "aiostreams",
+            "port": 3000,
+            "url": "http://localhost:3000"
+        }
+    ]
+}

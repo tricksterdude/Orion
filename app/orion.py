@@ -10,12 +10,13 @@ from app.dashboard import Dashboard
 from app.menu import Menu
 from app.banner import Banner
 from app.service_view import ServiceView
-from config.version import VERSION
+from app.alert_manager import AlertManager
 
 
 class Orion:
 
     def __init__(self):
+
         self.config = ConfigManager()
         self.logger = Logger()
         self.services = ServiceManager()
@@ -28,6 +29,7 @@ class Orion:
         self.menu = Menu()
         self.banner = Banner()
         self.service_view = ServiceView()
+        self.alert_manager = AlertManager()
 
     def start(self):
 
@@ -51,31 +53,44 @@ class Orion:
                 self.services.get_all()
             )
 
+            alerts = self.alert_manager.build(report)
+
             self.banner.show()
-            self.dashboard.show(report, self.logger)
+            self.dashboard.show(
+                report,
+                alerts,
+                self.logger
+            )
 
             choice = self.menu.show()
 
             if choice == "1":
+
                 continue
 
             elif choice == "2":
+
                 self.service_menu()
 
             elif choice == "3":
+
                 continue
 
             elif choice == "0":
+
                 self.logger.log("Goodbye.")
                 break
 
             else:
+
                 self.logger.log("Invalid option.")
 
     def load_configuration(self):
+
         self.config.load()
 
     def load_services(self):
+
         self.services = ServiceManager()
         self.services.register_defaults()
 
@@ -108,11 +123,15 @@ class Orion:
             choice = self.service_view.show_list(services)
 
             if choice == "0":
+
                 return
 
             try:
+
                 service = services[int(choice) - 1]
+
             except (ValueError, IndexError):
+
                 self.logger.log("Invalid selection.")
                 continue
 
