@@ -1,93 +1,71 @@
-# Orion
+# Orion Roadmap
 
-Home Cinema Operations Console
-
----
-
-## Overview
-
-Orion is a Python application for monitoring and controlling a Docker-based home cinema server.
-
-It provides a single console for viewing service health, diagnostics, Docker information and managing containers without opening Docker Desktop.
+> Orion is an intelligent Home Cinema Operations Centre for Windows.
 
 ---
 
-## Current Features
+# Current Version
 
-- Live system dashboard
-- Docker container inspection
-- HTTP health monitoring
-- Response time measurement
-- Service diagnostics
-- Start containers
-- Stop containers
-- Restart containers
-- View Docker logs
+## v0.8.0
+
+### Completed
+
+### Dashboard
+- System dashboard
+- Docker monitoring
+- Service health
+- Response time monitoring
+
+### Diagnostics
+- Orion Doctor
+- Recommendation engine
+- Health score
+
+### Hardware
+- Hardware detection
+- Display detection
+- Media profile
+
+### Playback
+- Playback foundation
+- Session management
+- Stremio process detection
 
 ---
 
-## Services Currently Supported
+# v0.9.0
 
-- NZBDAV
-- UsenetStreamer
-- NZBHydra2
-- AIOMetadata
-- AIOStreams
+## Display Controller
+
+- Detect supported display modes
+- Display mode verification
+- Safe refresh-rate switching
+- Automatic refresh-rate restore
+
+## Playback Optimiser
+
+- Playback detection
+- Decision engine
+- Display controller integration
 
 ---
 
-## Planned Features
+# v1.0.0
 
-- Open Web UI
-- Live monitoring
-- Automatic refresh
-- Storage monitoring
-- Backup management
-- Docker updates
-- Plugin support
+## Home Cinema Operations Centre
+
+- Automatic playback optimisation
+- HDR verification
+- Audio verification
+- Playback logging
+- Stable public release
+
+---
+
+# Future
+
+- Denon AVR integration
+- LG OLED optimisation
 - Desktop GUI
-
----
-
-## Requirements
-
-- Python 3.14+
-- Docker Desktop
-- Docker Engine
-- Requests
-
-Install requirements:
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-## Running Orion
-
-```bash
-python main.py
-```
-
----
-
-## Project Status
-
-Current Release
-
-```
-v0.4.0
-```
-
-Development Status
-
-```
-Active Development
-```
-
----
-
-## License
-
-Private Project
+- Plugin architecture
+- Multi-display support
