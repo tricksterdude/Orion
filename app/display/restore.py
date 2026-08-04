@@ -1,17 +1,32 @@
+from app.display.adapter import DisplayAdapter
+from app.display.mode import DisplayMode
+from app.display.switcher import DisplaySwitcher
+
+
 class DisplayRestore:
 
     def __init__(self):
 
-        self.original_mode = None
+        self.adapter = DisplayAdapter()
+        self.switcher = DisplaySwitcher()
 
-    def save(self, mode):
+        self.original: DisplayMode | None = None
 
-        self.original_mode = mode.copy()
+    def save(self):
 
-    def current(self):
+        self.original = self.adapter.current_mode()
 
-        return self.original_mode
+    def has_saved_mode(self) -> bool:
 
-    def clear(self):
+        return self.original is not None
 
-        self.original_mode = None
+    def original_mode(self):
+
+        return self.original
+
+    def restore(self) -> bool:
+
+        if self.original is None:
+            return False
+
+        return self.switcher.switch(self.original)
