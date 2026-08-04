@@ -7,4 +7,5 @@ print("4K CINEMA MODES")
 print("----------------")
 
 for mode in adapter.cinema_modes():
-    print(f"{mode['refresh']} Hz")
+
+    print(f"{mode.refresh} Hz")

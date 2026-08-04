@@ -3,11 +3,13 @@ from ctypes import wintypes
 
 from app.display.constants import ENUM_CURRENT_SETTINGS
 from app.display.devmode import DEVMODE
+from app.display.mode import DisplayMode
 
 
 class DisplayAdapter:
 
     def __init__(self):
+
         self.user32 = ctypes.windll.user32
 
     def current_mode(self):
@@ -24,12 +26,12 @@ class DisplayAdapter:
         if not success:
             return None
 
-        return {
-            "width": devmode.dmPelsWidth,
-            "height": devmode.dmPelsHeight,
-            "refresh": devmode.dmDisplayFrequency,
-            "bits": devmode.dmBitsPerPel,
-        }
+        return DisplayMode(
+            width=devmode.dmPelsWidth,
+            height=devmode.dmPelsHeight,
+            refresh=devmode.dmDisplayFrequency,
+            bits=devmode.dmBitsPerPel,
+        )
 
     def available_modes(self):
 
@@ -50,12 +52,12 @@ class DisplayAdapter:
             if not success:
                 break
 
-            mode = {
-                "width": devmode.dmPelsWidth,
-                "height": devmode.dmPelsHeight,
-                "refresh": devmode.dmDisplayFrequency,
-                "bits": devmode.dmBitsPerPel,
-            }
+            mode = DisplayMode(
+                width=devmode.dmPelsWidth,
+                height=devmode.dmPelsHeight,
+                refresh=devmode.dmDisplayFrequency,
+                bits=devmode.dmBitsPerPel,
+            )
 
             if mode not in modes:
                 modes.append(mode)
@@ -70,13 +72,16 @@ class DisplayAdapter:
 
         for mode in self.available_modes():
 
-            if mode["width"] != 3840:
+            if mode.width != 3840:
                 continue
 
-            if mode["height"] != 2160:
+            if mode.height != 2160:
                 continue
 
             if mode not in modes:
                 modes.append(mode)
 
-        return sorted(modes, key=lambda m: m["refresh"])
+        return sorted(
+            modes,
+            key=lambda mode: mode.refresh
+        )

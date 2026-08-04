@@ -1,12 +1,13 @@
 import ctypes
 
 from app.display.adapter import DisplayAdapter
-from app.display.devmode import DEVMODE
 from app.display.constants import (
     CDS_TEST,
     DISP_CHANGE_SUCCESSFUL,
     ENUM_CURRENT_SETTINGS,
 )
+from app.display.devmode import DEVMODE
+from app.display.mode import DisplayMode
 
 
 class DisplaySwitcher:
@@ -16,20 +17,11 @@ class DisplaySwitcher:
         self.user32 = ctypes.windll.user32
         self.adapter = DisplayAdapter()
 
-    def can_switch(self, target):
+    def can_switch(self, target: DisplayMode) -> bool:
 
-        for mode in self.adapter.available_modes():
+        return target in self.adapter.available_modes()
 
-            if (
-                mode["width"] == target["width"]
-                and mode["height"] == target["height"]
-                and mode["refresh"] == target["refresh"]
-            ):
-                return True
-
-        return False
-
-    def _build_devmode(self, target):
+    def _build_devmode(self, target: DisplayMode):
 
         devmode = DEVMODE()
         devmode.dmSize = ctypes.sizeof(DEVMODE)
@@ -37,20 +29,20 @@ class DisplaySwitcher:
         success = self.user32.EnumDisplaySettingsW(
             None,
             ENUM_CURRENT_SETTINGS,
-            ctypes.byref(devmode)
+            ctypes.byref(devmode),
         )
 
         if not success:
             return None
 
-        devmode.dmPelsWidth = target["width"]
-        devmode.dmPelsHeight = target["height"]
-        devmode.dmBitsPerPel = target["bits"]
-        devmode.dmDisplayFrequency = target["refresh"]
+        devmode.dmPelsWidth = target.width
+        devmode.dmPelsHeight = target.height
+        devmode.dmBitsPerPel = target.bits
+        devmode.dmDisplayFrequency = target.refresh
 
         return devmode
 
-    def test_switch(self, target):
+    def test_switch(self, target: DisplayMode) -> bool:
 
         devmode = self._build_devmode(target)
 
@@ -62,7 +54,7 @@ class DisplaySwitcher:
             ctypes.byref(devmode),
             None,
             CDS_TEST,
-            None
+            None,
         )
 
         return result == DISP_CHANGE_SUCCESSFUL

@@ -12,35 +12,33 @@ class CinemaSession:
         result = self.engine.analyse(fps)
 
         print()
-
         print("=" * 60)
-        print("           ORION CINEMA SESSION")
+        print("              ORION CINEMA SESSION")
         print("=" * 60)
-
         print()
 
-        print(f"Movie FPS : {fps}")
-
+        print(f"Movie FPS : {fps:.3f}")
         print()
 
         print(
-            "Current : "
-            f"{result['current']['refresh']} Hz"
+            f"Current : "
+            f"{result['current'].width}x"
+            f"{result['current'].height} @ "
+            f"{result['current'].refresh} Hz"
         )
 
         print(
-            "Target  : "
-            f"{result['target']['refresh']} Hz"
+            f"Target  : "
+            f"{result['target'].width}x"
+            f"{result['target'].height} @ "
+            f"{result['target'].refresh} Hz"
         )
 
         print()
 
         if result["supported"]:
-
             print("✓ Ready to switch.")
-
         else:
-
             print("✗ Unsupported mode.")
 
         return result

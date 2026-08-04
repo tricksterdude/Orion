@@ -1,28 +1,27 @@
-from app.display.controller import DisplayController
-from app.display.switcher import DisplaySwitcher
 from app.display.adapter import DisplayAdapter
+from app.display.controller import DisplayController
+from app.display.mode import DisplayMode
+from app.display.switcher import DisplaySwitcher
 
 
 class CinemaEngine:
 
     def __init__(self):
 
+        self.adapter = DisplayAdapter()
         self.controller = DisplayController()
         self.switcher = DisplaySwitcher()
-        self.adapter = DisplayAdapter()
 
     def analyse(self, fps):
 
         current = self.adapter.current_mode()
 
-        refresh = self.controller.choose_refresh(fps)
-
-        target = {
-            "width": current["width"],
-            "height": current["height"],
-            "refresh": refresh,
-            "bits": current["bits"],
-        }
+        target = DisplayMode(
+            width=current.width,
+            height=current.height,
+            bits=current.bits,
+            refresh=self.controller.choose_refresh(fps),
+        )
 
         supported = self.switcher.can_switch(target)
 
