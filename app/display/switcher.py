@@ -7,14 +7,14 @@ class DisplaySwitcher:
 
         self.adapter = DisplayAdapter()
 
-    def can_switch(self, width, height, refresh):
+    def can_switch(self, target):
 
         for mode in self.adapter.available_modes():
 
             if (
-                mode["width"] == width
-                and mode["height"] == height
-                and mode["refresh"] == refresh
+                mode["width"] == target["width"]
+                and mode["height"] == target["height"]
+                and mode["refresh"] == target["refresh"]
             ):
                 return True
 

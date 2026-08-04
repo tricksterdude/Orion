@@ -1,34 +1,9 @@
 import ctypes
 from ctypes import wintypes
 
+from app.display.devmode import DEVMODE
+
 ENUM_CURRENT_SETTINGS = -1
-
-
-class DEVMODE(ctypes.Structure):
-    _fields_ = [
-        ("dmDeviceName", ctypes.c_wchar * 32),
-        ("dmSpecVersion", wintypes.WORD),
-        ("dmDriverVersion", wintypes.WORD),
-        ("dmSize", wintypes.WORD),
-        ("dmDriverExtra", wintypes.WORD),
-        ("dmFields", wintypes.DWORD),
-        ("dmPositionX", wintypes.LONG),
-        ("dmPositionY", wintypes.LONG),
-        ("dmDisplayOrientation", wintypes.DWORD),
-        ("dmDisplayFixedOutput", wintypes.DWORD),
-        ("dmColor", wintypes.SHORT),
-        ("dmDuplex", wintypes.SHORT),
-        ("dmYResolution", wintypes.SHORT),
-        ("dmTTOption", wintypes.SHORT),
-        ("dmCollate", wintypes.SHORT),
-        ("dmFormName", ctypes.c_wchar * 32),
-        ("dmLogPixels", wintypes.WORD),
-        ("dmBitsPerPel", wintypes.DWORD),
-        ("dmPelsWidth", wintypes.DWORD),
-        ("dmPelsHeight", wintypes.DWORD),
-        ("dmDisplayFlags", wintypes.DWORD),
-        ("dmDisplayFrequency", wintypes.DWORD),
-    ]
 
 
 class DisplayAdapter:
