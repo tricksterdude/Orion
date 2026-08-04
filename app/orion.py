@@ -13,6 +13,12 @@ from app.service_view import ServiceView
 from app.alert_manager import AlertManager
 from app.refresh_manager import RefreshManager
 from app.about import About
+from app.doctor import OrionDoctor
+from app.doctor_view import DoctorView
+from app.hardware_manager import HardwareManager
+from app.hardware_view import HardwareView
+from app.display_manager import DisplayManager
+from app.display_view import DisplayView
 
 
 class Orion:
@@ -35,6 +41,15 @@ class Orion:
         self.refresh_manager = RefreshManager()
         self.about = About()
 
+        self.doctor = OrionDoctor()
+        self.doctor_view = DoctorView()
+
+        self.hardware_manager = HardwareManager()
+        self.hardware_view = HardwareView()
+
+        self.display_manager = DisplayManager()
+        self.display_view = DisplayView()
+
     def start(self):
 
         while True:
@@ -42,6 +57,7 @@ class Orion:
             report, alerts = self.refresh_manager.refresh(self)
 
             self.banner.show()
+
             self.dashboard.show(
                 report,
                 alerts,
@@ -65,6 +81,21 @@ class Orion:
             elif choice == "4":
 
                 self.about.show()
+
+            elif choice == "5":
+
+                results = self.doctor.run(report)
+                self.doctor_view.show(results)
+
+            elif choice == "6":
+
+                hardware = self.hardware_manager.summary()
+                self.hardware_view.show(hardware)
+
+            elif choice == "7":
+
+                display = self.display_manager.summary()
+                self.display_view.show(display)
 
             elif choice == "0":
 
