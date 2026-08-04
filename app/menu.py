@@ -8,6 +8,7 @@ class Menu:
         print("1. Dashboard")
         print("2. Service Details")
         print("3. Refresh")
+        print("4. About")
         print("0. Exit")
         print()
 

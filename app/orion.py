@@ -11,6 +11,8 @@ from app.menu import Menu
 from app.banner import Banner
 from app.service_view import ServiceView
 from app.alert_manager import AlertManager
+from app.refresh_manager import RefreshManager
+from app.about import About
 
 
 class Orion:
@@ -30,30 +32,14 @@ class Orion:
         self.banner = Banner()
         self.service_view = ServiceView()
         self.alert_manager = AlertManager()
+        self.refresh_manager = RefreshManager()
+        self.about = About()
 
     def start(self):
 
         while True:
 
-            self.load_configuration()
-            self.load_services()
-            self.check_services()
-
-            system = {
-                "computer": self.system.get_hostname(),
-                "os": f"{self.system.get_os()} {self.system.get_release()}",
-                "python": self.system.get_python_version(),
-                "cpu": self.system.get_cpu_usage(),
-                "memory": self.system.get_memory_usage(),
-                "disk": self.system.get_disk_usage()
-            }
-
-            report = self.report_manager.build(
-                system,
-                self.services.get_all()
-            )
-
-            alerts = self.alert_manager.build(report)
+            report, alerts = self.refresh_manager.refresh(self)
 
             self.banner.show()
             self.dashboard.show(
@@ -75,6 +61,10 @@ class Orion:
             elif choice == "3":
 
                 continue
+
+            elif choice == "4":
+
+                self.about.show()
 
             elif choice == "0":
 
@@ -123,7 +113,6 @@ class Orion:
             choice = self.service_view.show_list(services)
 
             if choice == "0":
-
                 return
 
             try:

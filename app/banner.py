@@ -1,5 +1,9 @@
 from ui.screen import Screen
-from config.version import VERSION
+from config.version import (
+    APP_NAME,
+    APP_DESCRIPTION,
+    VERSION
+)
 
 
 class Banner(Screen):
@@ -8,9 +12,9 @@ class Banner(Screen):
 
         self.line()
 
-        print("ORION".center(self.WIDTH))
-        print("Home Cinema Operations Console".center(self.WIDTH))
-        print(f"v{VERSION}".center(self.WIDTH))
+        print(APP_NAME.center(self.WIDTH))
+        print(APP_DESCRIPTION.center(self.WIDTH))
+        print(f"Version {VERSION}".center(self.WIDTH))
 
         self.line()
         print()
