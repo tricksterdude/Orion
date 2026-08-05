@@ -8,7 +8,67 @@ The format is based on **Keep a Changelog** and follows **Semantic Versioning** 
 
 ## [0.8.0] - 2026-08-04
 
+### Summary
+
+This release establishes Orion's new playback architecture and completes the foundation for Orion's cinema engine.
+
+Orion can now detect playback, identify media selected through AIOStreams, retrieve TMDb metadata, perform technical analysis, analyse the optimal display mode, and maintain a shared playback context throughout the application.
+
+---
+
 ### Added
+
+#### Core
+
+- OrionEngine
+- MovieContext
+- PlaybackSession
+- MediaSession
+- ProviderManager
+- Configuration management
+
+#### Playback
+
+- Playback detection
+- Playback session lifecycle
+- Playback start/stop monitoring
+- AIOStreams integration
+
+#### Metadata
+
+- TMDb API integration
+- IMDb lookup
+- Movie metadata model
+- Automatic poster and backdrop retrieval
+
+#### Technical Analysis
+
+- TechnicalManager
+- TechnicalExtractor
+- TechnicalMetadata model
+
+(Currently uses placeholder values ready for MediaInfo and FFprobe.)
+
+#### Cinema
+
+- CinemaEngine
+- CinemaSession
+- Display analysis
+- Refresh-rate recommendation engine
+
+#### Display
+
+- Display mode detection
+- Display restore system
+- Display switching framework
+
+#### Events
+
+- MovieContext
+- Event-driven playback pipeline
+- MediaSession subscriptions
+
+#### Diagnostics
 
 - System dashboard
 - Docker service monitoring
@@ -17,22 +77,73 @@ The format is based on **Keep a Changelog** and follows **Semantic Versioning** 
 - Display detection
 - Orion Doctor
 - Recommendation engine
-- Media profile support
-- Playback subsystem foundation
+
+---
 
 ### Changed
 
-- Improved application architecture
-- Introduced modular managers
-- Enhanced diagnostics
-- Improved dashboard presentation
+- Introduced OrionEngine as the central orchestration layer.
+- Introduced MovieContext as the shared playback model.
+- PlaybackSession now owns the active playback context.
+- Runtime responsibilities have been simplified.
+- Managers are being standardised around the `analyse(context)` pattern.
+- Improved modular architecture throughout the application.
+- Reduced duplicated application state.
+
+---
 
 ### Fixed
 
-- Menu loading issues
-- Progress module loading
-- Health calculation bugs
-- Display detection improvements
+- Playback pipeline stability
+- Movie detection workflow
+- TMDb metadata integration
+- Technical metadata processing
+- Display recommendation workflow
+- Runtime architecture consistency
+
+---
+
+## Current Workflow
+
+Playback Detection
+
+↓
+
+Movie Selection
+
+↓
+
+TMDb Metadata
+
+↓
+
+Technical Analysis
+
+↓
+
+Cinema Analysis
+
+↓
+
+Display Recommendation
+
+↓
+
+Playback End
+
+↓
+
+Display Restore
+
+---
+
+## Known Limitations
+
+- Technical metadata currently uses placeholder values.
+- Frame-rate detection is currently hard-coded to 23.976 fps.
+- TV episode metadata requires additional handling.
+- Playback recovery after Orion starts mid-playback is not yet implemented.
+- Automatic Windows refresh-rate switching has not yet been enabled.
 
 ---
 
@@ -40,9 +151,18 @@ The format is based on **Keep a Changelog** and follows **Semantic Versioning** 
 
 ### Planned
 
-- Display Controller
-- Display mode enumeration
-- Refresh-rate switching
-- Playback detection
-- Cinema Engine
-- Automatic display restoration
+- Playback recovery
+- MediaInfo integration
+- FFprobe integration
+- Accurate FPS detection
+- Automatic Windows refresh-rate switching
+- HDR and Dolby Vision detection
+- Audio codec detection
+- TV episode support
+- Live playback dashboard
+
+---
+
+**Project Status**
+
+Foundation Complete ✅
