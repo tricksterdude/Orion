@@ -163,6 +163,31 @@ Display Restore
 
 ---
 
+## [0.9.0] - 2026-08-05
+
+### Added
+
+- Orion Engine introduced as the central orchestration layer
+- Local Orion REST API
+- Playback API endpoint (`POST /playback`)
+- API controller architecture
+- Playback request model
+- API routing framework
+- Engine package structure
+
+### Changed
+
+- Refactored runtime to use Orion Engine
+- Simplified playback pipeline
+- Consolidated engine architecture
+- Prepared playback providers for API-driven integration
+
+### Fixed
+
+- Runtime engine duplication
+- Package import structure
+- Playback session flow
+
 **Project Status**
 
 Foundation Complete ✅

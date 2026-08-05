@@ -1,4 +1,5 @@
-from app.providers.aiostreams import AIOStreamsProvider
+from app.providers.playback.aiostreams import AIOStreamsPlaybackProvider
+from app.providers.playback.usenetstreamer import UsenetStreamerPlaybackProvider
 
 
 class ProviderManager:
@@ -6,7 +7,11 @@ class ProviderManager:
     def __init__(self, session):
 
         self.providers = [
-            AIOStreamsProvider(session)
+
+            AIOStreamsPlaybackProvider(session),
+
+            UsenetStreamerPlaybackProvider(session),
+
         ]
 
     def start(self):

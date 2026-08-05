@@ -1,9 +1,11 @@
 import time
+from threading import Thread
 
+from app.api.server import OrionAPIServer
 from app.display.restore import DisplayRestore
 from app.managers.provider_manager import ProviderManager
 from app.media.session import MediaSession
-from app.orion.engine import OrionEngine
+from app.orion import OrionEngine
 from app.playback.detector import PlaybackDetector
 
 
@@ -19,15 +21,13 @@ class OrionRuntime:
 
         self.engine = OrionEngine()
 
+        self.api = OrionAPIServer()
+
         self.providers = ProviderManager(self.media)
 
         self.media.subscribe(self.movie_selected)
 
     def movie_selected(self, context):
-
-        context = self.engine.analyse(context)
-
-        media = context.media
 
         print()
         print("=" * 60)
@@ -35,8 +35,10 @@ class OrionRuntime:
         print("=" * 60)
         print()
 
-        print("Title :", media.title)
-        print("IMDb  :", media.imdb_id)
+        print("Title :", context.media.title)
+        print("IMDb  :", context.media.imdb_id)
+
+        context = self.engine.analyse(context)
 
         if context.metadata:
 
@@ -71,6 +73,14 @@ class OrionRuntime:
         print("=" * 60)
         print()
 
+        Thread(
+            target=self.api.start,
+            daemon=True,
+        ).start()
+
+        print("✓ Orion API listening on http://127.0.0.1:8765")
+        print()
+
         self.providers.start()
 
         print()
@@ -92,6 +102,8 @@ class OrionRuntime:
                 self.restore.save()
 
                 self.engine.begin_cinema(23.976)
+
+                print()
 
                 session_active = True
 

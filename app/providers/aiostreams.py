@@ -8,8 +8,7 @@ from app.providers.base import MediaProvider
 
 class AIOStreamsProvider(MediaProvider):
 
-    def __init__(self, session):
-        self._session = session
+    def __init__(self):
         self._state = MediaState()
         self._process = None
         self._thread = None
@@ -46,11 +45,6 @@ class AIOStreamsProvider(MediaProvider):
         )
 
         self._thread.start()
-
-    def stop(self):
-
-        if self._process:
-            self._process.terminate()
 
     def _watch(self):
 
@@ -99,4 +93,12 @@ class AIOStreamsProvider(MediaProvider):
             self._state.paused = False
             self._state.stopped = False
 
-            self._session.update(self._state)
+            print()
+            print("=" * 60)
+            print("AIOSTREAMS EVENT")
+            print("=" * 60)
+            print(f"IMDb   : {self._state.imdb_id}")
+            print(f"Title  : {self._state.title}")
+            print(f"Year   : {self._state.year}")
+            print(f"Player : {self._state.player}")
+            print()
