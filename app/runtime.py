@@ -1,7 +1,9 @@
 import time
 
-from app.cinema.session import CinemaSession
 from app.display.restore import DisplayRestore
+from app.managers.provider_manager import ProviderManager
+from app.media.session import MediaSession
+from app.orion.engine import OrionEngine
 from app.playback.detector import PlaybackDetector
 
 
@@ -10,10 +12,56 @@ class OrionRuntime:
     def __init__(self):
 
         self.detector = PlaybackDetector()
-        self.session = CinemaSession()
+
         self.restore = DisplayRestore()
 
-        self.session_active = False
+        self.media = MediaSession()
+
+        self.engine = OrionEngine()
+
+        self.providers = ProviderManager(self.media)
+
+        self.media.subscribe(self.movie_selected)
+
+    def movie_selected(self, context):
+
+        context = self.engine.analyse(context)
+
+        media = context.media
+
+        print()
+        print("=" * 60)
+        print("MOVIE SELECTED")
+        print("=" * 60)
+        print()
+
+        print("Title :", media.title)
+        print("IMDb  :", media.imdb_id)
+
+        if context.metadata:
+
+            print()
+            print("=" * 60)
+            print("METADATA")
+            print("=" * 60)
+            print()
+
+            print("TMDb   :", context.metadata.tmdb_id)
+            print("Rating :", context.metadata.vote_average)
+
+        if context.technical:
+
+            print()
+            print("=" * 60)
+            print("TECHNICAL")
+            print("=" * 60)
+            print()
+
+            print("FPS        :", context.technical.fps)
+            print("Resolution :", context.technical.resolution)
+            print("HDR        :", context.technical.hdr)
+            print("Video      :", context.technical.video_codec)
+            print("Audio      :", context.technical.audio_codec)
 
     def run(self):
 
@@ -23,41 +71,38 @@ class OrionRuntime:
         print("=" * 60)
         print()
 
-        print("Monitoring Stremio...")
+        self.providers.start()
+
         print()
+        print("Monitoring playback...")
+        print()
+
+        session_active = False
 
         while True:
 
             playback = self.detector.update()
 
-            #
-            # Stremio started
-            #
-            if playback["started"] and not self.session_active:
+            if playback["started"] and not session_active:
 
-                print("✓ Stremio started")
+                self.engine.playback_started()
+
+                print("✓ Playback started")
 
                 self.restore.save()
 
-                #
-                # Temporary hard-coded FPS.
-                # We'll replace this with real FPS detection later.
-                #
-                self.session.begin(23.976)
+                self.engine.begin_cinema(23.976)
 
-                self.session_active = True
+                session_active = True
 
-            #
-            # Stremio closed
-            #
-            elif playback["stopped"] and self.session_active:
+            elif playback["stopped"] and session_active:
 
-                print("✓ Stremio stopped")
-
-                print("Restoring display...")
+                print("✓ Playback stopped")
 
                 self.restore.restore()
 
-                self.session_active = False
+                self.engine.playback_stopped()
+
+                session_active = False
 
             time.sleep(1)

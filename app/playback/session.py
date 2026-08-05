@@ -1,3 +1,7 @@
+from app.media.context import MovieContext
+from app.media.models import MediaState
+
+
 class PlaybackSession:
 
     def __init__(self):
@@ -8,17 +12,9 @@ class PlaybackSession:
 
         self.active = False
 
-        self.player = None
-
-        self.title = None
-
-        self.resolution = None
-
-        self.frame_rate = None
-
-        self.hdr = None
-
-        self.audio = None
+        self.context = MovieContext(
+            media=MediaState()
+        )
 
         self.original_refresh = None
 
@@ -30,7 +26,15 @@ class PlaybackSession:
 
     def stop(self):
 
-        self.active = False
+        self.reset()
+
+    def current(self):
+
+        return self.context
+
+    def set_context(self, context):
+
+        self.context = context
 
     def is_active(self):
 
