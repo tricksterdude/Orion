@@ -1,9 +1,11 @@
-from app.orion import Orion
+from app.runtime import OrionRuntime
 
 
 def main():
-    app = Orion()
-    app.start()
+
+    runtime = OrionRuntime()
+
+    runtime.run()
 
 
 if __name__ == "__main__":

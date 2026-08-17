@@ -1,32 +1,27 @@
 # Python
 __pycache__/
 *.py[cod]
+*.pyo
+*.egg-info/
+
+# Virtual environment
+.venv/
+venv/
+
+# Local configuration and secrets
+config/local.json
 
 # Logs
 logs/
 *.log
 
-# Virtual environments
-.venv/
-venv/
-env/
-
-# VS Code
+# IDE
 .vscode/
-
-# PyCharm
 .idea/
 
-# Windows
+# OS
+.DS_Store
 Thumbs.db
-Desktop.ini
 
-# Environment variables
-.env
-
-# Build files
-dist/
-build/
-
-# Test cache
-.pytest_cache/
+# Test / temporary files
+old_aiostreams.pygit

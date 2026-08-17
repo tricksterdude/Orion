@@ -1,0 +1,6 @@
+{
+    "nzbdav": {
+        "username": "YOUR_WEBDAV_USERNAME",
+        "password": "YOUR_WEBDAV_PASSWORD"
+    }
+}

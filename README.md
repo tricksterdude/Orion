@@ -6,47 +6,62 @@
 
 # Current Version
 
-## v0.8.0
+## v0.9.0
 
-### Completed
+### Core Architecture ✅
 
-### Dashboard
-- System dashboard
-- Docker monitoring
-- Service health
-- Response time monitoring
-
-### Diagnostics
-- Orion Doctor
-- Recommendation engine
-- Health score
-
-### Hardware
-- Hardware detection
-- Display detection
-- Media profile
+- Orion Engine
+- Playback session management
+- Context pipeline
+- Modular provider architecture
+- Runtime orchestration
 
 ### Playback
-- Playback foundation
+
+- Playback detection
 - Session management
 - Stremio process detection
+- Cinema session lifecycle
+
+### Cinema
+
+- Refresh-rate analysis
+- Display state capture
+- Display restoration
+- Cinema engine foundation
+
+### Metadata
+
+- TMDb integration
+- Media context
+- Technical metadata pipeline
+
+### API
+
+- Local Orion REST API
+- Playback endpoint (`POST /playback`)
+- API controller architecture
+- Playback request model
 
 ---
 
-# v0.9.0
+# Next (v0.10.0)
 
-## Display Controller
+## AIOStreams Integration
 
-- Detect supported display modes
-- Display mode verification
-- Safe refresh-rate switching
-- Automatic refresh-rate restore
+- Direct playback API integration
+- Automatic stream reporting
+- Filename delivery
+- Codec reporting
+- HDR / Dolby Vision reporting
+- Audio metadata reporting
 
-## Playback Optimiser
+## Technical Analysis
 
-- Playback detection
-- Decision engine
-- Display controller integration
+- FFprobe integration
+- MediaInfo integration
+- Real FPS detection
+- Bitrate detection
 
 ---
 
@@ -54,7 +69,7 @@
 
 ## Home Cinema Operations Centre
 
-- Automatic playback optimisation
+- Automatic refresh-rate switching
 - HDR verification
 - Audio verification
 - Playback logging
@@ -64,8 +79,12 @@
 
 # Future
 
+- UsenetStreamer integration
 - Denon AVR integration
 - LG OLED optimisation
 - Desktop GUI
 - Plugin architecture
 - Multi-display support
+- Remote web dashboard
+- Jellyfin integration
+- Plex integration
