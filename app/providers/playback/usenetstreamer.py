@@ -1,6 +1,9 @@
 import re
 import subprocess
 import threading
+import time
+
+import psutil
 
 from app.api.models import PlaybackRequest
 from app.providers.playback.base import PlaybackProvider
@@ -13,6 +16,10 @@ class UsenetStreamerPlaybackProvider(
 
     name = "UsenetStreamer"
 
+    STREAM_PORT = 7001
+    CONNECTION_GRACE_SECONDS = 10
+    CONNECTION_START_TIMEOUT = 20
+
     URL_PATTERN = re.compile(
         r"Proxying GET "
         r"(http://host\.docker\.internal:"
@@ -23,14 +30,20 @@ class UsenetStreamerPlaybackProvider(
         self,
         session,
         on_playback=None,
+        on_stopped=None,
     ):
 
         super().__init__(session)
 
         self.on_playback = on_playback
+        self.on_stopped = on_stopped
+
         self._process = None
         self._thread = None
+        self._connection_thread = None
+
         self._last_url = None
+        self._stop_event = threading.Event()
 
     def is_available(self):
 
@@ -62,9 +75,14 @@ class UsenetStreamerPlaybackProvider(
 
     def start(self):
 
-        if self._thread is not None:
+        if (
+            self._thread is not None
+            and self._thread.is_alive()
+        ):
 
             return
+
+        self._stop_event.clear()
 
         self._thread = threading.Thread(
             target=self._watch,
@@ -75,16 +93,129 @@ class UsenetStreamerPlaybackProvider(
 
     def stop(self):
 
+        self._stop_event.set()
+
         if self._process is not None:
 
             self._process.terminate()
             self._process = None
 
         self._thread = None
+        self._connection_thread = None
 
     def reset(self):
 
         self._last_url = None
+
+    @staticmethod
+    def _connection_port(address):
+
+        if not address:
+
+            return None
+
+        return getattr(address, "port", None)
+
+    def _has_stream_connection(self):
+
+        try:
+
+            connections = psutil.net_connections(
+                kind="tcp"
+            )
+
+        except (
+            psutil.AccessDenied,
+            psutil.Error,
+            OSError,
+        ):
+
+            return False
+
+        for connection in connections:
+
+            if connection.status != psutil.CONN_ESTABLISHED:
+
+                continue
+
+            local_port = self._connection_port(
+                connection.laddr
+            )
+
+            remote_port = self._connection_port(
+                connection.raddr
+            )
+
+            if self.STREAM_PORT in (
+                local_port,
+                remote_port,
+            ):
+
+                return True
+
+        return False
+
+    def _start_connection_monitor(self):
+
+        if (
+            self._connection_thread is not None
+            and self._connection_thread.is_alive()
+        ):
+
+            return
+
+        self._connection_thread = threading.Thread(
+            target=self._monitor_connection,
+            daemon=True,
+        )
+
+        self._connection_thread.start()
+
+    def _monitor_connection(self):
+
+        monitor_started = time.monotonic()
+        last_connected = None
+
+        while not self._stop_event.is_set():
+
+            now = time.monotonic()
+            connected = (
+                self._has_stream_connection()
+            )
+
+            if connected:
+
+                last_connected = now
+
+            elif (
+                last_connected is not None
+                and (
+                    now - last_connected
+                    >= self.CONNECTION_GRACE_SECONDS
+                )
+            ):
+
+                print(
+                    "✓ UsenetStreamer playback ended"
+                )
+
+                if self.on_stopped is not None:
+
+                    self.on_stopped()
+
+                return
+
+            elif (
+                last_connected is None
+                and (
+                    now - monitor_started
+                    >= self.CONNECTION_START_TIMEOUT
+                )
+            ):
+
+                return
+
+            self._stop_event.wait(1)
 
     def _watch(self):
 
@@ -112,6 +243,10 @@ class UsenetStreamerPlaybackProvider(
             )
 
             for line in self._process.stdout:
+
+                if self._stop_event.is_set():
+
+                    return
 
                 match = self.URL_PATTERN.search(
                     line
@@ -194,7 +329,13 @@ class UsenetStreamerPlaybackProvider(
 
                     self.on_playback(request)
 
+                self._start_connection_monitor()
+
         except Exception as error:
+
+            if self._stop_event.is_set():
+
+                return
 
             print()
             print(

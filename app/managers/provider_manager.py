@@ -24,6 +24,7 @@ class ProviderManager:
             UsenetStreamerPlaybackProvider(
                 session,
                 on_playback,
+                on_stopped,
             ),
         ]
 
