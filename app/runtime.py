@@ -8,6 +8,7 @@ from app.managers.provider_manager import ProviderManager
 from app.media.session import MediaSession
 from app.orion import OrionEngine
 from app.playback.detector import PlaybackDetector
+from app.playback.history import PlaybackHistory
 
 
 class OrionRuntime:
@@ -20,6 +21,7 @@ class OrionRuntime:
         self.restore = DisplayRestore()
         self.media = MediaSession()
         self.engine = OrionEngine()
+        self.history = PlaybackHistory()
 
         self.playback_requests = Queue()
         self.provider_stop_event = Event()
@@ -92,6 +94,7 @@ class OrionRuntime:
         )
 
         self.restore.save()
+        self.history.start()
 
     def stop_playback_session(self):
 
@@ -111,6 +114,7 @@ class OrionRuntime:
                 "✗ Display restoration failed"
             )
 
+        self.history.finish(restored)
         self.engine.playback_stopped()
 
         self.clear_playback_requests()
@@ -279,6 +283,11 @@ class OrionRuntime:
                                 )
                             )
 
+                            self.history.attach_metadata(
+                                request,
+                                result,
+                            )
+
                             cinema_active = (
                                 result["switched"]
                             )
@@ -310,6 +319,7 @@ class OrionRuntime:
                         "✗ Display restoration failed"
                     )
 
+                self.history.finish(restored)
                 self.engine.playback_stopped()
 
             self.clear_playback_requests()

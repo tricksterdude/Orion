@@ -11,6 +11,9 @@ venv/
 # Local configuration and secrets
 config/local.json
 
+# Private playback data
+data/playback_history.jsonl
+
 # Logs
 logs/
 *.log
