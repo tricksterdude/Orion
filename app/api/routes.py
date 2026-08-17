@@ -6,6 +6,7 @@ from flask import (
 
 from app.api.controllers.playback import PlaybackController
 from app.api.models import PlaybackRequest
+from app.media.title import friendly_media_title
 from app.playback.history import PlaybackHistory
 
 
@@ -74,6 +75,29 @@ def history_view_route():
     sessions = history_store.read(
         limit=50
     )
+
+    for session in sessions:
+
+        playback_data = session.get(
+            "playback"
+        )
+
+        if not isinstance(
+            playback_data,
+            dict,
+        ):
+
+            continue
+
+        if not playback_data.get("title"):
+
+            playback_data["title"] = (
+                friendly_media_title(
+                    playback_data.get(
+                        "filename"
+                    )
+                )
+            )
 
     return render_template(
         "playback_history.html",

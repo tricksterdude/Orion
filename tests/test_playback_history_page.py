@@ -38,9 +38,10 @@ try:
             ),
             "duration_seconds": 120,
             "playback": {
-                "title": "The Matrix",
+                "title": None,
                 "filename": (
-                    "The.Matrix.1999.2160p.mkv"
+                    "The.Matrix.1999.2160p."
+                    "BluRay.HEVC.mkv"
                 ),
                 "resolution": "3840x2160",
                 "fps": 23.976,
@@ -83,13 +84,16 @@ try:
         )
 
         assert "Playback History" in page
-        assert "The Matrix" in page
+        assert "The Matrix (1999)" in page
         assert "UsenetStreamer" in page
         assert "23.976 fps" in page
         assert "Display restored" in page
 
         print(
             "✓ Playback history page rendered"
+        )
+        print(
+            "✓ Friendly title generated"
         )
         print(
             "✓ Session details displayed"
