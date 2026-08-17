@@ -108,6 +108,62 @@ class PlaybackHistory:
 
         return saved
 
+    def read(self, limit=20):
+
+        try:
+
+            limit = int(limit)
+
+        except (
+            TypeError,
+            ValueError,
+        ):
+
+            limit = 20
+
+        if limit <= 0:
+
+            return []
+
+        if not self.path.exists():
+
+            return []
+
+        try:
+
+            lines = self.path.read_text(
+                encoding="utf-8"
+            ).splitlines()
+
+        except OSError:
+
+            return []
+
+        records = []
+
+        for line in reversed(lines):
+
+            if len(records) >= limit:
+
+                break
+
+            try:
+
+                record = json.loads(line)
+
+            except (
+                json.JSONDecodeError,
+                TypeError,
+            ):
+
+                continue
+
+            if isinstance(record, dict):
+
+                records.append(record)
+
+        return records
+
     def _append(self, record):
 
         try:
