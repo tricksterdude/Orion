@@ -59,6 +59,7 @@ class StremioProbe:
                 )
 
                 if response.get("id") == 1:
+
                     break
 
         finally:
@@ -148,6 +149,9 @@ class StremioProbe:
             encoding="utf-8",
             errors="replace",
             timeout=60,
+            creationflags=(
+                subprocess.CREATE_NO_WINDOW
+            ),
         )
 
         if result.returncode != 0:

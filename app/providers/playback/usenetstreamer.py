@@ -7,16 +7,23 @@ from app.providers.playback.base import PlaybackProvider
 from app.technical.nzbdav_probe import NZBDAVProbe
 
 
-class UsenetStreamerPlaybackProvider(PlaybackProvider):
+class UsenetStreamerPlaybackProvider(
+    PlaybackProvider
+):
 
     name = "UsenetStreamer"
 
     URL_PATTERN = re.compile(
         r"Proxying GET "
-        r"(http://host\.docker\.internal:8500/[^\r\n]+)"
+        r"(http://host\.docker\.internal:"
+        r"8500/[^\r\n]+)"
     )
 
-    def __init__(self, session, on_playback=None):
+    def __init__(
+        self,
+        session,
+        on_playback=None,
+    ):
 
         super().__init__(session)
 
@@ -39,6 +46,9 @@ class UsenetStreamerPlaybackProvider(PlaybackProvider):
                 capture_output=True,
                 text=True,
                 timeout=5,
+                creationflags=(
+                    subprocess.CREATE_NO_WINDOW
+                ),
             )
 
             return (
@@ -53,6 +63,7 @@ class UsenetStreamerPlaybackProvider(PlaybackProvider):
     def start(self):
 
         if self._thread is not None:
+
             return
 
         self._thread = threading.Thread(
@@ -65,6 +76,7 @@ class UsenetStreamerPlaybackProvider(PlaybackProvider):
     def stop(self):
 
         if self._process is not None:
+
             self._process.terminate()
             self._process = None
 
@@ -94,40 +106,58 @@ class UsenetStreamerPlaybackProvider(PlaybackProvider):
                 text=True,
                 encoding="utf-8",
                 errors="replace",
+                creationflags=(
+                    subprocess.CREATE_NO_WINDOW
+                ),
             )
 
             for line in self._process.stdout:
 
-                match = self.URL_PATTERN.search(line)
+                match = self.URL_PATTERN.search(
+                    line
+                )
 
                 if match is None:
+
                     continue
 
                 docker_url = match.group(1)
 
                 if docker_url == self._last_url:
+
                     continue
 
                 self._last_url = docker_url
 
                 print()
-                print("✓ UsenetStreamer media detected")
-                print("Running FFprobe analysis...")
+                print(
+                    "✓ UsenetStreamer media detected"
+                )
+                print(
+                    "Running FFprobe analysis..."
+                )
 
                 try:
 
-                    technical = probe.probe(docker_url)
+                    technical = probe.probe(
+                        docker_url
+                    )
 
                 except Exception as error:
 
-                    print("✗ FFprobe analysis failed:")
+                    print(
+                        "✗ FFprobe analysis failed:"
+                    )
                     print(error)
 
                     continue
 
                 resolution = None
 
-                if technical["width"] and technical["height"]:
+                if (
+                    technical["width"]
+                    and technical["height"]
+                ):
 
                     resolution = (
                         f"{technical['width']}x"
@@ -143,18 +173,31 @@ class UsenetStreamerPlaybackProvider(PlaybackProvider):
                     source="UsenetStreamer",
                 )
 
-                print("✓ Technical metadata extracted")
-                print(f"File  : {request.filename}")
-                print(f"FPS   : {request.fps}")
-                print(f"Video : {request.video_codec}")
-                print(f"HDR   : {request.hdr}")
+                print(
+                    "✓ Technical metadata extracted"
+                )
+                print(
+                    f"File  : {request.filename}"
+                )
+                print(
+                    f"FPS   : {request.fps}"
+                )
+                print(
+                    f"Video : {request.video_codec}"
+                )
+                print(
+                    f"HDR   : {request.hdr}"
+                )
                 print()
 
                 if self.on_playback is not None:
+
                     self.on_playback(request)
 
         except Exception as error:
 
             print()
-            print("✗ UsenetStreamer provider failed:")
+            print(
+                "✗ UsenetStreamer provider failed:"
+            )
             print(error)

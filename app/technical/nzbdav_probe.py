@@ -10,9 +10,17 @@ class NZBDAVProbe:
 
     def __init__(self):
 
-        root = Path(__file__).resolve().parents[2]
+        root = (
+            Path(__file__)
+            .resolve()
+            .parents[2]
+        )
 
-        config_path = root / "config" / "local.json"
+        config_path = (
+            root
+            / "config"
+            / "local.json"
+        )
 
         if not config_path.exists():
 
@@ -26,12 +34,23 @@ class NZBDAVProbe:
             )
         )
 
-        nzbdav = config.get("nzbdav", {})
+        nzbdav = config.get(
+            "nzbdav",
+            {},
+        )
 
-        self.username = nzbdav.get("username")
-        self.password = nzbdav.get("password")
+        self.username = nzbdav.get(
+            "username"
+        )
 
-        if not self.username or not self.password:
+        self.password = nzbdav.get(
+            "password"
+        )
+
+        if (
+            not self.username
+            or not self.password
+        ):
 
             raise RuntimeError(
                 "Missing NZBDAV WebDAV credentials"
@@ -40,12 +59,16 @@ class NZBDAVProbe:
     def probe(self, docker_url):
 
         url = docker_url.replace(
-            "http://host.docker.internal:8500",
+            (
+                "http://host.docker."
+                "internal:8500"
+            ),
             "http://localhost:8500",
         )
 
         credentials = (
-            f"{self.username}:{self.password}"
+            f"{self.username}:"
+            f"{self.password}"
         )
 
         authorization = base64.b64encode(
@@ -79,6 +102,9 @@ class NZBDAVProbe:
             encoding="utf-8",
             errors="replace",
             timeout=60,
+            creationflags=(
+                subprocess.CREATE_NO_WINDOW
+            ),
         )
 
         if result.returncode != 0:
@@ -90,7 +116,10 @@ class NZBDAVProbe:
 
         data = json.loads(result.stdout)
 
-        streams = data.get("streams", [])
+        streams = data.get(
+            "streams",
+            [],
+        )
 
         if not streams:
 
@@ -105,7 +134,9 @@ class NZBDAVProbe:
             or stream.get("r_frame_rate")
         )
 
-        fps = self.parse_frame_rate(frame_rate)
+        fps = self.parse_frame_rate(
+            frame_rate
+        )
 
         transfer = (
             stream.get("color_transfer")
@@ -127,10 +158,14 @@ class NZBDAVProbe:
             "fps": fps,
             "width": stream.get("width"),
             "height": stream.get("height"),
-            "codec": stream.get("codec_name"),
+            "codec": stream.get(
+                "codec_name"
+            ),
             "color_transfer": transfer,
             "color_primaries": (
-                stream.get("color_primaries")
+                stream.get(
+                    "color_primaries"
+                )
             ),
             "hdr": hdr,
         }
@@ -142,4 +177,7 @@ class NZBDAVProbe:
 
             return None
 
-        return round(float(Fraction(value)), 3)
+        return round(
+            float(Fraction(value)),
+            3,
+        )
