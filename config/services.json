@@ -3,8 +3,8 @@
         {
             "name": "NZBDAV",
             "container": "nzbdav",
-            "port": 8080,
-            "url": "http://localhost:8080"
+            "port": 8500,
+            "url": "http://localhost:8500"
         },
         {
             "name": "UsenetStreamer",
@@ -21,14 +21,14 @@
         {
             "name": "AIOMetadata",
             "container": "aiometadata",
-            "port": 3232,
-            "url": "http://localhost:3232"
+            "port": 3600,
+            "url": "http://localhost:3600"
         },
         {
             "name": "AIOStreams",
             "container": "aiostreams",
-            "port": 3000,
-            "url": "http://localhost:3000"
+            "port": 3500,
+            "url": "http://localhost:3500"
         }
     ]
 }
