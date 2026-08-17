@@ -1,4 +1,8 @@
-from flask import Blueprint, request
+from flask import (
+    Blueprint,
+    render_template,
+    request,
+)
 
 from app.api.controllers.playback import PlaybackController
 from app.api.models import PlaybackRequest
@@ -62,3 +66,16 @@ def history_route():
         "count": len(sessions),
         "sessions": sessions,
     }
+
+
+@history.get("/history/view")
+def history_view_route():
+
+    sessions = history_store.read(
+        limit=50
+    )
+
+    return render_template(
+        "playback_history.html",
+        sessions=sessions,
+    )
