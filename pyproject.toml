@@ -10,7 +10,9 @@ readme = "README.md"
 requires-python = ">=3.12"
 
 dependencies = [
+    "Flask>=3.1.0",
     "psutil>=7.0.0",
+    "requests>=2.32.0",
 ]
 
 authors = [
@@ -19,3 +21,9 @@ authors = [
 
 [project.scripts]
 orion = "main:main"
+
+[tool.setuptools]
+py-modules = ["main"]
+
+[tool.setuptools.packages.find]
+include = ["app", "app.*"]
