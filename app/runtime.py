@@ -1,4 +1,5 @@
 import time
+from queue import Empty, Queue
 from threading import Thread
 
 from app.api.server import OrionAPIServer
@@ -11,6 +12,8 @@ from app.playback.detector import PlaybackDetector
 
 class OrionRuntime:
 
+    PLAYBACK_REQUEST_MAX_AGE = 60
+
     def __init__(self):
 
         self.detector = PlaybackDetector()
@@ -21,11 +24,57 @@ class OrionRuntime:
 
         self.engine = OrionEngine()
 
-        self.api = OrionAPIServer()
+        self.playback_requests = Queue()
+
+        self.api = OrionAPIServer(
+            self.playback_received
+        )
 
         self.providers = ProviderManager(self.media)
 
         self.media.subscribe(self.movie_selected)
+
+    def playback_received(self, request):
+
+        self.playback_requests.put(
+            (time.monotonic(), request)
+        )
+
+    def next_playback_request(self):
+
+        latest = None
+        now = time.monotonic()
+
+        try:
+
+            while True:
+
+                received_at, request = (
+                    self.playback_requests.get_nowait()
+                )
+
+                if (
+                    now - received_at
+                    <= self.PLAYBACK_REQUEST_MAX_AGE
+                ):
+
+                    latest = request
+
+        except Empty:
+
+            return latest
+
+    def clear_playback_requests(self):
+
+        try:
+
+            while True:
+
+                self.playback_requests.get_nowait()
+
+        except Empty:
+
+            return
 
     def movie_selected(self, context):
 
@@ -78,7 +127,10 @@ class OrionRuntime:
             daemon=True,
         ).start()
 
-        print("✓ Orion API listening on http://127.0.0.1:8765")
+        print(
+            "✓ Orion API listening on "
+            "http://127.0.0.1:8765"
+        )
         print()
 
         self.providers.start()
@@ -88,6 +140,7 @@ class OrionRuntime:
         print()
 
         session_active = False
+        cinema_active = False
 
         try:
 
@@ -95,34 +148,82 @@ class OrionRuntime:
 
                 playback = self.detector.update()
 
-                if playback["started"] and not session_active:
+                if (
+                    playback["started"]
+                    and not session_active
+                ):
 
                     self.engine.playback_started()
 
                     print("✓ Playback started")
+                    print(
+                        "Waiting for playback metadata..."
+                    )
 
                     self.restore.save()
 
-                    self.engine.begin_cinema(23.976)
-
-                    print()
-
                     session_active = True
+                    cinema_active = False
 
-                elif playback["stopped"] and session_active:
+                elif (
+                    playback["stopped"]
+                    and session_active
+                ):
 
                     print("✓ Playback stopped")
 
                     restored = self.restore.restore()
 
                     if restored:
-                        print("✓ Original display mode restored")
+                        print(
+                            "✓ Original display mode restored"
+                        )
                     else:
-                        print("✗ Display restoration failed")
+                        print(
+                            "✗ Display restoration failed"
+                        )
 
                     self.engine.playback_stopped()
 
+                    self.clear_playback_requests()
+
                     session_active = False
+                    cinema_active = False
+
+                if session_active and not cinema_active:
+
+                    request = self.next_playback_request()
+
+                    if request is not None:
+
+                        if request.fps is None:
+
+                            print(
+                                "✗ Playback metadata has "
+                                "no FPS value"
+                            )
+
+                        else:
+
+                            print(
+                                "✓ Playback metadata received"
+                            )
+                            print(
+                                f"Using reported FPS: "
+                                f"{request.fps}"
+                            )
+
+                            result = (
+                                self.engine.begin_cinema(
+                                    request.fps
+                                )
+                            )
+
+                            cinema_active = (
+                                result["switched"]
+                            )
+
+                            print()
 
                 time.sleep(1)
 
@@ -138,10 +239,18 @@ class OrionRuntime:
                 restored = self.restore.restore()
 
                 if restored:
-                    print("✓ Original display mode restored")
+                    print(
+                        "✓ Original display mode restored"
+                    )
                 else:
-                    print("✗ Display restoration failed")
+                    print(
+                        "✗ Display restoration failed"
+                    )
 
                 self.engine.playback_stopped()
+
+            self.clear_playback_requests()
+
+            self.providers.stop()
 
             print("✓ Orion stopped")
