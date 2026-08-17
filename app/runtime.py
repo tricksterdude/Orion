@@ -30,7 +30,10 @@ class OrionRuntime:
             self.playback_received
         )
 
-        self.providers = ProviderManager(self.media)
+        self.providers = ProviderManager(
+            self.media,
+            self.playback_received,
+        )
 
         self.media.subscribe(self.movie_selected)
 
@@ -97,8 +100,14 @@ class OrionRuntime:
             print("=" * 60)
             print()
 
-            print("TMDb   :", context.metadata.tmdb_id)
-            print("Rating :", context.metadata.vote_average)
+            print(
+                "TMDb   :",
+                context.metadata.tmdb_id,
+            )
+            print(
+                "Rating :",
+                context.metadata.vote_average,
+            )
 
         if context.technical:
 
@@ -108,11 +117,26 @@ class OrionRuntime:
             print("=" * 60)
             print()
 
-            print("FPS        :", context.technical.fps)
-            print("Resolution :", context.technical.resolution)
-            print("HDR        :", context.technical.hdr)
-            print("Video      :", context.technical.video_codec)
-            print("Audio      :", context.technical.audio_codec)
+            print(
+                "FPS        :",
+                context.technical.fps,
+            )
+            print(
+                "Resolution :",
+                context.technical.resolution,
+            )
+            print(
+                "HDR        :",
+                context.technical.hdr,
+            )
+            print(
+                "Video      :",
+                context.technical.video_codec,
+            )
+            print(
+                "Audio      :",
+                context.technical.audio_codec,
+            )
 
     def run(self):
 
@@ -175,10 +199,13 @@ class OrionRuntime:
                     restored = self.restore.restore()
 
                     if restored:
+
                         print(
                             "✓ Original display mode restored"
                         )
+
                     else:
+
                         print(
                             "✗ Display restoration failed"
                         )
@@ -207,6 +234,9 @@ class OrionRuntime:
 
                             print(
                                 "✓ Playback metadata received"
+                            )
+                            print(
+                                f"Source: {request.source}"
                             )
                             print(
                                 f"Using reported FPS: "
@@ -239,10 +269,13 @@ class OrionRuntime:
                 restored = self.restore.restore()
 
                 if restored:
+
                     print(
                         "✓ Original display mode restored"
                     )
+
                 else:
+
                     print(
                         "✗ Display restoration failed"
                     )
