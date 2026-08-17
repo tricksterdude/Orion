@@ -11,7 +11,7 @@ class OrionAPIServer:
 
     def __init__(self, on_playback=None):
 
-        self.app = Flask("Orion")
+        self.app = Flask(__name__)
 
         configure_playback_handler(on_playback)
 
