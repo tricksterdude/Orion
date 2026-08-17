@@ -6,6 +6,7 @@ import time
 import psutil
 
 from app.api.models import PlaybackRequest
+from app.media.title import friendly_media_title
 from app.providers.playback.base import PlaybackProvider
 from app.technical.nzbdav_probe import NZBDAVProbe
 
@@ -134,7 +135,10 @@ class UsenetStreamerPlaybackProvider(
 
         for connection in connections:
 
-            if connection.status != psutil.CONN_ESTABLISHED:
+            if (
+                connection.status
+                != psutil.CONN_ESTABLISHED
+            ):
 
                 continue
 
@@ -179,6 +183,7 @@ class UsenetStreamerPlaybackProvider(
         while not self._stop_event.is_set():
 
             now = time.monotonic()
+
             connected = (
                 self._has_stream_connection()
             )
@@ -299,7 +304,12 @@ class UsenetStreamerPlaybackProvider(
                         f"{technical['height']}"
                     )
 
+                title = friendly_media_title(
+                    technical["filename"]
+                )
+
                 request = PlaybackRequest(
+                    title=title,
                     filename=technical["filename"],
                     resolution=resolution,
                     fps=technical["fps"],
@@ -310,6 +320,9 @@ class UsenetStreamerPlaybackProvider(
 
                 print(
                     "✓ Technical metadata extracted"
+                )
+                print(
+                    f"Title : {request.title}"
                 )
                 print(
                     f"File  : {request.filename}"
