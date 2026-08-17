@@ -1,11 +1,7 @@
 import os
-import subprocess
 import threading
-import time
 from pathlib import Path
 from urllib.parse import urlparse
-
-import psutil
 
 from app.api.models import PlaybackRequest
 from app.providers.playback.base import PlaybackProvider
@@ -15,10 +11,6 @@ from app.technical.stremio_probe import StremioProbe
 class AIOStreamsPlaybackProvider(PlaybackProvider):
 
     name = "AIOStreams"
-
-    DEBUG_ARGUMENTS = (
-        "--remote-debugging-port=9222"
-    )
 
     def __init__(
         self,
@@ -38,7 +30,6 @@ class AIOStreamsPlaybackProvider(PlaybackProvider):
         self._stop_event = threading.Event()
         self._last_url = None
         self._playing = False
-        self._stremio_process = None
 
     def is_available(self):
 
@@ -65,19 +56,6 @@ class AIOStreamsPlaybackProvider(PlaybackProvider):
     def stop(self):
 
         self._stop_event.set()
-
-        if self._stremio_process is not None:
-
-            try:
-
-                self._stremio_process.terminate()
-
-            except OSError:
-
-                pass
-
-            self._stremio_process = None
-
         self._thread = None
 
     def reset(self):
@@ -98,29 +76,23 @@ class AIOStreamsPlaybackProvider(PlaybackProvider):
 
             self.on_stopped()
 
+    def _wait(self, seconds=1):
+
+        return self._stop_event.wait(
+            seconds
+        )
+
     def _watch(self):
-
-        if not self.ensure_debug_stremio():
-
-            if not self._stop_event.is_set():
-
-                print()
-                print(
-                    "✗ AIOStreams provider unavailable"
-                )
-                print(
-                    "Close Stremio before starting Orion."
-                )
-                print()
-
-            return
 
         while not self._stop_event.is_set():
 
             if not self.probe.debugger_available():
 
                 self._notify_stopped()
-                return
+                self._last_url = None
+                self._wait(2)
+
+                continue
 
             try:
 
@@ -133,15 +105,16 @@ class AIOStreamsPlaybackProvider(PlaybackProvider):
                 if not self.probe.debugger_available():
 
                     self._notify_stopped()
-                    return
+                    self._last_url = None
 
-                time.sleep(1)
+                self._wait()
                 continue
 
             if selected is None:
 
                 self._notify_stopped()
-                time.sleep(1)
+                self._wait()
+
                 continue
 
             self._playing = True
@@ -155,12 +128,13 @@ class AIOStreamsPlaybackProvider(PlaybackProvider):
             }:
 
                 self._last_url = None
-                time.sleep(1)
+                self._wait()
+
                 continue
 
             if stream_url == self._last_url:
 
-                time.sleep(1)
+                self._wait()
                 continue
 
             self._last_url = stream_url
@@ -241,75 +215,7 @@ class AIOStreamsPlaybackProvider(PlaybackProvider):
                 print(error)
                 print()
 
-            time.sleep(1)
-
-    def ensure_debug_stremio(self):
-
-        if self.probe.debugger_available():
-
-            return True
-
-        if self.stremio_running():
-
-            return False
-
-        environment = os.environ.copy()
-
-        environment[
-            "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS"
-        ] = self.DEBUG_ARGUMENTS
-
-        self._stremio_process = (
-            subprocess.Popen(
-                [str(self.stremio_path())],
-                env=environment,
-                creationflags=(
-                    subprocess.CREATE_NO_WINDOW
-                ),
-            )
-        )
-
-        for _ in range(30):
-
-            if self._stop_event.is_set():
-
-                return False
-
-            if self.probe.debugger_available():
-
-                return True
-
-            time.sleep(1)
-
-        return False
-
-    @staticmethod
-    def stremio_running():
-
-        for process in psutil.process_iter(
-            ["name"]
-        ):
-
-            try:
-
-                name = process.info["name"]
-
-                if (
-                    name
-                    and "stremio-shell-ng"
-                    in name.lower()
-                ):
-
-                    return True
-
-            except (
-                psutil.NoSuchProcess,
-                psutil.AccessDenied,
-            ):
-
-                continue
-
-        return False
+            self._wait()
 
     @staticmethod
     def stremio_path():
