@@ -12,11 +12,14 @@ class ProviderManager:
         self,
         session,
         on_playback=None,
+        on_stopped=None,
     ):
 
         self.providers = [
             AIOStreamsPlaybackProvider(
-                session
+                session,
+                on_playback,
+                on_stopped,
             ),
             UsenetStreamerPlaybackProvider(
                 session,

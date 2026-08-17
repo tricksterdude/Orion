@@ -1,6 +1,6 @@
 import time
 from queue import Empty, Queue
-from threading import Thread
+from threading import Event, Thread
 
 from app.api.server import OrionAPIServer
 from app.display.restore import DisplayRestore
@@ -20,7 +20,9 @@ class OrionRuntime:
         self.restore = DisplayRestore()
         self.media = MediaSession()
         self.engine = OrionEngine()
+
         self.playback_requests = Queue()
+        self.provider_stop_event = Event()
 
         self.api = OrionAPIServer(
             self.playback_received
@@ -29,6 +31,7 @@ class OrionRuntime:
         self.providers = ProviderManager(
             self.media,
             self.playback_received,
+            self.playback_stopped_received,
         )
 
         self.media.subscribe(self.movie_selected)
@@ -38,6 +41,10 @@ class OrionRuntime:
         self.playback_requests.put(
             (time.monotonic(), request)
         )
+
+    def playback_stopped_received(self):
+
+        self.provider_stop_event.set()
 
     def next_playback_request(self):
 
@@ -74,6 +81,40 @@ class OrionRuntime:
         except Empty:
 
             return
+
+    def start_playback_session(self):
+
+        self.engine.playback_started()
+
+        print("✓ Playback started")
+        print(
+            "Waiting for playback metadata..."
+        )
+
+        self.restore.save()
+
+    def stop_playback_session(self):
+
+        print("✓ Playback stopped")
+
+        restored = self.restore.restore()
+
+        if restored:
+
+            print(
+                "✓ Original display mode restored"
+            )
+
+        else:
+
+            print(
+                "✗ Display restoration failed"
+            )
+
+        self.engine.playback_stopped()
+
+        self.clear_playback_requests()
+        self.providers.reset()
 
     def movie_selected(self, context):
 
@@ -168,57 +209,49 @@ class OrionRuntime:
 
                 playback = self.detector.update()
 
+                provider_stopped = (
+                    self.provider_stop_event.is_set()
+                )
+
+                if provider_stopped:
+
+                    self.provider_stop_event.clear()
+
                 if (
-                    playback["started"]
-                    and not session_active
-                ):
-
-                    self.engine.playback_started()
-
-                    print("✓ Playback started")
-                    print(
-                        "Waiting for playback metadata..."
+                    (
+                        playback["stopped"]
+                        or provider_stopped
                     )
-
-                    self.restore.save()
-
-                    session_active = True
-                    cinema_active = False
-
-                elif (
-                    playback["stopped"]
                     and session_active
                 ):
 
-                    print("✓ Playback stopped")
-
-                    restored = self.restore.restore()
-
-                    if restored:
-
-                        print(
-                            "✓ Original display mode restored"
-                        )
-
-                    else:
-
-                        print(
-                            "✗ Display restoration failed"
-                        )
-
-                    self.engine.playback_stopped()
-
-                    self.clear_playback_requests()
-                    self.providers.reset()
+                    self.stop_playback_session()
 
                     session_active = False
                     cinema_active = False
 
-                if session_active and not cinema_active:
+                elif (
+                    playback["started"]
+                    and not session_active
+                ):
 
-                    request = self.next_playback_request()
+                    self.start_playback_session()
 
-                    if request is not None:
+                    session_active = True
+                    cinema_active = False
+
+                request = self.next_playback_request()
+
+                if request is not None:
+
+                    if not session_active:
+
+                        self.start_playback_session()
+
+                        session_active = True
+                        cinema_active = False
+
+                    if not cinema_active:
 
                         if request.fps is None:
 
