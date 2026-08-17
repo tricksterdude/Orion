@@ -1,7 +1,7 @@
 import re
 import requests
 
-BASE = "http://127.0.0.1:3000"
+BASE = "http://127.0.0.1:3500"
 
 print("=" * 60)
 print("AIOSTREAMS FRONTEND")

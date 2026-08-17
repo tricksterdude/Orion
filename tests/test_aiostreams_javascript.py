@@ -1,15 +1,39 @@
-import requests
 import re
 
-url = "http://127.0.0.1:3000/assets/js/index.ecd59f14.js"
+import requests
+
+
+BASE = "http://127.0.0.1:3500"
 
 print("=" * 60)
 print("AIOSTREAMS JAVASCRIPT")
 print("=" * 60)
 
-text = requests.get(url).text
+html = requests.get(
+    BASE,
+    timeout=5,
+).text
 
-print(f"\nDownloaded {len(text):,} bytes")
+scripts = re.findall(
+    r'<script[^>]+src="([^"]+)"',
+    html,
+)
+
+index_script = next(
+    script
+    for script in scripts
+    if "/index." in script
+)
+
+url = BASE + index_script
+
+text = requests.get(
+    url,
+    timeout=10,
+).text
+
+print(f"\nJavaScript: {index_script}")
+print(f"Downloaded {len(text):,} bytes")
 
 keywords = [
     "/api",
