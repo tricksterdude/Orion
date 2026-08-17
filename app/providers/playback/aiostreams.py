@@ -259,9 +259,14 @@ class AIOStreamsPlaybackProvider(PlaybackProvider):
             "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS"
         ] = self.DEBUG_ARGUMENTS
 
-        self._stremio_process = subprocess.Popen(
-            [str(self.stremio_path())],
-            env=environment,
+        self._stremio_process = (
+            subprocess.Popen(
+                [str(self.stremio_path())],
+                env=environment,
+                creationflags=(
+                    subprocess.CREATE_NO_WINDOW
+                ),
+            )
         )
 
         for _ in range(30):
