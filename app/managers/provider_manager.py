@@ -41,3 +41,17 @@ class ProviderManager:
         for provider in self.providers:
 
             provider.stop()
+
+    def reset(self):
+
+        for provider in self.providers:
+
+            reset = getattr(
+                provider,
+                "reset",
+                None,
+            )
+
+            if callable(reset):
+
+                reset()

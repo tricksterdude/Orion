@@ -17,13 +17,9 @@ class OrionRuntime:
     def __init__(self):
 
         self.detector = PlaybackDetector()
-
         self.restore = DisplayRestore()
-
         self.media = MediaSession()
-
         self.engine = OrionEngine()
-
         self.playback_requests = Queue()
 
         self.api = OrionAPIServer(
@@ -213,6 +209,7 @@ class OrionRuntime:
                     self.engine.playback_stopped()
 
                     self.clear_playback_requests()
+                    self.providers.reset()
 
                     session_active = False
                     cinema_active = False
@@ -283,7 +280,7 @@ class OrionRuntime:
                 self.engine.playback_stopped()
 
             self.clear_playback_requests()
-
+            self.providers.reset()
             self.providers.stop()
 
             print("✓ Orion stopped")

@@ -70,6 +70,10 @@ class UsenetStreamerPlaybackProvider(PlaybackProvider):
 
         self._thread = None
 
+    def reset(self):
+
+        self._last_url = None
+
     def _watch(self):
 
         try:

@@ -142,4 +142,4 @@ class NZBDAVProbe:
 
             return None
 
-        return float(Fraction(value))
+        return round(float(Fraction(value)), 3)
