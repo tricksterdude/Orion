@@ -51,10 +51,10 @@ print("USENETSTREAMER STOP DETECTION TEST")
 print("=" * 60)
 print()
 
-established_connection = SimpleNamespace(
+outbound_connection = SimpleNamespace(
     status=psutil.CONN_ESTABLISHED,
-    laddr=SimpleNamespace(port=7001),
-    raddr=SimpleNamespace(port=51000),
+    laddr=SimpleNamespace(port=51000),
+    raddr=SimpleNamespace(port=7001),
 )
 
 provider = UsenetStreamerPlaybackProvider(
@@ -63,7 +63,7 @@ provider = UsenetStreamerPlaybackProvider(
 
 with patch(
     "psutil.net_connections",
-    return_value=[established_connection],
+    return_value=[outbound_connection],
 ):
 
     assert (
@@ -71,12 +71,36 @@ with patch(
         is True
     )
 
-print("✓ Active port 7001 connection detected")
+print(
+    "✓ Stremio-to-7001 connection detected"
+)
+
+mirrored_server_connection = SimpleNamespace(
+    status=psutil.CONN_ESTABLISHED,
+    laddr=SimpleNamespace(port=7001),
+    raddr=SimpleNamespace(port=51000),
+)
+
+with patch(
+    "psutil.net_connections",
+    return_value=[
+        mirrored_server_connection
+    ],
+):
+
+    assert (
+        provider._has_stream_connection()
+        is False
+    )
+
+print(
+    "✓ Mirrored server connection ignored"
+)
 
 closed_connection = SimpleNamespace(
     status=psutil.CONN_CLOSE,
-    laddr=SimpleNamespace(port=7001),
-    raddr=SimpleNamespace(port=51000),
+    laddr=SimpleNamespace(port=51000),
+    raddr=SimpleNamespace(port=7001),
 )
 
 with patch(
@@ -89,7 +113,7 @@ with patch(
         is False
     )
 
-print("✓ Closed port 7001 connection ignored")
+print("✓ Closed connection ignored")
 
 stop_events = []
 

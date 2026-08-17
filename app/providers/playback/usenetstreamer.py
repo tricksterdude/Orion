@@ -142,18 +142,11 @@ class UsenetStreamerPlaybackProvider(
 
                 continue
 
-            local_port = self._connection_port(
-                connection.laddr
-            )
-
             remote_port = self._connection_port(
                 connection.raddr
             )
 
-            if self.STREAM_PORT in (
-                local_port,
-                remote_port,
-            ):
+            if remote_port == self.STREAM_PORT:
 
                 return True
 
