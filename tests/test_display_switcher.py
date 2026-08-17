@@ -1,3 +1,4 @@
+from app.display.mode import DisplayMode
 from app.display.switcher import DisplaySwitcher
 
 switcher = DisplaySwitcher()
@@ -17,11 +18,14 @@ print("-------------------------")
 
 for width, height, refresh in tests:
 
-    supported = switcher.can_switch(
-        width,
-        height,
-        refresh
+    target = DisplayMode(
+        width=width,
+        height=height,
+        bits=32,
+        refresh=refresh,
     )
+
+    supported = switcher.can_switch(target)
 
     print(
         f"{width}x{height} @ {refresh} Hz : {supported}"

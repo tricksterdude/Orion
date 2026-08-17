@@ -36,9 +36,35 @@ class CinemaSession:
 
         print()
 
-        if result["supported"]:
-            print("✓ Ready to switch.")
+        if not result["supported"]:
+
+            result["switched"] = False
+
+            print("✗ Unsupported display mode.")
+
+            return result
+
+        if not result["simulation"]:
+
+            result["switched"] = False
+
+            print("✗ Windows rejected the display mode.")
+
+            return result
+
+        if result["current"] == result["target"]:
+
+            result["switched"] = True
+
+            print("✓ Display is already using the target mode.")
+
+            return result
+
+        result["switched"] = self.engine.activate(result)
+
+        if result["switched"]:
+            print("✓ Display switched successfully.")
         else:
-            print("✗ Unsupported mode.")
+            print("✗ Display switch failed.")
 
         return result

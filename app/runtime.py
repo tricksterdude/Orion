@@ -89,32 +89,59 @@ class OrionRuntime:
 
         session_active = False
 
-        while True:
+        try:
 
-            playback = self.detector.update()
+            while True:
 
-            if playback["started"] and not session_active:
+                playback = self.detector.update()
 
-                self.engine.playback_started()
+                if playback["started"] and not session_active:
 
-                print("✓ Playback started")
+                    self.engine.playback_started()
 
-                self.restore.save()
+                    print("✓ Playback started")
 
-                self.engine.begin_cinema(23.976)
+                    self.restore.save()
 
-                print()
+                    self.engine.begin_cinema(23.976)
 
-                session_active = True
+                    print()
 
-            elif playback["stopped"] and session_active:
+                    session_active = True
 
-                print("✓ Playback stopped")
+                elif playback["stopped"] and session_active:
 
-                self.restore.restore()
+                    print("✓ Playback stopped")
+
+                    restored = self.restore.restore()
+
+                    if restored:
+                        print("✓ Original display mode restored")
+                    else:
+                        print("✗ Display restoration failed")
+
+                    self.engine.playback_stopped()
+
+                    session_active = False
+
+                time.sleep(1)
+
+        except KeyboardInterrupt:
+
+            print()
+            print("Stopping Orion...")
+
+        finally:
+
+            if session_active:
+
+                restored = self.restore.restore()
+
+                if restored:
+                    print("✓ Original display mode restored")
+                else:
+                    print("✗ Display restoration failed")
 
                 self.engine.playback_stopped()
 
-                session_active = False
-
-            time.sleep(1)
+            print("✓ Orion stopped")

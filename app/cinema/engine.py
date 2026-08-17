@@ -25,10 +25,30 @@ class CinemaEngine:
 
         supported = self.switcher.can_switch(target)
 
+        simulation = (
+            supported
+            and self.switcher.test_switch(target)
+        )
+
         return {
             "fps": fps,
             "current": current,
             "target": target,
             "supported": supported,
-            "simulation": True,
+            "simulation": simulation,
         }
+
+    def activate(self, analysis):
+
+        if not analysis["supported"]:
+            return False
+
+        if not analysis["simulation"]:
+            return False
+
+        if analysis["current"] == analysis["target"]:
+            return True
+
+        return self.switcher.switch(
+            analysis["target"]
+        )
