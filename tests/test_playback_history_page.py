@@ -88,6 +88,8 @@ try:
         assert "UsenetStreamer" in page
         assert "23.976 fps" in page
         assert "Display restored" in page
+        assert 'href="/"' in page
+        assert "Back to Orion" in page
 
         print(
             "✓ Playback history page rendered"
@@ -100,6 +102,9 @@ try:
         )
         print(
             "✓ Display status displayed"
+        )
+        print(
+            "✓ Home navigation displayed"
         )
 
 finally:
