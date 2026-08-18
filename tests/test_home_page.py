@@ -7,7 +7,13 @@ print("ORION HOME PAGE TEST")
 print("=" * 60)
 print()
 
-original_read = routes.history_store.read
+original_history_read = (
+    routes.history_store.read
+)
+
+original_service_get_all = (
+    routes.service_status.get_all
+)
 
 try:
 
@@ -15,6 +21,27 @@ try:
         lambda limit=100: [
             {"session_id": "one"},
             {"session_id": "two"},
+        ]
+    )
+
+    routes.service_status.get_all = (
+        lambda: [
+            {
+                "name": "AIOStreams",
+                "port": 3500,
+                "url": "http://localhost:3500",
+                "healthy": True,
+                "status_code": 200,
+                "response_time": 12.5,
+            },
+            {
+                "name": "NZBDAV",
+                "port": 8500,
+                "url": "http://localhost:8500",
+                "healthy": False,
+                "status_code": None,
+                "response_time": None,
+            },
         ]
     )
 
@@ -40,9 +67,29 @@ try:
 
     print("✓ Recent session count displayed")
 
+    assert "AIOStreams" in page
+    assert "localhost:3500" in page
+    assert "HTTP 200" in page
+    assert "12.5 ms" in page
+
+    print("✓ Healthy service displayed")
+
+    assert "NZBDAV" in page
+    assert "localhost:8500" in page
+    assert "No response" in page
+    assert "Attention needed" in page
+
+    print("✓ Offline service displayed")
+
 finally:
 
-    routes.history_store.read = original_read
+    routes.history_store.read = (
+        original_history_read
+    )
+
+    routes.service_status.get_all = (
+        original_service_get_all
+    )
 
 print()
 print("✓ Orion home page test passed")
