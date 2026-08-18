@@ -10,6 +10,7 @@ from app.media.title import friendly_media_title
 from app.playback.history import PlaybackHistory
 
 
+home = Blueprint("home", __name__)
 playback = Blueprint("playback", __name__)
 history = Blueprint("history", __name__)
 
@@ -20,6 +21,19 @@ history_store = PlaybackHistory()
 def configure_playback_handler(handler):
 
     controller.set_handler(handler)
+
+
+@home.get("/")
+def home_route():
+
+    sessions = history_store.read(
+        limit=100
+    )
+
+    return render_template(
+        "home.html",
+        session_count=len(sessions),
+    )
 
 
 @playback.post("/playback")
