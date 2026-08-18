@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
@@ -19,6 +19,7 @@
             --muted: #9bb9e5;
             --cyan: #38cfff;
             --green: #51efbc;
+            --yellow: #ffd166;
             --red: #ff7085;
         }
 
@@ -91,10 +92,22 @@
             color: var(--green);
         }
 
+        .pill-update {
+            border: 1px solid rgba(255, 209, 102, 0.32);
+            background: rgba(255, 209, 102, 0.10);
+            color: var(--yellow);
+        }
+
         .pill-offline {
             border: 1px solid rgba(255, 112, 133, 0.30);
             background: rgba(255, 112, 133, 0.10);
             color: var(--red);
+        }
+
+        .pill-unavailable {
+            border: 1px solid rgba(155, 185, 229, 0.28);
+            background: rgba(155, 185, 229, 0.08);
+            color: var(--muted);
         }
 
         .dot {
@@ -198,7 +211,8 @@
             font-weight: 800;
         }
 
-        .services-panel {
+        .services-panel,
+        .updates-panel {
             margin-top: 22px;
             overflow: hidden;
             border: 1px solid var(--border);
@@ -206,7 +220,8 @@
             background: var(--surface);
         }
 
-        .services-header {
+        .services-header,
+        .updates-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -215,17 +230,23 @@
             border-bottom: 1px solid var(--border);
         }
 
-        .services-header h2 {
+        .services-header h2,
+        .updates-header h2 {
             margin: 6px 0 0;
             font-size: 30px;
             letter-spacing: -0.025em;
         }
 
-        .services-summary {
+        .services-summary,
+        .updates-summary {
             color: var(--cyan);
             font-size: 20px;
             font-weight: 900;
             white-space: nowrap;
+        }
+
+        .updates-summary-attention {
+            color: var(--yellow);
         }
 
         .service-list {
@@ -237,6 +258,8 @@
             min-width: 0;
             padding: 24px;
             border-right: 1px solid var(--border);
+            color: inherit;
+            text-decoration: none;
         }
 
         .service:last-child {
@@ -260,6 +283,39 @@
         .service-response {
             display: block;
             margin-top: 12px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .update-list {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .update-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            min-width: 0;
+            padding: 26px 30px;
+            border-right: 1px solid var(--border);
+        }
+
+        .update-item:last-child {
+            border-right: 0;
+        }
+
+        .update-name {
+            display: block;
+            margin-bottom: 7px;
+            font-size: 20px;
+            font-weight: 850;
+        }
+
+        .update-image {
+            display: block;
+            overflow-wrap: anywhere;
             color: var(--muted);
             font-size: 13px;
         }
@@ -325,12 +381,14 @@
                 margin-top: 44px;
             }
 
-            .services-header {
+            .services-header,
+            .updates-header {
                 align-items: flex-start;
                 flex-direction: column;
             }
 
             .service-list,
+            .update-list,
             .details {
                 grid-template-columns: 1fr;
             }
@@ -341,6 +399,17 @@
             }
 
             .service:last-child {
+                border-bottom: 0;
+            }
+
+            .update-item {
+                align-items: flex-start;
+                flex-direction: column;
+                border-right: 0;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .update-item:last-child {
                 border-bottom: 0;
             }
 
@@ -494,6 +563,65 @@
                             {% endif %}
                         </span>
                     </a>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="updates-panel">
+            <header class="updates-header">
+                <div>
+                    <span class="label">Docker images</span>
+                    <h2>Container updates</h2>
+                </div>
+
+                <div
+                    class="
+                        updates-summary
+                        {% if update_count > 0 %}
+                            updates-summary-attention
+                        {% endif %}
+                    "
+                >
+                    {% if update_count == 0 %}
+                        No updates available
+                    {% elif update_count == 1 %}
+                        1 update available
+                    {% else %}
+                        {{ update_count }} updates available
+                    {% endif %}
+                </div>
+            </header>
+
+            <div class="update-list">
+                {% for container in container_updates %}
+                    <div class="update-item">
+                        <div>
+                            <span class="update-name">
+                                {{ container.name }}
+                            </span>
+
+                            <span class="update-image">
+                                {{ container.image }}
+                            </span>
+                        </div>
+
+                        {% if container.status == "available" %}
+                            <span class="pill pill-update">
+                                <span class="dot"></span>
+                                {{ container.name }} update available
+                            </span>
+                        {% elif container.status == "current" %}
+                            <span class="pill pill-healthy">
+                                <span class="dot"></span>
+                                {{ container.name }} is up to date
+                            </span>
+                        {% else %}
+                            <span class="pill pill-unavailable">
+                                <span class="dot"></span>
+                                Unable to check
+                            </span>
+                        {% endif %}
+                    </div>
                 {% endfor %}
             </div>
         </section>
