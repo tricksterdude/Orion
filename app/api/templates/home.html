@@ -45,6 +45,10 @@
                 sans-serif;
         }
 
+        button {
+            font: inherit;
+        }
+
         .page {
             width: min(1180px, calc(100% - 40px));
             margin: 0 auto;
@@ -92,12 +96,6 @@
             color: var(--green);
         }
 
-        .pill-update {
-            border: 1px solid rgba(255, 209, 102, 0.32);
-            background: rgba(255, 209, 102, 0.10);
-            color: var(--yellow);
-        }
-
         .pill-offline {
             border: 1px solid rgba(255, 112, 133, 0.30);
             background: rgba(255, 112, 133, 0.10);
@@ -120,6 +118,35 @@
 
         .orion-status {
             margin-top: 32px;
+        }
+
+        .update-result {
+            display: inline-flex;
+            width: fit-content;
+            max-width: 100%;
+            margin-top: 22px;
+            padding: 11px 16px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            font-size: 14px;
+            font-weight: 750;
+        }
+
+        .update-result-success {
+            border-color: rgba(81, 239, 188, 0.35);
+            background: rgba(81, 239, 188, 0.10);
+            color: var(--green);
+        }
+
+        .update-result-current {
+            background: rgba(155, 185, 229, 0.08);
+            color: var(--muted);
+        }
+
+        .update-result-failed {
+            border-color: rgba(255, 112, 133, 0.35);
+            background: rgba(255, 112, 133, 0.10);
+            color: var(--red);
         }
 
         .cards {
@@ -230,11 +257,21 @@
             border-bottom: 1px solid var(--border);
         }
 
+        .updates-panel-current .updates-header {
+            padding-top: 22px;
+            padding-bottom: 22px;
+            border-bottom: 0;
+        }
+
         .services-header h2,
         .updates-header h2 {
             margin: 6px 0 0;
             font-size: 30px;
             letter-spacing: -0.025em;
+        }
+
+        .updates-panel-current .updates-header h2 {
+            font-size: 26px;
         }
 
         .services-summary,
@@ -251,7 +288,8 @@
 
         .service-list {
             display: grid;
-            grid-template-columns: repeat(5, minmax(0, 1fr));
+            grid-template-columns:
+                repeat(auto-fit, minmax(180px, 1fr));
         }
 
         .service {
@@ -318,6 +356,50 @@
             overflow-wrap: anywhere;
             color: var(--muted);
             font-size: 13px;
+        }
+
+        .update-actions {
+            display: flex;
+            align-items: flex-end;
+            flex-direction: column;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .update-form {
+            margin: 0;
+        }
+
+        .update-button {
+            padding: 12px 20px;
+            border: 1px solid rgba(255, 209, 102, 0.48);
+            border-radius: 999px;
+            background: rgba(255, 209, 102, 0.12);
+            color: var(--yellow);
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 850;
+            transition:
+                background 160ms ease,
+                transform 160ms ease;
+        }
+
+        .update-button:hover {
+            transform: translateY(-1px);
+            background: rgba(255, 209, 102, 0.20);
+        }
+
+        .update-button:focus-visible {
+            outline: 3px solid var(--yellow);
+            outline-offset: 3px;
+        }
+
+        .update-note {
+            max-width: 280px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.45;
+            text-align: right;
         }
 
         .details {
@@ -413,6 +495,14 @@
                 border-bottom: 0;
             }
 
+            .update-actions {
+                align-items: flex-start;
+            }
+
+            .update-note {
+                text-align: left;
+            }
+
             .card {
                 min-height: 235px;
             }
@@ -438,6 +528,23 @@
                 <span class="dot"></span>
                 Orion is running
             </div>
+
+            {% if update_result %}
+                <div
+                    class="
+                        update-result
+                        {% if update_result.status == 'updated' %}
+                            update-result-success
+                        {% elif update_result.status == 'current' %}
+                            update-result-current
+                        {% else %}
+                            update-result-failed
+                        {% endif %}
+                    "
+                >
+                    {{ update_result.message }}
+                </div>
+            {% endif %}
         </header>
 
         <section class="cards">
@@ -567,7 +674,14 @@
             </div>
         </section>
 
-        <section class="updates-panel">
+        <section
+            class="
+                updates-panel
+                {% if update_count == 0 %}
+                    updates-panel-current
+                {% endif %}
+            "
+        >
             <header class="updates-header">
                 <div>
                     <span class="label">Docker images</span>
@@ -592,38 +706,69 @@
                 </div>
             </header>
 
-            <div class="update-list">
-                {% for container in container_updates %}
-                    <div class="update-item">
-                        <div>
-                            <span class="update-name">
-                                {{ container.name }}
-                            </span>
+            {% if update_count > 0 %}
+                <div class="update-list">
+                    {% for container in container_updates %}
+                        <div class="update-item">
+                            <div>
+                                <span class="update-name">
+                                    {{ container.name }}
+                                </span>
 
-                            <span class="update-image">
-                                {{ container.image }}
-                            </span>
+                                <span class="update-image">
+                                    {{ container.image }}
+                                </span>
+                            </div>
+
+                            <div class="update-actions">
+                                {% if container.status == "available" %}
+                                    <form
+                                        class="update-form"
+                                        method="post"
+                                        action="/containers/{{ container.slug }}/update"
+                                        onsubmit="
+                                            return confirm(
+                                                'Update {{ container.name }} now? '
+                                                + 'Orion will back up its settings, '
+                                                + 'recreate only this container and '
+                                                + 'wait for it to become healthy.'
+                                            );
+                                        "
+                                    >
+                                        <input
+                                            type="hidden"
+                                            name="token"
+                                            value="{{ container_update_token }}"
+                                        >
+
+                                        <button
+                                            class="update-button"
+                                            type="submit"
+                                        >
+                                            Update {{ container.name }}
+                                        </button>
+                                    </form>
+
+                                    <span class="update-note">
+                                        Settings are backed up before
+                                        the container is recreated.
+                                    </span>
+                                {% elif container.status == "current" %}
+                                    <span class="pill pill-healthy">
+                                        <span class="dot"></span>
+                                        {{ container.name }} is up to date
+                                    </span>
+                                {% else %}
+                                    <span class="pill pill-unavailable">
+                                        <span class="dot"></span>
+                                        Unable to check
+                                    </span>
+                                {% endif %}
+                            </div>
                         </div>
-
-                        {% if container.status == "available" %}
-                            <span class="pill pill-update">
-                                <span class="dot"></span>
-                                {{ container.name }} update available
-                            </span>
-                        {% elif container.status == "current" %}
-                            <span class="pill pill-healthy">
-                                <span class="dot"></span>
-                                {{ container.name }} is up to date
-                            </span>
-                        {% else %}
-                            <span class="pill pill-unavailable">
-                                <span class="dot"></span>
-                                Unable to check
-                            </span>
-                        {% endif %}
-                    </div>
-                {% endfor %}
-            </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
         </section>
 
         <section class="details">
@@ -653,5 +798,15 @@
             Orion keeps its operational data locally on this computer.
         </footer>
     </main>
+
+    {% if update_result %}
+        <script>
+            window.history.replaceState(
+                {},
+                document.title,
+                window.location.pathname
+            );
+        </script>
+    {% endif %}
 </body>
 </html>

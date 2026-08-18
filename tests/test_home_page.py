@@ -136,10 +136,93 @@ try:
 
     assert "Container updates" in page
     assert "1 update available" in page
-    assert "AIOStreams update available" in page
+    assert "AIOStreams update available" not in page
+    assert "Update AIOStreams" in page
+    assert (
+        'action="/containers/aiostreams/update"'
+        in page
+    )
+    assert 'name="token"' in page
+    assert routes.container_update_token in page
     assert "UsenetStreamer is up to date" in page
 
-    print("✓ Container update status displayed")
+    print("✓ Controlled update button displayed")
+
+    routes.container_update_status.get_all = (
+        lambda: [
+            {
+                "name": "AIOStreams",
+                "slug": "aiostreams",
+                "container": "aiostreams",
+                "image": (
+                    "ghcr.io/viren070/"
+                    "aiostreams:latest"
+                ),
+                "status": "current",
+                "update_available": False,
+                "installed_digest": (
+                    "sha256:" + ("a" * 64)
+                ),
+                "registry_digest": (
+                    "sha256:" + ("a" * 64)
+                ),
+                "message": "Up to date.",
+            },
+            {
+                "name": "UsenetStreamer",
+                "slug": "usenetstreamer",
+                "container": "usenetstreamer",
+                "image": (
+                    "gavpyro/"
+                    "usenetstreamer:latest"
+                ),
+                "status": "current",
+                "update_available": False,
+                "installed_digest": (
+                    "sha256:" + ("c" * 64)
+                ),
+                "registry_digest": (
+                    "sha256:" + ("c" * 64)
+                ),
+                "message": "Up to date.",
+            },
+        ]
+    )
+
+    current_response = client.get("/")
+    current_page = current_response.get_data(
+        as_text=True
+    )
+
+    assert current_response.status_code == 200
+    assert "No updates available" in current_page
+    assert "updates-panel-current" in current_page
+    assert 'class="update-list"' not in current_page
+    assert "Update AIOStreams" not in current_page
+
+    print("✓ Current containers use compact layout")
+
+    result_response = client.get(
+        "/?update_status=updated"
+        "&update_message="
+        "AIOStreams+updated+successfully."
+    )
+
+    result_page = result_response.get_data(
+        as_text=True
+    )
+
+    assert result_response.status_code == 200
+    assert (
+        "AIOStreams updated successfully."
+        in result_page
+    )
+    assert (
+        "window.history.replaceState"
+        in result_page
+    )
+
+    print("✓ Update result clears from refresh address")
 
     assert "</article>" not in page
     assert "AIOStreams · UsenetStreamer" in page
