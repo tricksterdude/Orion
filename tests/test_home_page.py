@@ -63,6 +63,7 @@ try:
 
     assert "Playback History" in page
     assert 'href="/history/view"' in page
+    assert "Open history →" in page
 
     print("✓ Playback history link displayed")
 
@@ -89,8 +90,10 @@ try:
     print("✓ Service detail links displayed")
 
     assert "</article>" not in page
-    assert "Â·" not in page
     assert "AIOStreams · UsenetStreamer" in page
+    assert "service’s" in page
+    assert "current Windows host address." in page
+    assert "â" not in page
 
     print("✓ Service links close correctly")
     print("✓ Page text encoding is correct")
