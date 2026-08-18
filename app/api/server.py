@@ -3,6 +3,7 @@ from flask import Flask
 from app.api.routes import (
     configure_playback_handler,
     history,
+    home,
     playback,
 )
 
@@ -15,6 +16,7 @@ class OrionAPIServer:
 
         configure_playback_handler(on_playback)
 
+        self.app.register_blueprint(home)
         self.app.register_blueprint(playback)
         self.app.register_blueprint(history)
 
