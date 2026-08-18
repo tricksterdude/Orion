@@ -6,6 +6,7 @@ from flask import (
 
 from app.api.controllers.playback import PlaybackController
 from app.api.models import PlaybackRequest
+from app.api.service_status import ServiceStatus
 from app.media.title import friendly_media_title
 from app.playback.history import PlaybackHistory
 
@@ -16,6 +17,7 @@ history = Blueprint("history", __name__)
 
 controller = PlaybackController()
 history_store = PlaybackHistory()
+service_status = ServiceStatus()
 
 
 def configure_playback_handler(handler):
@@ -30,9 +32,19 @@ def home_route():
         limit=100
     )
 
+    services = service_status.get_all()
+
+    healthy_count = sum(
+        1
+        for service in services
+        if service["healthy"]
+    )
+
     return render_template(
         "home.html",
         session_count=len(sessions),
+        services=services,
+        healthy_count=healthy_count,
     )
 
 
