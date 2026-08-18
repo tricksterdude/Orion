@@ -15,6 +15,10 @@ original_service_get_all = (
     routes.service_status.get_all
 )
 
+original_update_get_all = (
+    routes.container_update_status.get_all
+)
+
 try:
 
     routes.history_store.read = (
@@ -45,6 +49,47 @@ try:
                 "healthy": False,
                 "status_code": None,
                 "response_time": None,
+            },
+        ]
+    )
+
+    routes.container_update_status.get_all = (
+        lambda: [
+            {
+                "name": "AIOStreams",
+                "slug": "aiostreams",
+                "container": "aiostreams",
+                "image": (
+                    "ghcr.io/viren070/"
+                    "aiostreams:latest"
+                ),
+                "status": "available",
+                "update_available": True,
+                "installed_digest": (
+                    "sha256:" + ("a" * 64)
+                ),
+                "registry_digest": (
+                    "sha256:" + ("b" * 64)
+                ),
+                "message": "Update available.",
+            },
+            {
+                "name": "UsenetStreamer",
+                "slug": "usenetstreamer",
+                "container": "usenetstreamer",
+                "image": (
+                    "gavpyro/"
+                    "usenetstreamer:latest"
+                ),
+                "status": "current",
+                "update_available": False,
+                "installed_digest": (
+                    "sha256:" + ("c" * 64)
+                ),
+                "registry_digest": (
+                    "sha256:" + ("c" * 64)
+                ),
+                "message": "Up to date.",
             },
         ]
     )
@@ -89,6 +134,13 @@ try:
     print("✓ Offline service displayed")
     print("✓ Service detail links displayed")
 
+    assert "Container updates" in page
+    assert "1 update available" in page
+    assert "AIOStreams update available" in page
+    assert "UsenetStreamer is up to date" in page
+
+    print("✓ Container update status displayed")
+
     assert "</article>" not in page
     assert "AIOStreams · UsenetStreamer" in page
     assert "service’s" in page
@@ -106,6 +158,10 @@ finally:
 
     routes.service_status.get_all = (
         original_service_get_all
+    )
+
+    routes.container_update_status.get_all = (
+        original_update_get_all
     )
 
 print()

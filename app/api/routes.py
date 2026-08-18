@@ -5,6 +5,9 @@ from flask import (
     request,
 )
 
+from app.api.container_updates import (
+    ContainerUpdateStatus,
+)
 from app.api.controllers.playback import PlaybackController
 from app.api.models import PlaybackRequest
 from app.api.service_status import ServiceStatus
@@ -19,6 +22,7 @@ history = Blueprint("history", __name__)
 controller = PlaybackController()
 history_store = PlaybackHistory()
 service_status = ServiceStatus()
+container_update_status = ContainerUpdateStatus()
 
 
 def configure_playback_handler(handler):
@@ -41,11 +45,23 @@ def home_route():
         if service["healthy"]
     )
 
+    container_updates = (
+        container_update_status.get_all()
+    )
+
+    update_count = sum(
+        1
+        for container in container_updates
+        if container["update_available"] is True
+    )
+
     return render_template(
         "home.html",
         session_count=len(sessions),
         services=services,
         healthy_count=healthy_count,
+        container_updates=container_updates,
+        update_count=update_count,
     )
 
 
