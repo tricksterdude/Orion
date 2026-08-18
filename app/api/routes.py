@@ -1,12 +1,20 @@
+import hmac
+import secrets
+
 from flask import (
     Blueprint,
     abort,
+    redirect,
     render_template,
     request,
+    url_for,
 )
 
 from app.api.container_updates import (
     ContainerUpdateStatus,
+)
+from app.api.container_updater import (
+    ContainerUpdater,
 )
 from app.api.controllers.playback import PlaybackController
 from app.api.models import PlaybackRequest
@@ -23,6 +31,14 @@ controller = PlaybackController()
 history_store = PlaybackHistory()
 service_status = ServiceStatus()
 container_update_status = ContainerUpdateStatus()
+
+container_updater = ContainerUpdater(
+    status_checker=container_update_status,
+)
+
+container_update_token = (
+    secrets.token_urlsafe(32)
+)
 
 
 def configure_playback_handler(handler):
@@ -55,6 +71,23 @@ def home_route():
         if container["update_available"] is True
     )
 
+    update_result = None
+
+    update_status = request.args.get(
+        "update_status"
+    )
+
+    update_message = request.args.get(
+        "update_message"
+    )
+
+    if update_status and update_message:
+
+        update_result = {
+            "status": update_status,
+            "message": update_message,
+        }
+
     return render_template(
         "home.html",
         session_count=len(sessions),
@@ -62,6 +95,79 @@ def home_route():
         healthy_count=healthy_count,
         container_updates=container_updates,
         update_count=update_count,
+        container_update_token=(
+            container_update_token
+        ),
+        update_result=update_result,
+    )
+
+
+@home.post("/containers/<container_slug>/update")
+def container_update_route(container_slug):
+
+    submitted_token = request.form.get(
+        "token",
+        "",
+    )
+
+    if not hmac.compare_digest(
+        submitted_token,
+        container_update_token,
+    ):
+
+        abort(403)
+
+    if (
+        container_slug
+        not in container_updater.containers
+    ):
+
+        abort(404)
+
+    update_information = next(
+        (
+            container
+            for container
+            in container_update_status.get_all()
+            if (
+                container["slug"]
+                == container_slug
+            )
+        ),
+        None,
+    )
+
+    if (
+        update_information is None
+        or (
+            update_information[
+                "update_available"
+            ]
+            is not True
+        )
+    ):
+
+        return redirect(
+            url_for(
+                "home.home_route",
+                update_status="current",
+                update_message=(
+                    "No update is currently "
+                    "available for that container."
+                ),
+            )
+        )
+
+    result = container_updater.update(
+        container_slug
+    )
+
+    return redirect(
+        url_for(
+            "home.home_route",
+            update_status=result["status"],
+            update_message=result["message"],
+        )
     )
 
 
