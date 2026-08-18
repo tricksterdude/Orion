@@ -14,6 +14,10 @@ class ServiceStatus:
         health_manager=None,
     ):
 
+        self.service_manager = (
+            service_manager
+        )
+
         if service_manager is None:
 
             self.services = (
@@ -56,6 +60,22 @@ class ServiceStatus:
             SimpleNamespace(**service)
             for service in data["services"]
         ]
+
+    def reload(self):
+
+        if self.service_manager is None:
+
+            self.services = (
+                self._load_configured_services()
+            )
+
+        else:
+
+            self.services = (
+                self.service_manager.get_all()
+            )
+
+        return self.services
 
     @staticmethod
     def _slug(name):

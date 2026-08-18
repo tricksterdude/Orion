@@ -289,19 +289,32 @@
         .service-list {
             display: grid;
             grid-template-columns:
-                repeat(auto-fit, minmax(180px, 1fr));
+                repeat(auto-fit, minmax(210px, 1fr));
         }
 
         .service {
+            display: flex;
             min-width: 0;
+            flex-direction: column;
             padding: 24px;
             border-right: 1px solid var(--border);
-            color: inherit;
-            text-decoration: none;
         }
 
         .service:last-child {
             border-right: 0;
+        }
+
+        .service-link {
+            display: block;
+            flex: 1;
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .service-link:focus-visible {
+            border-radius: 8px;
+            outline: 3px solid var(--cyan);
+            outline-offset: 5px;
         }
 
         .service-name {
@@ -323,6 +336,35 @@
             margin-top: 12px;
             color: var(--muted);
             font-size: 13px;
+        }
+
+        .service-remove-form {
+            margin: 18px 0 0;
+        }
+
+        .service-remove-button {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid rgba(255, 112, 133, 0.38);
+            border-radius: 999px;
+            background: rgba(255, 112, 133, 0.08);
+            color: var(--red);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 850;
+            transition:
+                background 160ms ease,
+                transform 160ms ease;
+        }
+
+        .service-remove-button:hover {
+            transform: translateY(-1px);
+            background: rgba(255, 112, 133, 0.16);
+        }
+
+        .service-remove-button:focus-visible {
+            outline: 3px solid var(--red);
+            outline-offset: 3px;
         }
 
         .update-list {
@@ -637,39 +679,73 @@
 
             <div class="service-list">
                 {% for service in services %}
-                    <a
-                        class="service"
-                        href="/services/{{ service.slug }}"
-                    >
-                        <span class="service-name">
-                            {{ service.name }}
-                        </span>
-
-                        <span class="service-port">
-                            localhost:{{ service.port }}
-                        </span>
-
-                        {% if service.healthy %}
-                            <span class="pill pill-healthy">
-                                <span class="dot"></span>
-                                Healthy
+                    <div class="service">
+                        <a
+                            class="service-link"
+                            href="/services/{{ service.slug }}"
+                        >
+                            <span class="service-name">
+                                {{ service.name }}
                             </span>
-                        {% else %}
-                            <span class="pill pill-offline">
-                                <span class="dot"></span>
-                                Offline
-                            </span>
-                        {% endif %}
 
-                        <span class="service-response">
-                            {% if service.response_time is not none %}
-                                HTTP {{ service.status_code }}
-                                · {{ service.response_time }} ms
+                            <span class="service-port">
+                                localhost:{{ service.port }}
+                            </span>
+
+                            {% if service.healthy %}
+                                <span class="pill pill-healthy">
+                                    <span class="dot"></span>
+                                    Healthy
+                                </span>
                             {% else %}
-                                No response
+                                <span class="pill pill-offline">
+                                    <span class="dot"></span>
+                                    Offline
+                                </span>
                             {% endif %}
-                        </span>
-                    </a>
+
+                            <span class="service-response">
+                                {% if service.response_time is not none %}
+                                    HTTP {{ service.status_code }}
+                                    · {{ service.response_time }} ms
+                                {% else %}
+                                    No response
+                                {% endif %}
+                            </span>
+                        </a>
+
+                        {% for optional in optional_services %}
+                            {% if optional.container == service.container %}
+                                <form
+                                    class="service-remove-form"
+                                    method="post"
+                                    action="/services/{{ optional.slug }}/remove"
+                                    onsubmit="
+                                        return confirm(
+                                            'Remove {{ optional.name }}? '
+                                            + 'Orion will first back up its '
+                                            + 'configuration and definitions. '
+                                            + 'Its configuration folder will '
+                                            + 'remain on disk.'
+                                        );
+                                    "
+                                >
+                                    <input
+                                        type="hidden"
+                                        name="token"
+                                        value="{{ optional_service_token }}"
+                                    >
+
+                                    <button
+                                        class="service-remove-button"
+                                        type="submit"
+                                    >
+                                        Remove {{ optional.name }}
+                                    </button>
+                                </form>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
                 {% endfor %}
             </div>
         </section>
