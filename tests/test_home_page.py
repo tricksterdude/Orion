@@ -28,6 +28,8 @@ try:
         lambda: [
             {
                 "name": "AIOStreams",
+                "slug": "aiostreams",
+                "container": "aiostreams",
                 "port": 3500,
                 "url": "http://localhost:3500",
                 "healthy": True,
@@ -36,6 +38,8 @@ try:
             },
             {
                 "name": "NZBDAV",
+                "slug": "nzbdav",
+                "container": "nzbdav",
                 "port": 8500,
                 "url": "http://localhost:8500",
                 "healthy": False,
@@ -71,6 +75,7 @@ try:
     assert "localhost:3500" in page
     assert "HTTP 200" in page
     assert "12.5 ms" in page
+    assert 'href="/services/aiostreams"' in page
 
     print("✓ Healthy service displayed")
 
@@ -78,8 +83,17 @@ try:
     assert "localhost:8500" in page
     assert "No response" in page
     assert "Attention needed" in page
+    assert 'href="/services/nzbdav"' in page
 
     print("✓ Offline service displayed")
+    print("✓ Service detail links displayed")
+
+    assert "</article>" not in page
+    assert "Â·" not in page
+    assert "AIOStreams · UsenetStreamer" in page
+
+    print("✓ Service links close correctly")
+    print("✓ Page text encoding is correct")
 
 finally:
 

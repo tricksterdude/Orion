@@ -57,6 +57,15 @@ class ServiceStatus:
             for service in data["services"]
         ]
 
+    @staticmethod
+    def _slug(name):
+
+        return "".join(
+            character.lower()
+            for character in name
+            if character.isalnum()
+        )
+
     def _check(self, service):
 
         result = self.health.check(
@@ -65,6 +74,14 @@ class ServiceStatus:
 
         return {
             "name": service.name,
+            "slug": self._slug(
+                service.name
+            ),
+            "container": getattr(
+                service,
+                "container",
+                None,
+            ),
             "port": service.port,
             "url": service.url,
             "healthy": result["healthy"],
@@ -92,3 +109,22 @@ class ServiceStatus:
             )
 
         return statuses
+
+    def get(self, requested_slug):
+
+        requested_slug = self._slug(
+            requested_slug
+        )
+
+        for service in self.services:
+
+            if (
+                self._slug(service.name)
+                == requested_slug
+            ):
+
+                return self._check(
+                    service
+                )
+
+        return None

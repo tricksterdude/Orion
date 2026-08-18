@@ -1,5 +1,6 @@
 from flask import (
     Blueprint,
+    abort,
     render_template,
     request,
 )
@@ -45,6 +46,23 @@ def home_route():
         session_count=len(sessions),
         services=services,
         healthy_count=healthy_count,
+    )
+
+
+@home.get("/services/<service_slug>")
+def service_view_route(service_slug):
+
+    service = service_status.get(
+        service_slug
+    )
+
+    if service is None:
+
+        abort(404)
+
+    return render_template(
+        "service.html",
+        service=service,
     )
 
 
