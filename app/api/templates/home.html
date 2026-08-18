@@ -399,7 +399,7 @@
                         </div>
 
                         <span class="open-label">
-                            Open history →
+                            Open history â†’
                         </span>
                     </div>
                 </div>
@@ -415,7 +415,7 @@
                         <h2>Operations</h2>
 
                         <p>
-                            Live health checks using each service’s
+                            Live health checks using each serviceâ€™s
                             current Windows host address.
                         </p>
                     </div>
@@ -461,7 +461,10 @@
 
             <div class="service-list">
                 {% for service in services %}
-                    <article class="service">
+                    <a
+                        class="service"
+                        href="/services/{{ service.slug }}"
+                    >
                         <span class="service-name">
                             {{ service.name }}
                         </span>
@@ -490,7 +493,7 @@
                                 No response
                             {% endif %}
                         </span>
-                    </article>
+                    </a>
                 {% endfor %}
             </div>
         </section>
