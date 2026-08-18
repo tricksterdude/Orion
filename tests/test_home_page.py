@@ -50,6 +50,16 @@ try:
                 "status_code": None,
                 "response_time": None,
             },
+            {
+                "name": "NZBHydra2",
+                "slug": "nzbhydra2",
+                "container": "nzbhydra2",
+                "port": 5076,
+                "url": "http://localhost:5076",
+                "healthy": True,
+                "status_code": 200,
+                "response_time": 18.4,
+            },
         ]
     )
 
@@ -133,6 +143,18 @@ try:
 
     print("✓ Offline service displayed")
     print("✓ Service detail links displayed")
+
+    assert "NZBHydra2" in page
+    assert "Remove NZBHydra2" in page
+    assert (
+        'action="/services/nzbhydra2/remove"'
+        in page
+    )
+    assert routes.optional_service_token in page
+    assert "auto-fit" in page
+
+    print("✓ Optional service removal displayed")
+    print("✓ Service grid automatically resizes")
 
     assert "Container updates" in page
     assert "1 update available" in page

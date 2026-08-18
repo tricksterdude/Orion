@@ -14,8 +14,9 @@ config/local.json
 # Private playback data
 data/playback_history.jsonl
 
-# Private container update backups
+# Private service backups
 data/container_update_backups/
+data/service_backups/
 
 # Logs
 logs/

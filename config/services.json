@@ -13,12 +13,6 @@
             "url": "http://localhost:7001"
         },
         {
-            "name": "NZBHydra2",
-            "container": "nzbhydra2",
-            "port": 5076,
-            "url": "http://localhost:5076"
-        },
-        {
             "name": "AIOMetadata",
             "container": "aiometadata",
             "port": 3600,

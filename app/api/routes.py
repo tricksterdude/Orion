@@ -18,6 +18,9 @@ from app.api.container_updater import (
 )
 from app.api.controllers.playback import PlaybackController
 from app.api.models import PlaybackRequest
+from app.api.optional_services import (
+    OptionalServiceManager,
+)
 from app.api.service_status import ServiceStatus
 from app.media.title import friendly_media_title
 from app.playback.history import PlaybackHistory
@@ -36,7 +39,15 @@ container_updater = ContainerUpdater(
     status_checker=container_update_status,
 )
 
+optional_service_manager = (
+    OptionalServiceManager()
+)
+
 container_update_token = (
+    secrets.token_urlsafe(32)
+)
+
+optional_service_token = (
     secrets.token_urlsafe(32)
 )
 
@@ -71,6 +82,25 @@ def home_route():
         if container["update_available"] is True
     )
 
+    configured_containers = {
+        service.get("container")
+        for service in services
+    }
+
+    optional_services = [
+        {
+            "name": definition["name"],
+            "slug": definition["slug"],
+            "container": definition["container"],
+        }
+        for definition
+        in optional_service_manager.optional_services.values()
+        if (
+            definition["container"]
+            in configured_containers
+        )
+    ]
+
     update_result = None
 
     update_status = request.args.get(
@@ -97,6 +127,10 @@ def home_route():
         update_count=update_count,
         container_update_token=(
             container_update_token
+        ),
+        optional_services=optional_services,
+        optional_service_token=(
+            optional_service_token
         ),
         update_result=update_result,
     )
@@ -166,6 +200,79 @@ def container_update_route(container_slug):
         url_for(
             "home.home_route",
             update_status=result["status"],
+            update_message=result["message"],
+        )
+    )
+
+
+@home.post("/services/<service_slug>/remove")
+def optional_service_remove_route(service_slug):
+
+    submitted_token = request.form.get(
+        "token",
+        "",
+    )
+
+    if not hmac.compare_digest(
+        submitted_token,
+        optional_service_token,
+    ):
+
+        abort(403)
+
+    definition = (
+        optional_service_manager
+        .optional_services
+        .get(service_slug)
+    )
+
+    if definition is None:
+
+        abort(404)
+
+    configured = any(
+        getattr(
+            service,
+            "container",
+            None,
+        )
+        == definition["container"]
+        for service in service_status.services
+    )
+
+    if not configured:
+
+        return redirect(
+            url_for(
+                "home.home_route",
+                update_status="current",
+                update_message=(
+                    f"{definition['name']} "
+                    "has already been removed."
+                ),
+            )
+        )
+
+    result = (
+        optional_service_manager.remove(
+            service_slug
+        )
+    )
+
+    if result["ok"]:
+
+        service_status.reload()
+
+    result_status = result["status"]
+
+    if result["ok"]:
+
+        result_status = "updated"
+
+    return redirect(
+        url_for(
+            "home.home_route",
+            update_status=result_status,
             update_message=result["message"],
         )
     )
