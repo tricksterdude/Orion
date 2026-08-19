@@ -32,11 +32,11 @@ Its primary responsibility is to ensure that the display configuration matches t
 
 Before Orion can change the Windows display mode, it writes the
 configured desktop mode to `data/display_recovery.json` using atomic
-file replacement. The desktop refresh rate is configured as 120 Hz in
-`config/settings.json`; stream FPS controls only the temporary cinema
-rate. If the checkpoint cannot be saved, or the configured desktop mode
-is unsupported, Orion continues monitoring playback but does not change
-the display.
+file replacement. Orion reads the desktop refresh rate from the existing
+MediaProfile in `data/media_profile.json` (120 Hz for the LG C3); stream
+FPS controls only the temporary cinema rate. If the checkpoint cannot be
+saved, or the configured desktop mode is unsupported, Orion continues
+monitoring playback but does not change the display.
 
 After a normal playback session, Orion restores the desktop mode and
 removes the checkpoint. If Orion is interrupted, the next startup reads

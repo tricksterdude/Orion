@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 
+from app.media_manager import MediaManager
 from app.recovery_status import display_recovery_status
 from app.runtime import OrionRuntime
 
@@ -8,6 +9,14 @@ print("=" * 60)
 print("RUNTIME DISPLAY RECOVERY TEST")
 print("=" * 60)
 print()
+
+
+assert (
+    MediaManager().get_desktop_refresh_rate()
+    == 120
+)
+
+print("✓ Existing MediaProfile supplies 120 Hz baseline")
 
 
 class FakeRestore:

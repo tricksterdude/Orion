@@ -3,9 +3,9 @@ from queue import Empty, Queue
 from threading import Event, Thread
 
 from app.api.server import OrionAPIServer
-from app.config_manager import ConfigManager
 from app.display.restore import DisplayRestore
 from app.managers.provider_manager import ProviderManager
+from app.media_manager import MediaManager
 from app.media.session import MediaSession
 from app.orion import OrionEngine
 from app.playback.detector import PlaybackDetector
@@ -20,12 +20,12 @@ class OrionRuntime:
     def __init__(self):
 
         self.detector = PlaybackDetector()
-        self.config = ConfigManager()
+        self.media_manager = MediaManager()
 
         self.restore = DisplayRestore(
-            desktop_refresh=self.config.get(
-                "display.desktop_refresh",
-                120,
+            desktop_refresh=(
+                self.media_manager
+                .get_desktop_refresh_rate()
             )
         )
         self.media = MediaSession()
