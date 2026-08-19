@@ -2,6 +2,10 @@
     "application": "Orion",
     "author": "Richard Nelson",
 
+    "display": {
+        "desktop_refresh": 120
+    },
+
     "tmdb": {
         "api_key": "a884cf0fe501cc5b745528b5819b0fdd"
     }

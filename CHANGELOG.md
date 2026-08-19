@@ -14,6 +14,7 @@ The format is based on **Keep a Changelog** and follows **Semantic Versioning** 
 - Automatic display restoration after an interrupted Orion session
 - Homepage recovery and failure status messages
 - Fail-closed display switching when recovery state cannot be saved
+- Configured 120 Hz desktop baseline independent of temporary stream FPS
 
 ---
 

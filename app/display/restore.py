@@ -18,6 +18,7 @@ class DisplayRestore:
         checkpoint_path="data/display_recovery.json",
         adapter=None,
         switcher=None,
+        desktop_refresh=None,
     ):
 
         self.checkpoint_path = Path(
@@ -33,6 +34,25 @@ class DisplayRestore:
             switcher
             or DisplaySwitcher()
         )
+
+        if (
+            desktop_refresh is not None
+            and (
+                isinstance(desktop_refresh, bool)
+                or not isinstance(
+                    desktop_refresh,
+                    int,
+                )
+                or desktop_refresh <= 0
+            )
+        ):
+
+            raise ValueError(
+                "Desktop refresh rate must be a "
+                "positive integer."
+            )
+
+        self.desktop_refresh = desktop_refresh
 
         self.original: DisplayMode | None = None
         self._lock = threading.RLock()
@@ -190,11 +210,32 @@ class DisplayRestore:
 
             try:
 
-                original = self.adapter.current_mode()
+                current = self.adapter.current_mode()
 
-                if original is None:
+                if current is None:
 
                     return False
+
+                if self.desktop_refresh is None:
+
+                    original = current
+
+                else:
+
+                    original = DisplayMode(
+                        width=current.width,
+                        height=current.height,
+                        refresh=(
+                            self.desktop_refresh
+                        ),
+                        bits=current.bits,
+                    )
+
+                    if not self.switcher.can_switch(
+                        original
+                    ):
+
+                        return False
 
                 self._write_checkpoint(original)
 

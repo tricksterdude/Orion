@@ -31,11 +31,14 @@ Its primary responsibility is to ensure that the display configuration matches t
 ## Recovery Safety
 
 Before Orion can change the Windows display mode, it writes the
-original mode to `data/display_recovery.json` using atomic file
-replacement. If this checkpoint cannot be saved, Orion continues
-monitoring playback but does not change the display.
+configured desktop mode to `data/display_recovery.json` using atomic
+file replacement. The desktop refresh rate is configured as 120 Hz in
+`config/settings.json`; stream FPS controls only the temporary cinema
+rate. If the checkpoint cannot be saved, or the configured desktop mode
+is unsupported, Orion continues monitoring playback but does not change
+the display.
 
-After a normal playback session, Orion restores the original mode and
+After a normal playback session, Orion restores the desktop mode and
 removes the checkpoint. If Orion is interrupted, the next startup reads
 the checkpoint and attempts restoration before the API or playback
 providers start. Failed recovery checkpoints are retained for retry and

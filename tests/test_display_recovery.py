@@ -25,10 +25,19 @@ class FakeAdapter:
 
 class FakeSwitcher:
 
-    def __init__(self, succeed=True):
+    def __init__(
+        self,
+        succeed=True,
+        supported=True,
+    ):
 
         self.succeed = succeed
+        self.supported = supported
         self.targets = []
+
+    def can_switch(self, target):
+
+        return self.supported
 
     def switch(self, target):
 
@@ -173,6 +182,46 @@ with TemporaryDirectory() as directory:
     assert checkpoint.exists()
 
     print("✓ Invalid recovery checkpoint fails closed")
+
+    checkpoint.unlink()
+
+    configured_restore = DisplayRestore(
+        checkpoint_path=checkpoint,
+        adapter=FakeAdapter(cinema_mode),
+        switcher=FakeSwitcher(),
+        desktop_refresh=120,
+    )
+
+    assert configured_restore.save() is True
+
+    configured_document = json.loads(
+        checkpoint.read_text(
+            encoding="utf-8"
+        )
+    )
+
+    assert (
+        configured_document["mode"]["refresh"]
+        == 120
+    )
+
+    print("✓ Configured 120 Hz desktop baseline preserved")
+
+    checkpoint.unlink()
+
+    unsupported_restore = DisplayRestore(
+        checkpoint_path=checkpoint,
+        adapter=FakeAdapter(cinema_mode),
+        switcher=FakeSwitcher(
+            supported=False
+        ),
+        desktop_refresh=120,
+    )
+
+    assert unsupported_restore.save() is False
+    assert not checkpoint.exists()
+
+    print("✓ Unsupported desktop baseline fails closed")
 
 print()
 print("✓ Crash-safe display recovery test passed")

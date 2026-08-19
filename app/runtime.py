@@ -3,6 +3,7 @@ from queue import Empty, Queue
 from threading import Event, Thread
 
 from app.api.server import OrionAPIServer
+from app.config_manager import ConfigManager
 from app.display.restore import DisplayRestore
 from app.managers.provider_manager import ProviderManager
 from app.media.session import MediaSession
@@ -19,7 +20,14 @@ class OrionRuntime:
     def __init__(self):
 
         self.detector = PlaybackDetector()
-        self.restore = DisplayRestore()
+        self.config = ConfigManager()
+
+        self.restore = DisplayRestore(
+            desktop_refresh=self.config.get(
+                "display.desktop_refresh",
+                120,
+            )
+        )
         self.media = MediaSession()
         self.engine = OrionEngine()
         self.history = PlaybackHistory()
@@ -224,7 +232,7 @@ class OrionRuntime:
         if restored and checkpoint_was_ready:
 
             print(
-                "✓ Original display mode restored"
+                "✓ Desktop display mode restored"
             )
 
         elif restored:
