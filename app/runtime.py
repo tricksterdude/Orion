@@ -9,6 +9,7 @@ from app.media.session import MediaSession
 from app.orion import OrionEngine
 from app.playback.detector import PlaybackDetector
 from app.playback.history import PlaybackHistory
+from app.recovery_status import display_recovery_status
 
 
 class OrionRuntime:
@@ -22,6 +23,7 @@ class OrionRuntime:
         self.media = MediaSession()
         self.engine = OrionEngine()
         self.history = PlaybackHistory()
+        self.display_checkpoint_ready = False
 
         self.playback_requests = Queue()
         self.provider_stop_event = Event()
@@ -93,25 +95,162 @@ class OrionRuntime:
             "Waiting for playback metadata..."
         )
 
-        self.restore.save()
+        self.display_checkpoint_ready = (
+            self.restore.save()
+        )
+
+        if self.display_checkpoint_ready:
+
+            print(
+                "✓ Display recovery checkpoint saved"
+            )
+
+        else:
+
+            print(
+                "✗ Display recovery checkpoint could "
+                "not be saved"
+            )
+            print(
+                "Automatic display switching is "
+                "disabled for this session."
+            )
+
+            display_recovery_status.set(
+                {
+                    "status": "failed",
+                    "message": (
+                        "Orion could not save a display "
+                        "recovery checkpoint. Automatic "
+                        "display switching is disabled "
+                        "for this playback session."
+                    ),
+                }
+            )
+
         self.history.start()
+
+        return self.display_checkpoint_ready
+
+    def recover_display_if_needed(self):
+
+        result = self.restore.recover_pending()
+
+        display_recovery_status.set(result)
+        self.display_checkpoint_ready = False
+
+        if result["status"] == "restored":
+
+            print(
+                "✓ Interrupted display session "
+                "recovered"
+            )
+            print(result["message"])
+            print()
+
+        elif result["status"] == "failed":
+
+            print(
+                "✗ Display recovery requires "
+                "attention"
+            )
+            print(result["message"])
+            print()
+
+        return result
+
+    def begin_cinema_session(self, request):
+
+        if request.fps is None:
+
+            print(
+                "✗ Playback metadata has "
+                "no FPS value"
+            )
+
+            return False
+
+        if not self.display_checkpoint_ready:
+
+            print(
+                "✗ Display switching skipped because "
+                "no recovery checkpoint is available"
+            )
+
+            return False
+
+        print(
+            "✓ Playback metadata received"
+        )
+        print(
+            f"Source: {request.source}"
+        )
+        print(
+            f"Using reported FPS: "
+            f"{request.fps}"
+        )
+
+        result = self.engine.begin_cinema(
+            request.fps
+        )
+
+        self.history.attach_metadata(
+            request,
+            result,
+        )
+
+        print()
+
+        return result["switched"]
 
     def stop_playback_session(self):
 
         print("✓ Playback stopped")
 
-        restored = self.restore.restore()
+        checkpoint_was_ready = (
+            self.display_checkpoint_ready
+        )
 
-        if restored:
+        if checkpoint_was_ready:
+
+            restored = self.restore.restore()
+
+        else:
+
+            restored = True
+
+        self.display_checkpoint_ready = False
+
+        if restored and checkpoint_was_ready:
 
             print(
                 "✓ Original display mode restored"
+            )
+
+        elif restored:
+
+            print(
+                "✓ Display remained unchanged; "
+                "no restoration was required"
             )
 
         else:
 
             print(
                 "✗ Display restoration failed"
+            )
+
+            display_recovery_status.set(
+                {
+                    "status": "failed",
+                    "message": (
+                        "Orion could not restore the "
+                        "saved display mode after "
+                        "playback. The recovery "
+                        "checkpoint was retained and "
+                        "Orion will retry at startup."
+                    ),
+                }
             )
 
         self.history.finish(restored)
@@ -187,6 +326,8 @@ class OrionRuntime:
         print("=" * 60)
         print()
 
+        self.recover_display_if_needed()
+
         Thread(
             target=self.api.start,
             daemon=True,
@@ -257,42 +398,11 @@ class OrionRuntime:
 
                     if not cinema_active:
 
-                        if request.fps is None:
-
-                            print(
-                                "✗ Playback metadata has "
-                                "no FPS value"
+                        cinema_active = (
+                            self.begin_cinema_session(
+                                request
                             )
-
-                        else:
-
-                            print(
-                                "✓ Playback metadata received"
-                            )
-                            print(
-                                f"Source: {request.source}"
-                            )
-                            print(
-                                f"Using reported FPS: "
-                                f"{request.fps}"
-                            )
-
-                            result = (
-                                self.engine.begin_cinema(
-                                    request.fps
-                                )
-                            )
-
-                            self.history.attach_metadata(
-                                request,
-                                result,
-                            )
-
-                            cinema_active = (
-                                result["switched"]
-                            )
-
-                            print()
+                        )
 
                 time.sleep(1)
 
@@ -305,22 +415,7 @@ class OrionRuntime:
 
             if session_active:
 
-                restored = self.restore.restore()
-
-                if restored:
-
-                    print(
-                        "✓ Original display mode restored"
-                    )
-
-                else:
-
-                    print(
-                        "✗ Display restoration failed"
-                    )
-
-                self.history.finish(restored)
-                self.engine.playback_stopped()
+                self.stop_playback_session()
 
             self.clear_playback_requests()
             self.providers.reset()

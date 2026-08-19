@@ -1,5 +1,6 @@
 from app.api import routes
 from app.api.server import OrionAPIServer
+from app.recovery_status import display_recovery_status
 
 
 print("=" * 60)
@@ -21,6 +22,10 @@ original_update_get_all = (
 
 original_discover = (
     routes.service_discovery.discover
+)
+
+original_recovery_status = (
+    display_recovery_status.get()
 )
 
 try:
@@ -127,6 +132,15 @@ try:
         }
     )
 
+    display_recovery_status.set(
+        {
+            "status": "restored",
+            "message": (
+                "Orion restored 3840x2160 at 120 Hz."
+            ),
+        }
+    )
+
     server = OrionAPIServer()
     client = server.app.test_client()
 
@@ -138,6 +152,11 @@ try:
     assert "Orion is running" in page
 
     print("✓ Orion home page rendered")
+
+    assert "Display recovered" in page
+    assert "restored 3840x2160 at 120 Hz" in page
+
+    print("✓ Startup recovery status displayed")
 
     assert "Playback History" in page
     assert 'href="/history/view"' in page
@@ -307,6 +326,10 @@ finally:
 
     routes.service_discovery.discover = (
         original_discover
+    )
+
+    display_recovery_status.set(
+        original_recovery_status
     )
 
 print()

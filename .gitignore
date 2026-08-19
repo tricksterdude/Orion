@@ -13,6 +13,8 @@ config/local.json
 
 # Private playback data
 data/playback_history.jsonl
+data/display_recovery.json
+data/display_recovery.json.tmp
 
 # Private service backups
 data/container_update_backups/

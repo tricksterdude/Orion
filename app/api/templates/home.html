@@ -149,6 +149,37 @@
             color: var(--red);
         }
 
+        .recovery-banner {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 10px 18px;
+            max-width: 860px;
+            margin-top: 24px;
+            padding: 18px 20px;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            background: rgba(13, 23, 40, 0.92);
+            line-height: 1.5;
+        }
+
+        .recovery-banner strong {
+            color: inherit;
+        }
+
+        .recovery-banner span {
+            color: var(--muted);
+        }
+
+        .recovery-banner-restored {
+            border-color: rgba(81, 239, 188, 0.4);
+            color: var(--green);
+        }
+
+        .recovery-banner-failed {
+            border-color: rgba(255, 112, 133, 0.45);
+            color: var(--red);
+        }
+
         .cards {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -660,6 +691,10 @@
             .card {
                 min-height: 235px;
             }
+
+            .recovery-banner {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -697,6 +732,24 @@
                     "
                 >
                     {{ update_result.message }}
+                </div>
+            {% endif %}
+
+            {% if recovery_status.status == 'restored' %}
+                <div
+                    class="recovery-banner recovery-banner-restored"
+                    role="status"
+                >
+                    <strong>Display recovered</strong>
+                    <span>{{ recovery_status.message }}</span>
+                </div>
+            {% elif recovery_status.status == 'failed' %}
+                <div
+                    class="recovery-banner recovery-banner-failed"
+                    role="alert"
+                >
+                    <strong>Display recovery needs attention</strong>
+                    <span>{{ recovery_status.message }}</span>
                 </div>
             {% endif %}
         </header>
