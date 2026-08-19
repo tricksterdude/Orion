@@ -24,6 +24,8 @@ from app.api.optional_services import (
 from app.api.service_discovery import (
     ContainerServiceDiscovery,
 )
+from app.api.service_controller import ServiceController
+from app.api.service_names import service_slug
 from app.api.service_registry import ServiceRegistry
 from app.api.service_status import ServiceStatus
 from app.media.title import friendly_media_title
@@ -49,6 +51,7 @@ optional_service_manager = (
 
 service_discovery = ContainerServiceDiscovery()
 service_registry = ServiceRegistry()
+service_controller = ServiceController()
 
 container_update_token = (
     secrets.token_urlsafe(32)
@@ -62,6 +65,14 @@ service_registration_token = (
     secrets.token_urlsafe(32)
 )
 
+history_management_token = (
+    secrets.token_urlsafe(32)
+)
+
+service_control_token = (
+    secrets.token_urlsafe(32)
+)
+
 
 def configure_playback_handler(handler):
 
@@ -72,7 +83,7 @@ def configure_playback_handler(handler):
 def home_route():
 
     sessions = history_store.read(
-        limit=100
+        limit=15
     )
 
     services = service_status.get_all()
@@ -314,9 +325,86 @@ def service_view_route(service_slug):
 
         abort(404)
 
+    service_result = None
+
+    result_status = request.args.get(
+        "service_status"
+    )
+
+    result_message = request.args.get(
+        "service_message"
+    )
+
+    if result_status and result_message:
+
+        service_result = {
+            "status": result_status,
+            "message": result_message,
+        }
+
     return render_template(
         "service.html",
         service=service,
+        service_control_token=service_control_token,
+        service_result=service_result,
+    )
+
+
+@home.post("/services/<requested_slug>/control/<action>")
+def service_control_route(requested_slug, action):
+
+    submitted_token = request.form.get(
+        "token",
+        "",
+    )
+
+    if not hmac.compare_digest(
+        submitted_token,
+        service_control_token,
+    ):
+
+        abort(403)
+
+    if action not in service_controller.ALLOWED_ACTIONS:
+
+        abort(404)
+
+    configured_service = next(
+        (
+            service
+            for service in service_status.services
+            if service_slug(
+                getattr(service, "name", "")
+            )
+            == service_slug(requested_slug)
+        ),
+        None,
+    )
+
+    if configured_service is None:
+
+        abort(404)
+
+    result = service_controller.control(
+        action,
+        getattr(
+            configured_service,
+            "container",
+            None,
+        ),
+    )
+
+    return redirect(
+        url_for(
+            "home.service_view_route",
+            service_slug=requested_slug,
+            service_status=(
+                "updated"
+                if result["ok"]
+                else "failed"
+            ),
+            service_message=result["message"],
+        )
     )
 
 
@@ -337,7 +425,7 @@ def history_route():
 
     requested_limit = request.args.get(
         "limit",
-        "20",
+        "15",
     )
 
     try:
@@ -354,7 +442,7 @@ def history_route():
 
     limit = max(
         1,
-        min(limit, 100),
+        min(limit, 15),
     )
 
     sessions = history_store.read(
@@ -371,8 +459,25 @@ def history_route():
 def history_view_route():
 
     sessions = history_store.read(
-        limit=50
+        limit=15
     )
+
+    history_result = None
+
+    result_status = request.args.get(
+        "history_status"
+    )
+
+    result_message = request.args.get(
+        "history_message"
+    )
+
+    if result_status and result_message:
+
+        history_result = {
+            "status": result_status,
+            "message": result_message,
+        }
 
     for session in sessions:
 
@@ -400,6 +505,95 @@ def history_view_route():
     return render_template(
         "playback_history.html",
         sessions=sessions,
+        history_management_token=(
+            history_management_token
+        ),
+        history_result=history_result,
+    )
+
+
+@history.post("/history/<session_id>/delete")
+def history_delete_route(session_id):
+
+    submitted_token = request.form.get(
+        "token",
+        "",
+    )
+
+    if not hmac.compare_digest(
+        submitted_token,
+        history_management_token,
+    ):
+
+        abort(403)
+
+    deleted = history_store.delete(session_id)
+
+    if deleted is True:
+
+        result_status = "updated"
+        message = "The playback history entry was deleted."
+
+    elif deleted is False:
+
+        result_status = "current"
+        message = "That playback history entry no longer exists."
+
+    else:
+
+        result_status = "failed"
+        message = "Orion could not delete that history entry."
+
+    return redirect(
+        url_for(
+            "history.history_view_route",
+            history_status=result_status,
+            history_message=message,
+        )
+    )
+
+
+@history.post("/history/delete-all")
+def history_delete_all_route():
+
+    submitted_token = request.form.get(
+        "token",
+        "",
+    )
+
+    if not hmac.compare_digest(
+        submitted_token,
+        history_management_token,
+    ):
+
+        abort(403)
+
+    deleted_count = history_store.clear()
+
+    if deleted_count is None:
+
+        result_status = "failed"
+        message = "Orion could not clear playback history."
+
+    elif deleted_count == 0:
+
+        result_status = "current"
+        message = "Playback history is already empty."
+
+    else:
+
+        result_status = "updated"
+        message = (
+            f"Deleted {deleted_count} playback "
+            "history entries."
+        )
+
+    return redirect(
+        url_for(
+            "history.history_view_route",
+            history_status=result_status,
+            history_message=message,
+        )
     )
 
 

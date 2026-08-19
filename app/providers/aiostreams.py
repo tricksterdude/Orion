@@ -2,6 +2,8 @@ import json
 import subprocess
 import threading
 
+from app.docker_cli import docker_executable
+
 from app.media.models import MediaState
 from app.providers.base import MediaProvider
 
@@ -20,7 +22,12 @@ class AIOStreamsProvider(MediaProvider):
     def is_available(self):
         try:
             result = subprocess.run(
-                ["docker", "ps", "--format", "{{.Names}}"],
+                [
+                    docker_executable(),
+                    "ps",
+                    "--format",
+                    "{{.Names}}",
+                ],
                 capture_output=True,
                 text=True,
                 timeout=5,
@@ -50,7 +57,7 @@ class AIOStreamsProvider(MediaProvider):
 
         self._process = subprocess.Popen(
             [
-                "docker",
+                docker_executable(),
                 "logs",
                 "--tail",
                 "0",

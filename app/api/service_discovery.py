@@ -1,6 +1,8 @@
 import json
 import subprocess
 
+from app.docker_cli import docker_executable
+
 
 class ContainerServiceDiscovery:
 
@@ -37,16 +39,26 @@ class ContainerServiceDiscovery:
                 0,
             )
 
-        result = subprocess.run(
-            command,
-            cwd=cwd,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            check=False,
-            startupinfo=startupinfo,
-            creationflags=creationflags,
-        )
+        try:
+
+            result = subprocess.run(
+                command,
+                cwd=cwd,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+                check=False,
+                startupinfo=startupinfo,
+                creationflags=creationflags,
+            )
+
+        except FileNotFoundError as error:
+
+            raise RuntimeError(
+                "Docker CLI could not be found. "
+                "Restart Orion after Docker Desktop "
+                "is installed or set ORION_DOCKER_CLI."
+            ) from error
 
         if result.returncode != 0:
 
@@ -64,7 +76,7 @@ class ContainerServiceDiscovery:
 
         output = self.command_runner(
             [
-                "docker",
+                docker_executable(),
                 "container",
                 "ls",
                 "--all",
@@ -85,7 +97,7 @@ class ContainerServiceDiscovery:
 
         output = self.command_runner(
             [
-                "docker",
+                docker_executable(),
                 "inspect",
                 container_name,
             ],

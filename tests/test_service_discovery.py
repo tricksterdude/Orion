@@ -1,4 +1,5 @@
 import json
+from unittest.mock import patch
 
 from app.api.service_discovery import (
     ContainerServiceDiscovery,
@@ -249,6 +250,34 @@ assert "Docker is unavailable" in (
 )
 
 print("✓ Docker failures handled safely")
+
+with patch(
+    "app.api.service_discovery.subprocess.run",
+    side_effect=FileNotFoundError(
+        2,
+        "The system cannot find the file specified",
+    ),
+):
+
+    try:
+
+        ContainerServiceDiscovery._run_command(
+            ["missing-docker", "container", "ls"],
+            timeout=20,
+            cwd=None,
+        )
+
+    except RuntimeError as error:
+
+        assert "Docker CLI could not be found" in str(error)
+
+    else:
+
+        raise AssertionError(
+            "Missing Docker CLI should be reported safely."
+        )
+
+print("✓ Missing Docker CLI error explained clearly")
 
 collision_documents = {
     "my_service": inspect_document(

@@ -5,6 +5,8 @@ import zipfile
 from datetime import datetime
 from pathlib import Path
 
+from app.docker_cli import docker_executable
+
 
 class OptionalServiceManager:
 
@@ -409,7 +411,7 @@ class OptionalServiceManager:
 
             self.command_runner(
                 [
-                    "docker",
+                    docker_executable(),
                     "compose",
                     "--project-directory",
                     str(compose_folder),
@@ -436,7 +438,7 @@ class OptionalServiceManager:
 
         self.command_runner(
             [
-                "docker",
+                docker_executable(),
                 "compose",
                 "--project-directory",
                 compose_folder,
@@ -457,7 +459,7 @@ class OptionalServiceManager:
 
         self.command_runner(
             [
-                "docker",
+                docker_executable(),
                 "compose",
                 "--project-directory",
                 compose_folder,
