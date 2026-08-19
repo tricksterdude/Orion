@@ -30,6 +30,7 @@ from app.api.service_registry import ServiceRegistry
 from app.api.service_status import ServiceStatus
 from app.media.title import friendly_media_title
 from app.playback.history import PlaybackHistory
+from app.recovery_status import display_recovery_status
 
 
 home = Blueprint("home", __name__)
@@ -169,6 +170,9 @@ def home_route():
             service_registration_token
         ),
         update_result=update_result,
+        recovery_status=(
+            display_recovery_status.get()
+        ),
     )
 
 

@@ -6,6 +6,18 @@ The format is based on **Keep a Changelog** and follows **Semantic Versioning** 
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- Atomic display recovery checkpoints before cinema-mode switching
+- Automatic display restoration after an interrupted Orion session
+- Homepage recovery and failure status messages
+- Fail-closed display switching when recovery state cannot be saved
+- Existing MediaProfile desktop baseline kept independent of temporary stream FPS
+
+---
+
 ## [0.8.0] - 2026-08-04
 
 ### Summary

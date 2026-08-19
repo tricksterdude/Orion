@@ -13,16 +13,36 @@ Its primary responsibility is to ensure that the display configuration matches t
 - Display detection
 - Resolution detection
 - Refresh-rate detection
+- Safe refresh-rate switching
+- Automatic display restoration
+- Atomic crash-recovery checkpoints
+- Startup recovery after interrupted cinema sessions
 
 ---
 
 ## Planned Features
 
 - Display mode enumeration
-- Safe refresh-rate switching
-- Automatic display restoration
 - HDR state verification
 - Multi-monitor awareness
+
+---
+
+## Recovery Safety
+
+Before Orion can change the Windows display mode, it writes the
+configured desktop mode to `data/display_recovery.json` using atomic
+file replacement. Orion reads the desktop refresh rate from the existing
+MediaProfile in `data/media_profile.json` (120 Hz for the LG C3); stream
+FPS controls only the temporary cinema rate. If the checkpoint cannot be
+saved, or the configured desktop mode is unsupported, Orion continues
+monitoring playback but does not change the display.
+
+After a normal playback session, Orion restores the desktop mode and
+removes the checkpoint. If Orion is interrupted, the next startup reads
+the checkpoint and attempts restoration before the API or playback
+providers start. Failed recovery checkpoints are retained for retry and
+reported on the homepage.
 
 ---
 
