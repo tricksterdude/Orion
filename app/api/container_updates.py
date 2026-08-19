@@ -4,6 +4,8 @@ import subprocess
 import threading
 import time
 
+from app.docker_cli import docker_executable
+
 
 class ContainerUpdateStatus:
 
@@ -105,7 +107,7 @@ class ContainerUpdateStatus:
 
         output = self.command_runner(
             [
-                "docker",
+                docker_executable(),
                 "image",
                 "inspect",
                 image,
@@ -136,7 +138,7 @@ class ContainerUpdateStatus:
 
         output = self.command_runner(
             [
-                "docker",
+                docker_executable(),
                 "buildx",
                 "imagetools",
                 "inspect",

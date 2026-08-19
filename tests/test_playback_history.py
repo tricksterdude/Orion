@@ -141,3 +141,44 @@ with TemporaryDirectory() as temporary_directory:
     print()
 
     print("✓ Playback history test passed")
+
+    for index in range(20):
+
+        assert history._append(
+            {
+                "session_id": f"session-{index}",
+                "started_at": f"2026-08-19T{index:02d}:00:00+00:00",
+            }
+        )
+
+    retained = history.read(limit=100)
+
+    assert len(retained) == 15
+    assert retained[0]["session_id"] == "session-19"
+    assert retained[-1]["session_id"] == "session-5"
+
+    stored_lines = history_path.read_text(
+        encoding="utf-8"
+    ).splitlines()
+
+    assert len(stored_lines) == 15
+
+    print("✓ Playback history retains no more than 15 entries")
+
+    assert history.delete("session-10") is True
+    assert history.delete("missing-session") is False
+
+    remaining = history.read(limit=100)
+
+    assert len(remaining) == 14
+    assert all(
+        item["session_id"] != "session-10"
+        for item in remaining
+    )
+
+    print("✓ Individual playback history entry deleted")
+
+    assert history.clear() == 14
+    assert history.read() == []
+
+    print("✓ All playback history deleted")

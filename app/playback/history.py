@@ -1,4 +1,6 @@
 import json
+import os
+import threading
 import time
 from dataclasses import asdict
 from datetime import datetime, timezone
@@ -8,6 +10,8 @@ from uuid import uuid4
 
 class PlaybackHistory:
 
+    MAX_ENTRIES = 15
+
     def __init__(
         self,
         path="data/playback_history.jsonl",
@@ -16,6 +20,7 @@ class PlaybackHistory:
         self.path = Path(path)
         self.current = None
         self.started_monotonic = None
+        self._lock = threading.Lock()
 
     @staticmethod
     def timestamp():
@@ -108,7 +113,7 @@ class PlaybackHistory:
 
         return saved
 
-    def read(self, limit=20):
+    def read(self, limit=MAX_ENTRIES):
 
         try:
 
@@ -119,11 +124,16 @@ class PlaybackHistory:
             ValueError,
         ):
 
-            limit = 20
+            limit = self.MAX_ENTRIES
 
         if limit <= 0:
 
             return []
+
+        limit = min(
+            limit,
+            self.MAX_ENTRIES,
+        )
 
         if not self.path.exists():
 
@@ -131,21 +141,29 @@ class PlaybackHistory:
 
         try:
 
-            lines = self.path.read_text(
-                encoding="utf-8"
-            ).splitlines()
+            records = self._read_records()
 
         except OSError:
 
             return []
 
+        return list(
+            reversed(records[-limit:])
+        )
+
+    def _read_records(self):
+
+        if not self.path.exists():
+
+            return []
+
+        lines = self.path.read_text(
+            encoding="utf-8"
+        ).splitlines()
+
         records = []
 
-        for line in reversed(lines):
-
-            if len(records) >= limit:
-
-                break
+        for line in lines:
 
             try:
 
@@ -164,19 +182,23 @@ class PlaybackHistory:
 
         return records
 
-    def _append(self, record):
+    def _write_records(self, records):
 
-        try:
+        self.path.parent.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
 
-            self.path.parent.mkdir(
-                parents=True,
-                exist_ok=True,
-            )
+        temporary_path = self.path.with_name(
+            f"{self.path.name}.tmp"
+        )
 
-            with self.path.open(
-                "a",
-                encoding="utf-8",
-            ) as history_file:
+        with temporary_path.open(
+            "w",
+            encoding="utf-8",
+        ) as history_file:
+
+            for record in records:
 
                 json.dump(
                     record,
@@ -185,6 +207,83 @@ class PlaybackHistory:
                 )
 
                 history_file.write("\n")
+
+        os.replace(
+            temporary_path,
+            self.path,
+        )
+
+    def delete(self, session_id):
+
+        requested_id = str(
+            session_id or ""
+        ).strip()
+
+        if not requested_id:
+
+            return False
+
+        with self._lock:
+
+            try:
+
+                records = self._read_records()
+
+                remaining = [
+                    record
+                    for record in records
+                    if str(
+                        record.get("session_id")
+                        or ""
+                    )
+                    != requested_id
+                ]
+
+                if len(remaining) == len(records):
+
+                    return False
+
+                self._write_records(
+                    remaining[-self.MAX_ENTRIES:]
+                )
+
+                return True
+
+            except OSError:
+
+                return None
+
+    def clear(self):
+
+        with self._lock:
+
+            try:
+
+                records = self._read_records()
+
+                if self.path.exists():
+
+                    self.path.unlink()
+
+                return len(records)
+
+            except OSError:
+
+                return None
+
+    def _append(self, record):
+
+        try:
+
+            with self._lock:
+
+                records = self._read_records()
+
+                records.append(record)
+
+                self._write_records(
+                    records[-self.MAX_ENTRIES:]
+                )
 
             return True
 

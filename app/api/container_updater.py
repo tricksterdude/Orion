@@ -6,6 +6,8 @@ import zipfile
 from datetime import datetime
 from pathlib import Path
 
+from app.docker_cli import docker_executable
+
 
 class ContainerUpdater:
 
@@ -145,7 +147,7 @@ class ContainerUpdater:
 
         output = self.command_runner(
             [
-                "docker",
+                docker_executable(),
                 "inspect",
                 container,
                 "--format={{.Image}}",
@@ -259,7 +261,7 @@ class ContainerUpdater:
 
         self.command_runner(
             [
-                "docker",
+                docker_executable(),
                 "compose",
                 "--project-directory",
                 compose_folder,
@@ -278,7 +280,7 @@ class ContainerUpdater:
 
         self.command_runner(
             [
-                "docker",
+                docker_executable(),
                 "compose",
                 "--project-directory",
                 compose_folder,
@@ -296,7 +298,7 @@ class ContainerUpdater:
 
         output = self.command_runner(
             [
-                "docker",
+                docker_executable(),
                 "inspect",
                 container,
                 "--format={{json .State}}",
@@ -390,7 +392,7 @@ class ContainerUpdater:
 
         self.command_runner(
             [
-                "docker",
+                docker_executable(),
                 "image",
                 "tag",
                 previous_image_id,

@@ -3,6 +3,8 @@ import subprocess
 import threading
 import time
 
+from app.docker_cli import docker_executable
+
 import psutil
 
 from app.api.models import PlaybackRequest
@@ -52,7 +54,7 @@ class UsenetStreamerPlaybackProvider(
 
             result = subprocess.run(
                 [
-                    "docker",
+                    docker_executable(),
                     "ps",
                     "--format",
                     "{{.Names}}",
@@ -223,7 +225,7 @@ class UsenetStreamerPlaybackProvider(
 
             self._process = subprocess.Popen(
                 [
-                    "docker",
+                    docker_executable(),
                     "logs",
                     "--tail",
                     "0",

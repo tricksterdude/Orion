@@ -194,6 +194,38 @@
             line-height: 1.6;
         }
 
+        .service-result {
+            margin: -30px 0 30px;
+            padding: 16px 20px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: rgba(16, 27, 48, 0.9);
+            color: var(--muted);
+            font-weight: 750;
+        }
+
+        .service-result-updated {
+            border-color: rgba(77, 240, 193, 0.5);
+            color: var(--green);
+        }
+
+        .service-result-failed {
+            border-color: rgba(255, 111, 125, 0.5);
+            color: var(--red);
+        }
+
+        .action-buttons {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .service-control-form {
+            margin: 0;
+        }
+
         .open-button {
             flex: 0 0 auto;
             display: inline-flex;
@@ -216,6 +248,34 @@
         .open-button:hover {
             transform: translateY(-2px);
             background: rgba(57, 201, 255, 0.2);
+        }
+
+        .control-button {
+            min-height: 58px;
+            padding: 0 24px;
+            border: 1px solid rgba(77, 240, 193, 0.6);
+            border-radius: 18px;
+            background: rgba(77, 240, 193, 0.1);
+            color: var(--green);
+            cursor: pointer;
+            font: inherit;
+            font-size: 18px;
+            font-weight: 900;
+        }
+
+        .control-button:hover {
+            transform: translateY(-2px);
+            background: rgba(77, 240, 193, 0.18);
+        }
+
+        .stop-button {
+            border-color: rgba(255, 111, 125, 0.6);
+            background: rgba(255, 111, 125, 0.1);
+            color: var(--red);
+        }
+
+        .stop-button:hover {
+            background: rgba(255, 111, 125, 0.18);
         }
 
         @media (max-width: 760px) {
@@ -252,6 +312,12 @@
             }
 
             .open-button {
+                width: 100%;
+            }
+
+            .action-buttons,
+            .service-control-form,
+            .control-button {
                 width: 100%;
             }
         }
@@ -298,6 +364,14 @@
                 </span>
             </div>
         </header>
+
+        {% if service_result %}
+            <div
+                class="service-result service-result-{{ service_result.status }}"
+            >
+                {{ service_result.message }}
+            </div>
+        {% endif %}
 
         <section
             class="details"
@@ -352,17 +426,70 @@
             <div class="actions">
                 <p class="actions-note">
                     Open the service’s local web interface using
-                    its configured Windows host address.
+                    its configured Windows host address, or safely
+                    control its Docker container.
                 </p>
 
-                <a
-                    class="open-button"
-                    href="{{ service.url }}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    Open Web UI ↗
-                </a>
+                <div class="action-buttons">
+                    <a
+                        class="open-button"
+                        href="{{ service.url }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        Open Web UI ↗
+                    </a>
+
+                    {% if service.container %}
+                        <form
+                            class="service-control-form"
+                            method="post"
+                            action="{{ url_for(
+                                'home.service_control_route',
+                                requested_slug=service.slug,
+                                action='restart'
+                            ) }}"
+                            onsubmit="return confirm('Restart this Docker service?');"
+                        >
+                            <input
+                                type="hidden"
+                                name="token"
+                                value="{{ service_control_token }}"
+                            >
+
+                            <button
+                                class="control-button"
+                                type="submit"
+                            >
+                                Restart
+                            </button>
+                        </form>
+
+                        <form
+                            class="service-control-form"
+                            method="post"
+                            action="{{ url_for(
+                                'home.service_control_route',
+                                requested_slug=service.slug,
+                                action='stop'
+                            ) }}"
+                            onsubmit="return confirm('Stop this Docker service?');"
+                        >
+                            <input
+                                type="hidden"
+                                name="token"
+                                value="{{ service_control_token }}"
+                            >
+
+                            <button
+                                class="control-button stop-button"
+                                type="submit"
+                            >
+                                Stop
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
             </div>
         </section>
     </main>

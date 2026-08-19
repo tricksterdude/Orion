@@ -1,13 +1,20 @@
 import subprocess
 import json
 
+from app.docker_cli import docker_executable
+
 
 class DockerManager:
 
     def get_running_containers(self):
 
         result = subprocess.run(
-            ["docker", "ps", "--format", "{{.Names}}"],
+            [
+                docker_executable(),
+                "ps",
+                "--format",
+                "{{.Names}}",
+            ],
             capture_output=True,
             text=True
         )
@@ -20,7 +27,11 @@ class DockerManager:
     def inspect(self, container):
 
         result = subprocess.run(
-            ["docker", "inspect", container],
+            [
+                docker_executable(),
+                "inspect",
+                container,
+            ],
             capture_output=True,
             text=True
         )
@@ -28,18 +39,42 @@ class DockerManager:
         return json.loads(result.stdout)[0]
 
     def restart(self, container):
-        subprocess.run(["docker", "restart", container])
+        subprocess.run(
+            [
+                docker_executable(),
+                "restart",
+                container,
+            ]
+        )
 
     def stop(self, container):
-        subprocess.run(["docker", "stop", container])
+        subprocess.run(
+            [
+                docker_executable(),
+                "stop",
+                container,
+            ]
+        )
 
     def start(self, container):
-        subprocess.run(["docker", "start", container])
+        subprocess.run(
+            [
+                docker_executable(),
+                "start",
+                container,
+            ]
+        )
 
     def logs(self, container, lines=50):
 
         result = subprocess.run(
-            ["docker", "logs", "--tail", str(lines), container],
+            [
+                docker_executable(),
+                "logs",
+                "--tail",
+                str(lines),
+                container,
+            ],
             capture_output=True,
             text=True
         )
@@ -50,7 +85,7 @@ class DockerManager:
 
         result = subprocess.run(
             [
-                "docker",
+                docker_executable(),
                 "stats",
                 "--no-stream",
                 "--format",

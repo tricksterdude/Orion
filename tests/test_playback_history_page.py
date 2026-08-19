@@ -90,6 +90,12 @@ try:
         assert "Display restored" in page
         assert 'href="/"' in page
         assert "Back to Orion" in page
+        assert "Delete all" in page
+        assert (
+            'action="/history/page-test/delete"'
+            in page
+        )
+        assert routes.history_management_token in page
 
         print(
             "✓ Playback history page rendered"
@@ -106,6 +112,50 @@ try:
         print(
             "✓ Home navigation displayed"
         )
+
+        missing_token_response = client.post(
+            "/history/page-test/delete"
+        )
+
+        assert missing_token_response.status_code == 403
+
+        delete_response = client.post(
+            "/history/page-test/delete",
+            data={
+                "token": routes.history_management_token,
+            },
+        )
+
+        assert delete_response.status_code == 302
+        assert test_history.read() == []
+
+        print("✓ Individual history deletion secured")
+
+        assert test_history._append(
+            {
+                **session,
+                "session_id": "clear-one",
+            }
+        )
+
+        assert test_history._append(
+            {
+                **session,
+                "session_id": "clear-two",
+            }
+        )
+
+        clear_response = client.post(
+            "/history/delete-all",
+            data={
+                "token": routes.history_management_token,
+            },
+        )
+
+        assert clear_response.status_code == 302
+        assert test_history.read() == []
+
+        print("✓ Full history deletion secured")
 
 finally:
 
