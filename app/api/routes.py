@@ -21,6 +21,10 @@ from app.api.models import PlaybackRequest
 from app.api.optional_services import (
     OptionalServiceManager,
 )
+from app.api.service_discovery import (
+    ContainerServiceDiscovery,
+)
+from app.api.service_registry import ServiceRegistry
 from app.api.service_status import ServiceStatus
 from app.media.title import friendly_media_title
 from app.playback.history import PlaybackHistory
@@ -43,11 +47,18 @@ optional_service_manager = (
     OptionalServiceManager()
 )
 
+service_discovery = ContainerServiceDiscovery()
+service_registry = ServiceRegistry()
+
 container_update_token = (
     secrets.token_urlsafe(32)
 )
 
 optional_service_token = (
+    secrets.token_urlsafe(32)
+)
+
+service_registration_token = (
     secrets.token_urlsafe(32)
 )
 
@@ -85,7 +96,12 @@ def home_route():
     configured_containers = {
         service.get("container")
         for service in services
+        if service.get("container")
     }
+
+    discovery_result = service_discovery.discover(
+        configured_services=services
+    )
 
     optional_services = [
         {
@@ -131,6 +147,15 @@ def home_route():
         optional_services=optional_services,
         optional_service_token=(
             optional_service_token
+        ),
+        discovered_services=(
+            discovery_result["candidates"]
+        ),
+        discovery_errors=(
+            discovery_result["errors"]
+        ),
+        service_registration_token=(
+            service_registration_token
         ),
         update_result=update_result,
     )
@@ -375,4 +400,65 @@ def history_view_route():
     return render_template(
         "playback_history.html",
         sessions=sessions,
+    )
+
+
+@home.post("/services/discovered/<candidate_id>/add")
+def discovered_service_add_route(candidate_id):
+
+    submitted_token = request.form.get(
+        "token",
+        "",
+    )
+
+    if not hmac.compare_digest(
+        submitted_token,
+        service_registration_token,
+    ):
+
+        abort(403)
+
+    candidate = service_discovery.get_candidate(
+        candidate_id,
+        configured_services=service_status.services,
+    )
+
+    if candidate is None:
+
+        return redirect(
+            url_for(
+                "home.home_route",
+                update_status="current",
+                update_message=(
+                    "That Docker service is no longer "
+                    "available to add."
+                ),
+            )
+        )
+
+    result = service_registry.add(
+        candidate,
+        display_name=request.form.get("name"),
+    )
+
+    if result["status"] == "added":
+
+        service_status.reload()
+
+    result_status = result["status"]
+
+    if result_status == "added":
+
+        result_status = "updated"
+
+    elif result_status == "exists":
+
+        result_status = "current"
+
+    return redirect(
+        url_for(
+            "home.home_route",
+            update_status=result_status,
+            update_message=result["message"],
+        )
     )

@@ -3,6 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from types import SimpleNamespace
 
+from app.api.service_names import service_slug
 from app.health_manager import HealthManager
 
 
@@ -80,11 +81,7 @@ class ServiceStatus:
     @staticmethod
     def _slug(name):
 
-        return "".join(
-            character.lower()
-            for character in name
-            if character.isalnum()
-        )
+        return service_slug(name)
 
     def _check(self, service):
 
