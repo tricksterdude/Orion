@@ -181,6 +181,22 @@ with tempfile.TemporaryDirectory() as directory:
 
     print("✓ Duplicate display name rejected safely")
 
+    route_collision_result = registry.add(
+        {
+            **candidate,
+            "container": "route-collision-service",
+            "port": 9093,
+        },
+        display_name="ExampleService",
+    )
+
+    assert (
+        route_collision_result["status"]
+        == "exists"
+    )
+
+    print("✓ Service-page name collision rejected safely")
+
     invalid_name_result = registry.add(
         candidate,
         display_name="   ",

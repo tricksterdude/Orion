@@ -43,13 +43,20 @@ try:
 
     def missing_candidate(
         candidate_id,
-        configured_containers=None,
+        configured_services=None,
     ):
 
         candidate_calls.append(
             (
                 candidate_id,
-                configured_containers,
+                {
+                    (
+                        service.container,
+                        service.port,
+                    )
+                    for service
+                    in configured_services
+                },
             )
         )
 
@@ -70,7 +77,7 @@ try:
     assert candidate_calls == [
         (
             "missing-8088",
-            {"aiostreams"},
+            {("aiostreams", 3500)},
         )
     ]
     assert "no+longer+available" in (
@@ -88,7 +95,7 @@ try:
     }
 
     routes.service_discovery.get_candidate = (
-        lambda candidate_id, configured_containers=None: (
+        lambda candidate_id, configured_services=None: (
             candidate
         )
     )

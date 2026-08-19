@@ -100,7 +100,7 @@ def home_route():
     }
 
     discovery_result = service_discovery.discover(
-        configured_containers=configured_containers
+        configured_services=services
     )
 
     optional_services = [
@@ -418,15 +418,9 @@ def discovered_service_add_route(candidate_id):
 
         abort(403)
 
-    configured_containers = {
-        getattr(service, "container", None)
-        for service in service_status.services
-        if getattr(service, "container", None)
-    }
-
     candidate = service_discovery.get_candidate(
         candidate_id,
-        configured_containers=configured_containers,
+        configured_services=service_status.services,
     )
 
     if candidate is None:

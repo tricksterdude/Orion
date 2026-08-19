@@ -6,6 +6,8 @@ import zipfile
 from datetime import datetime
 from pathlib import Path
 
+from app.api.service_names import service_slug
+
 
 class ServiceRegistry:
 
@@ -36,15 +38,7 @@ class ServiceRegistry:
     @staticmethod
     def _slug(value):
 
-        text = str(value or "").strip().lower()
-
-        text = re.sub(
-            r"[^a-z0-9]+",
-            "-",
-            text,
-        )
-
-        return text.strip("-")
+        return service_slug(value)
 
     @classmethod
     def _validate_name(cls, value):

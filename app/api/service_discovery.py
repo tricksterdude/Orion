@@ -193,20 +193,71 @@ class ContainerServiceDiscovery:
             "health": health_status,
         }
 
-    def discover(
-        self,
-        configured_containers=None,
+    @staticmethod
+    def _configured_endpoints(
+        configured_services,
     ):
 
-        configured = {
-            str(container).lower()
-            for container
-            in (
-                configured_containers
-                or []
-            )
-            if container
-        }
+        endpoints = set()
+
+        for service in configured_services or []:
+
+            if isinstance(service, dict):
+
+                container = service.get(
+                    "container"
+                )
+
+                port_value = service.get("port")
+
+            else:
+
+                container = getattr(
+                    service,
+                    "container",
+                    None,
+                )
+
+                port_value = getattr(
+                    service,
+                    "port",
+                    None,
+                )
+
+            container = str(
+                container or ""
+            ).strip().lower()
+
+            try:
+
+                port = int(port_value)
+
+            except (
+                TypeError,
+                ValueError,
+            ):
+
+                continue
+
+            if (
+                container
+                and 1 <= port <= 65535
+            ):
+
+                endpoints.add(
+                    (container, port)
+                )
+
+        return endpoints
+
+    def discover(
+        self,
+        configured_services=None,
+    ):
+
+        configured = self._configured_endpoints(
+            configured_services
+        )
 
         candidates = []
         errors = []
@@ -225,13 +276,6 @@ class ContainerServiceDiscovery:
             }
 
         for container_name in container_names:
-
-            if (
-                container_name.lower()
-                in configured
-            ):
-
-                continue
 
             try:
 
@@ -258,6 +302,13 @@ class ContainerServiceDiscovery:
                 )
 
                 for port in ports:
+
+                    if (
+                        container_name.lower(),
+                        port,
+                    ) in configured:
+
+                        continue
 
                     identifier = (
                         f"{container_name}-{port}"
@@ -309,12 +360,12 @@ class ContainerServiceDiscovery:
     def get_candidate(
         self,
         candidate_id,
-        configured_containers=None,
+        configured_services=None,
     ):
 
         result = self.discover(
-            configured_containers=(
-                configured_containers
+            configured_services=(
+                configured_services
             )
         )
 

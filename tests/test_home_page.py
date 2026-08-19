@@ -109,7 +109,7 @@ try:
     )
 
     routes.service_discovery.discover = (
-        lambda configured_containers=None: {
+        lambda configured_services=None: {
             "candidates": [
                 {
                     "id": "example-service-8088",

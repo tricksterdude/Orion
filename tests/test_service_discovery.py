@@ -139,9 +139,12 @@ discovery = ContainerServiceDiscovery(
 )
 
 result = discovery.discover(
-    configured_containers={
-        "existing-service",
-    }
+    configured_services=[
+        {
+            "container": "existing-service",
+            "port": 3500,
+        },
+    ]
 )
 
 candidates = result["candidates"]
@@ -195,9 +198,12 @@ print("✓ Internal container without host port excluded")
 
 selected = discovery.get_candidate(
     "candidate-service-8088",
-    configured_containers={
-        "existing-service",
-    },
+    configured_services=[
+        {
+            "container": "existing-service",
+            "port": 3500,
+        },
+    ],
 )
 
 assert selected is not None
@@ -206,9 +212,12 @@ assert selected["port"] == 8088
 
 missing = discovery.get_candidate(
     "missing-service-1234",
-    configured_containers={
-        "existing-service",
-    },
+    configured_services=[
+        {
+            "container": "existing-service",
+            "port": 3500,
+        },
+    ],
 )
 
 assert missing is None
@@ -291,6 +300,52 @@ assert {
 }
 
 print("✓ Similar Docker names keep unique identifiers")
+
+multi_port_document = inspect_document(
+    "multi-port-service",
+    "example/multi-port:latest",
+    {
+        "8080/tcp": [
+            {
+                "HostPort": "8088",
+            }
+        ],
+        "9090/tcp": [
+            {
+                "HostPort": "9099",
+            }
+        ],
+    },
+)
+
+
+def multi_port_runner(command, timeout, cwd=None):
+
+    if command[1:3] == ["container", "ls"]:
+
+        return "multi-port-service\n"
+
+    return json.dumps(multi_port_document)
+
+
+multi_port_result = ContainerServiceDiscovery(
+    command_runner=multi_port_runner
+).discover(
+    configured_services=[
+        {
+            "container": "multi-port-service",
+            "port": 8088,
+        }
+    ]
+)
+
+assert [
+    candidate["port"]
+    for candidate
+    in multi_port_result["candidates"]
+] == [9099]
+
+print("✓ Unconfigured port on configured container remains available")
 
 print()
 print("✓ Existing service discovery test passed")
