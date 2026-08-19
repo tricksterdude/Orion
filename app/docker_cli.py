@@ -49,6 +49,21 @@ def _candidate_paths():
 
         yield Path(configured.strip('"'))
 
+    local_app_data = os.environ.get(
+        "LOCALAPPDATA"
+    )
+
+    if local_app_data:
+
+        yield (
+            Path(local_app_data)
+            / "Programs"
+            / "DockerDesktop"
+            / "resources"
+            / "bin"
+            / "docker.exe"
+        )
+
     program_files = {
         os.environ.get("ProgramFiles"),
         os.environ.get("ProgramW6432"),

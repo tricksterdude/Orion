@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from app.docker_cli import docker_executable
 
@@ -52,6 +53,63 @@ finally:
 
         os.environ["ORION_DOCKER_CLI"] = (
             original_override
+        )
+
+    docker_executable.cache_clear()
+
+
+original_local_app_data = os.environ.get(
+    "LOCALAPPDATA"
+)
+
+try:
+
+    with TemporaryDirectory() as directory:
+
+        local_docker_path = (
+            Path(directory)
+            / "Programs"
+            / "DockerDesktop"
+            / "resources"
+            / "bin"
+            / "docker.exe"
+        )
+
+        local_docker_path.parent.mkdir(
+            parents=True,
+        )
+
+        local_docker_path.write_bytes(b"")
+
+        os.environ["LOCALAPPDATA"] = directory
+
+        docker_executable.cache_clear()
+
+        with patch(
+            "app.docker_cli.shutil.which",
+            return_value=None,
+        ):
+
+            assert (
+                Path(docker_executable())
+                == local_docker_path.resolve()
+            )
+
+        print("✓ Per-user Docker Desktop path resolved")
+
+finally:
+
+    if original_local_app_data is None:
+
+        os.environ.pop(
+            "LOCALAPPDATA",
+            None,
+        )
+
+    else:
+
+        os.environ["LOCALAPPDATA"] = (
+            original_local_app_data
         )
 
     docker_executable.cache_clear()
