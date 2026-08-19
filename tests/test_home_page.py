@@ -19,6 +19,10 @@ original_update_get_all = (
     routes.container_update_status.get_all
 )
 
+original_discover = (
+    routes.service_discovery.discover
+)
+
 try:
 
     routes.history_store.read = (
@@ -104,6 +108,25 @@ try:
         ]
     )
 
+    routes.service_discovery.discover = (
+        lambda configured_containers=None: {
+            "candidates": [
+                {
+                    "id": "example-service-8088",
+                    "name": "example-service",
+                    "container": "example-service",
+                    "image": "example/service:latest",
+                    "port": 8088,
+                    "url": "http://localhost:8088",
+                    "running": True,
+                    "status": "running",
+                    "health": "healthy",
+                }
+            ],
+            "errors": [],
+        }
+    )
+
     server = OrionAPIServer()
     client = server.app.test_client()
 
@@ -155,6 +178,19 @@ try:
 
     print("✓ Optional service removal displayed")
     print("✓ Service grid automatically resizes")
+
+    assert "Discovered services" in page
+    assert "example/service:latest" in page
+    assert "localhost:8088" in page
+    assert (
+        'action="/services/discovered/'
+        'example-service-8088/add"'
+        in page
+    )
+    assert routes.service_registration_token in page
+    assert "Add service" in page
+
+    print("✓ Existing Docker service discovery displayed")
 
     assert "Container updates" in page
     assert "1 update available" in page
@@ -267,6 +303,10 @@ finally:
 
     routes.container_update_status.get_all = (
         original_update_get_all
+    )
+
+    routes.service_discovery.discover = (
+        original_discover
     )
 
 print()
