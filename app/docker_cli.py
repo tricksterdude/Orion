@@ -49,14 +49,30 @@ def _candidate_paths():
 
         yield Path(configured.strip('"'))
 
-    local_app_data = os.environ.get(
+    local_app_data_roots = []
+
+    configured_local_app_data = os.environ.get(
         "LOCALAPPDATA"
     )
 
-    if local_app_data:
+    if configured_local_app_data:
+
+        local_app_data_roots.append(
+            Path(configured_local_app_data)
+        )
+
+    local_app_data_roots.append(
+        Path.home()
+        / "AppData"
+        / "Local"
+    )
+
+    for local_app_data in dict.fromkeys(
+        local_app_data_roots
+    ):
 
         yield (
-            Path(local_app_data)
+            local_app_data
             / "Programs"
             / "DockerDesktop"
             / "resources"
