@@ -43,6 +43,12 @@
 - API controller architecture
 - Playback request model
 
+### Operations
+
+- Homepage health status with plain-language diagnostics
+- Privacy-safe troubleshooting report
+- Windows pull-request regression checks
+
 ---
 
 # Next (v0.10.0)
