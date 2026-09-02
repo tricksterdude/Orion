@@ -46,6 +46,8 @@ If Stremio is already open without playback detection, close it first and then u
 
 Playback metadata is kept in session history even when Orion deliberately blocks a display change because a recovery checkpoint could not be created.
 
+Orion resolves FFprobe from the active command path, an explicit `ORION_FFPROBE` override, the current user's WinGet links, standard FFmpeg installations, or Chocolatey. This keeps technical analysis available when Orion runs in the background with a different `PATH` from an interactive terminal.
+
 ---
 
 ### Cinema Engine

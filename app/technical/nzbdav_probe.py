@@ -5,6 +5,8 @@ from fractions import Fraction
 from pathlib import Path
 from urllib.parse import unquote
 
+from app.ffprobe_cli import ffprobe_executable
+
 
 class NZBDAVProbe:
 
@@ -77,7 +79,7 @@ class NZBDAVProbe:
 
         result = subprocess.run(
             [
-                "ffprobe",
+                ffprobe_executable(),
                 "-v",
                 "error",
                 "-headers",
