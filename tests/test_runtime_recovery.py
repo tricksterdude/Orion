@@ -76,7 +76,11 @@ class FakeHistory:
 
         self.started += 1
 
-    def attach_metadata(self, request, result):
+    def attach_metadata(
+        self,
+        request,
+        result=None,
+    ):
 
         self.attachments.append(
             (request, result)
@@ -129,9 +133,14 @@ try:
         request
     ) is False
     assert runtime.engine.cinema_calls == []
-    assert runtime.history.attachments == []
+    assert runtime.history.attachments == [
+        (request, None)
+    ]
 
-    print("✓ Display switch blocked without checkpoint")
+    print(
+        "✓ Metadata retained when display switch "
+        "is blocked"
+    )
 
     runtime.restore = FakeRestore(
         save_result=True
@@ -144,7 +153,9 @@ try:
     assert runtime.engine.cinema_calls == [
         23.976
     ]
-    assert len(runtime.history.attachments) == 1
+    assert runtime.history.attachments[-1:] == [
+        (request, {"switched": True}),
+    ]
 
     print("✓ Display switch allowed after safe checkpoint")
 

@@ -18,14 +18,36 @@ class TestServiceStatus:
             container="nzbdav",
             port=8500,
             url="http://localhost:8500",
-        )
+        ),
+        SimpleNamespace(
+            name="AIOStreams",
+            container="aiostreams",
+            port=3500,
+            url="http://localhost:3500",
+        ),
     ]
 
     def get(self, requested_slug):
 
-        if requested_slug != "nzbdav":
+        if requested_slug not in {
+            "nzbdav",
+            "aiostreams",
+        }:
 
             return None
+
+        if requested_slug == "aiostreams":
+
+            return {
+                "name": "AIOStreams",
+                "slug": "aiostreams",
+                "container": "aiostreams",
+                "port": 3500,
+                "url": "http://localhost:3500",
+                "healthy": True,
+                "status_code": 200,
+                "response_time": 15.0,
+            }
 
         return {
             "name": "NZBDAV",
@@ -47,10 +69,45 @@ original_control = (
     routes.service_controller.control
 )
 
+original_stremio_controller = (
+    routes.stremio_controller
+)
+
+
+class TestStremioController:
+
+    def __init__(self):
+
+        self.launches = 0
+
+    def status(self):
+
+        return {
+            "state": "stopped",
+            "ready": False,
+            "can_launch": True,
+            "message": (
+                "Launch Stremio with Orion to enable "
+                "AIOStreams playback detection."
+            ),
+        }
+
+    def launch(self):
+
+        self.launches += 1
+
+        return {
+            "ok": True,
+            "message": "Stremio launched safely.",
+        }
+
 try:
 
     routes.service_status = (
         TestServiceStatus()
+    )
+    routes.stremio_controller = (
+        TestStremioController()
     )
 
     server = OrionAPIServer()
@@ -87,6 +144,43 @@ try:
         in page
     )
     assert routes.service_control_token in page
+
+    aiostreams_response = client.get(
+        "/services/aiostreams"
+    )
+
+    assert aiostreams_response.status_code == 200
+
+    aiostreams_page = (
+        aiostreams_response.get_data(
+            as_text=True
+        )
+    )
+
+    assert "Playback detection" in aiostreams_page
+    assert "Launch Stremio" in aiostreams_page
+    assert (
+        'action="/services/aiostreams/stremio/launch"'
+        in aiostreams_page
+    )
+
+    missing_launch_token = client.post(
+        "/services/aiostreams/stremio/launch"
+    )
+
+    assert missing_launch_token.status_code == 403
+
+    launch_response = client.post(
+        "/services/aiostreams/stremio/launch",
+        data={
+            "token": routes.service_control_token,
+        },
+    )
+
+    assert launch_response.status_code == 302
+    assert routes.stremio_controller.launches == 1
+
+    print("✓ AIOStreams launch control secured")
 
     control_calls = []
 
@@ -163,6 +257,10 @@ finally:
 
     routes.service_controller.control = (
         original_control
+    )
+
+    routes.stremio_controller = (
+        original_stremio_controller
     )
 
 print()

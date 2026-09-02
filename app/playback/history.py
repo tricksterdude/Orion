@@ -60,7 +60,7 @@ class PlaybackHistory:
     def attach_metadata(
         self,
         request,
-        cinema_result,
+        cinema_result=None,
     ):
 
         if self.current is None:
@@ -70,6 +70,11 @@ class PlaybackHistory:
         self.current["playback"] = asdict(
             request
         )
+
+        if cinema_result is None:
+
+            self.current["cinema"] = None
+            return
 
         self.current["cinema"] = {
             "current_mode": self.display_mode(

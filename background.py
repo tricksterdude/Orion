@@ -1,4 +1,3 @@
-import ctypes
 import logging
 import os
 import sys
@@ -6,15 +5,15 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 from app.runtime import OrionRuntime
+from app.single_instance import (
+    acquire_single_instance,
+    release_single_instance,
+)
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 LOG_DIRECTORY = PROJECT_ROOT / "logs"
 LOG_FILE = LOG_DIRECTORY / "orion.log"
-
-MUTEX_NAME = "Local\\OrionHomeCinema"
-ERROR_ALREADY_EXISTS = 183
-
 
 class LogStream:
 
@@ -123,30 +122,6 @@ def configure_logging():
     return logger
 
 
-def acquire_single_instance():
-
-    kernel32 = ctypes.windll.kernel32
-
-    handle = kernel32.CreateMutexW(
-        None,
-        False,
-        MUTEX_NAME,
-    )
-
-    if not handle:
-
-        raise ctypes.WinError()
-
-    if kernel32.GetLastError() == (
-        ERROR_ALREADY_EXISTS
-    ):
-
-        kernel32.CloseHandle(handle)
-        return None
-
-    return handle
-
-
 def main():
 
     os.chdir(PROJECT_ROOT)
@@ -185,9 +160,7 @@ def main():
             "Orion background runtime stopped."
         )
 
-        ctypes.windll.kernel32.CloseHandle(
-            mutex
-        )
+        release_single_instance(mutex)
 
 
 if __name__ == "__main__":

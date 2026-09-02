@@ -31,6 +31,7 @@ from app.api.service_status import ServiceStatus
 from app.media.title import friendly_media_title
 from app.playback.history import PlaybackHistory
 from app.recovery_status import display_recovery_status
+from app.stremio_controller import StremioController
 
 
 home = Blueprint("home", __name__)
@@ -53,6 +54,7 @@ optional_service_manager = (
 service_discovery = ContainerServiceDiscovery()
 service_registry = ServiceRegistry()
 service_controller = ServiceController()
+stremio_controller = StremioController()
 
 container_update_token = (
     secrets.token_urlsafe(32)
@@ -346,11 +348,55 @@ def service_view_route(service_slug):
             "message": result_message,
         }
 
+    stremio_status = None
+
+    if service["slug"] == "aiostreams":
+
+        stremio_status = (
+            stremio_controller.status()
+        )
+
     return render_template(
         "service.html",
         service=service,
         service_control_token=service_control_token,
         service_result=service_result,
+        stremio_status=stremio_status,
+    )
+
+
+@home.post("/services/aiostreams/stremio/launch")
+def stremio_launch_route():
+
+    submitted_token = request.form.get(
+        "token",
+        "",
+    )
+
+    if not hmac.compare_digest(
+        submitted_token,
+        service_control_token,
+    ):
+
+        abort(403)
+
+    if service_status.get("aiostreams") is None:
+
+        abort(404)
+
+    result = stremio_controller.launch()
+
+    return redirect(
+        url_for(
+            "home.service_view_route",
+            service_slug="aiostreams",
+            service_status=(
+                "updated"
+                if result["ok"]
+                else "failed"
+            ),
+            service_message=result["message"],
+        )
     )
 
 
