@@ -142,6 +142,28 @@ with TemporaryDirectory() as temporary_directory:
 
     print("✓ Playback history test passed")
 
+    history.start()
+
+    history.attach_metadata(request)
+
+    saved_without_cinema = history.finish(
+        restored=True
+    )
+
+    assert saved_without_cinema is True
+
+    metadata_only_record = history.read()[0]
+
+    assert (
+        metadata_only_record["playback"]["title"]
+        == "The Matrix"
+    )
+    assert metadata_only_record["cinema"] is None
+
+    print(
+        "✓ Metadata retained without a display change"
+    )
+
     for index in range(20):
 
         assert history._append(

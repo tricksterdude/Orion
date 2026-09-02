@@ -171,6 +171,10 @@ class OrionRuntime:
 
         if request.fps is None:
 
+            self.history.attach_metadata(
+                request,
+            )
+
             print(
                 "✗ Playback metadata has "
                 "no FPS value"
@@ -179,6 +183,10 @@ class OrionRuntime:
             return False
 
         if not self.display_checkpoint_ready:
+
+            self.history.attach_metadata(
+                request,
+            )
 
             print(
                 "✗ Display switching skipped because "

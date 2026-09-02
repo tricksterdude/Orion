@@ -8,6 +8,8 @@ from urllib.parse import unquote, urlparse
 import requests
 import websocket
 
+from app.ffprobe_cli import ffprobe_executable
+
 
 class StremioProbe:
 
@@ -129,7 +131,7 @@ class StremioProbe:
 
         result = subprocess.run(
             [
-                "ffprobe",
+                ffprobe_executable(),
                 "-v",
                 "error",
                 "-select_streams",

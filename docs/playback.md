@@ -38,6 +38,16 @@ Detects when playback starts and stops.
 
 Initially developed for Stremio but intended to support additional media players in the future.
 
+### AIOStreams and Stremio
+
+Orion reads the selected AIOStreams playback from Stremio's local metadata endpoint. Open the AIOStreams service page in Orion and use **Launch Stremio** so that endpoint is enabled with the WebView2 debugging and local-origin compatibility flags required by current Stremio releases. Orion does not silently start or close Stremio.
+
+If Stremio is already open without playback detection, close it first and then use the launch action on the AIOStreams service page. UsenetStreamer detection remains independent and continues to use its Docker stream events.
+
+Playback metadata is kept in session history even when Orion deliberately blocks a display change because a recovery checkpoint could not be created.
+
+Orion resolves FFprobe from the active command path, an explicit `ORION_FFPROBE` override, the current user's WinGet links, standard FFmpeg installations, or Chocolatey. This keeps technical analysis available when Orion runs in the background with a different `PATH` from an interactive terminal.
+
 ---
 
 ### Cinema Engine
