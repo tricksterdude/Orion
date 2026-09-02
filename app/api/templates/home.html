@@ -108,6 +108,12 @@
             color: var(--muted);
         }
 
+        .pill-warning {
+            border: 1px solid rgba(255, 209, 102, 0.32);
+            background: rgba(255, 209, 102, 0.09);
+            color: var(--yellow);
+        }
+
         .dot {
             width: 10px;
             height: 10px;
@@ -118,6 +124,20 @@
 
         .orion-status {
             margin-top: 32px;
+            text-decoration: none;
+            transition:
+                border-color 160ms ease,
+                transform 160ms ease;
+        }
+
+        .orion-status:hover {
+            border-color: currentColor;
+            transform: translateY(-2px);
+        }
+
+        .orion-status:focus-visible {
+            outline: 3px solid var(--cyan);
+            outline-offset: 4px;
         }
 
         .update-result {
@@ -209,6 +229,17 @@
             justify-content: space-between;
             height: 100%;
             padding: 34px;
+        }
+
+        .card-diagnostics {
+            grid-column: 1 / -1;
+            min-height: 230px;
+        }
+
+        .diagnostics-card-state {
+            display: flex;
+            align-items: center;
+            gap: 18px;
         }
 
         .card-link {
@@ -636,6 +667,15 @@
                 margin-top: 44px;
             }
 
+            .card-diagnostics {
+                grid-column: auto;
+            }
+
+            .diagnostics-card-state {
+                align-items: flex-end;
+                flex-direction: column;
+            }
+
             .services-header,
             .discovery-header,
             .updates-header {
@@ -713,10 +753,22 @@
                 switching and cinema-session history.
             </p>
 
-            <div class="pill pill-healthy orion-status">
+            <a
+                class="
+                    pill orion-status
+                    {% if diagnostics.status == 'healthy' %}
+                        pill-healthy
+                    {% elif diagnostics.status == 'warning' %}
+                        pill-warning
+                    {% else %}
+                        pill-offline
+                    {% endif %}
+                "
+                href="{{ url_for('home.diagnostics_route') }}"
+            >
                 <span class="dot"></span>
-                Orion is running
-            </div>
+                Orion is running · {{ diagnostics.label }}
+            </a>
 
             {% if update_result %}
                 <div
@@ -828,6 +880,60 @@
                     </div>
                 </div>
             </section>
+
+            <a
+                class="card card-link card-diagnostics"
+                href="{{ url_for('home.diagnostics_route') }}"
+            >
+                <div class="card-inner">
+                    <div>
+                        <span class="label">
+                            System assurance
+                        </span>
+
+                        <h2>Health &amp; Diagnostics</h2>
+
+                        <p>
+                            Check Docker, FFprobe, Stremio playback
+                            detection, display control, configuration
+                            and Orion's running process.
+                        </p>
+                    </div>
+
+                    <div class="card-footer">
+                        <div>
+                            <div class="large-number">
+                                {{ diagnostics.counts.healthy }}/{{ diagnostics.checks|length }}
+                            </div>
+
+                            <span class="label">
+                                Checks healthy
+                            </span>
+                        </div>
+
+                        <div class="diagnostics-card-state">
+                            <span
+                                class="
+                                    pill
+                                    {% if diagnostics.status == 'healthy' %}
+                                        pill-healthy
+                                    {% elif diagnostics.status == 'warning' %}
+                                        pill-warning
+                                    {% else %}
+                                        pill-offline
+                                    {% endif %}
+                                "
+                            >
+                                <span class="dot"></span>
+                                {{ diagnostics.label }}
+                            </span>
+                            <span class="open-label">
+                                Open diagnostics →
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </a>
         </section>
 
         <section class="services-panel">

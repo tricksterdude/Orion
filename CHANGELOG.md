@@ -16,6 +16,10 @@ The format is based on **Keep a Changelog** and follows **Semantic Versioning** 
 - Fail-closed display switching when recovery state cannot be saved
 - Existing MediaProfile desktop baseline kept independent of temporary stream FPS
 - User-controlled Stremio launch with AIOStreams playback detection enabled
+- Homepage health indicator and read-only system diagnostics page
+- Safe diagnostic reports that exclude private configuration and playback data
+- Windows pull-request regression checks for critical Orion workflows
+- Simulated playback lifecycle coverage from 120 Hz through cinema mode and restoration
 
 ### Fixed
 

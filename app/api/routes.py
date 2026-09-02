@@ -3,6 +3,7 @@ import secrets
 
 from flask import (
     Blueprint,
+    Response,
     abort,
     redirect,
     render_template,
@@ -32,6 +33,7 @@ from app.media.title import friendly_media_title
 from app.playback.history import PlaybackHistory
 from app.recovery_status import display_recovery_status
 from app.stremio_controller import StremioController
+from app.system_diagnostics import SystemDiagnostics
 
 
 home = Blueprint("home", __name__)
@@ -55,6 +57,10 @@ service_discovery = ContainerServiceDiscovery()
 service_registry = ServiceRegistry()
 service_controller = ServiceController()
 stremio_controller = StremioController()
+system_diagnostics = SystemDiagnostics(
+    service_status=service_status,
+    stremio_controller=stremio_controller,
+)
 
 container_update_token = (
     secrets.token_urlsafe(32)
@@ -90,6 +96,10 @@ def home_route():
     )
 
     services = service_status.get_all()
+
+    diagnostics_snapshot = system_diagnostics.run(
+        services=services
+    )
 
     healthy_count = sum(
         1
@@ -175,7 +185,50 @@ def home_route():
         recovery_status=(
             display_recovery_status.get()
         ),
+        diagnostics=diagnostics_snapshot,
     )
+
+
+@home.get("/diagnostics")
+def diagnostics_route():
+
+    services = service_status.get_all()
+
+    snapshot = system_diagnostics.run(
+        services=services,
+        force=(
+            request.args.get("refresh") == "1"
+        ),
+    )
+
+    return render_template(
+        "diagnostics.html",
+        diagnostics=snapshot,
+        safe_report=system_diagnostics.report(
+            snapshot
+        ),
+    )
+
+
+@home.get("/diagnostics/report")
+def diagnostics_report_route():
+
+    snapshot = system_diagnostics.run(
+        services=service_status.get_all()
+    )
+
+    response = Response(
+        system_diagnostics.report(snapshot),
+        mimetype="text/plain",
+    )
+
+    response.headers["Content-Disposition"] = (
+        "attachment; filename=orion-diagnostics.txt"
+    )
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+
+    return response
 
 
 @home.post("/containers/<container_slug>/update")

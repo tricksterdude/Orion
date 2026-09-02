@@ -24,11 +24,38 @@ original_discover = (
     routes.service_discovery.discover
 )
 
+original_system_diagnostics = (
+    routes.system_diagnostics
+)
+
 original_recovery_status = (
     display_recovery_status.get()
 )
 
 try:
+
+    class HomeDiagnostics:
+
+        def run(self, services=None, force=False):
+
+            return {
+                "status": "healthy",
+                "label": "Healthy",
+                "generated_at": (
+                    "2026-09-02T12:00:00+00:00"
+                ),
+                "counts": {
+                    "healthy": 7,
+                    "warning": 0,
+                    "action_required": 0,
+                },
+                "checks": [
+                    {"id": str(index)}
+                    for index in range(7)
+                ],
+            }
+
+    routes.system_diagnostics = HomeDiagnostics()
 
     routes.history_store.read = (
         lambda limit=100: [
@@ -150,6 +177,14 @@ try:
     assert response.status_code == 200
     assert "<title>Orion</title>" in page
     assert "Orion is running" in page
+    assert "Health &amp; Diagnostics" in page
+    assert "System assurance" in page
+    assert "7/7" in page
+    assert "Checks healthy" in page
+    assert "Open diagnostics →" in page
+    assert 'href="/diagnostics"' in page
+
+    print("✓ Overall system health links to diagnostics")
 
     print("✓ Orion home page rendered")
 
@@ -326,6 +361,10 @@ finally:
 
     routes.service_discovery.discover = (
         original_discover
+    )
+
+    routes.system_diagnostics = (
+        original_system_diagnostics
     )
 
     display_recovery_status.set(
