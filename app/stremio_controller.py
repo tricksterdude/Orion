@@ -9,8 +9,9 @@ from app.technical.stremio_probe import StremioProbe
 
 class StremioController:
 
-    DEBUG_ARGUMENT = (
-        "--remote-debugging-port=9222"
+    DEBUG_ARGUMENTS = (
+        "--remote-debugging-port=9222",
+        "--remote-allow-origins=*",
     )
 
     def __init__(
@@ -176,11 +177,11 @@ class StremioController:
 
         arguments = existing_arguments.split()
 
-        if self.DEBUG_ARGUMENT not in arguments:
+        for argument in self.DEBUG_ARGUMENTS:
 
-            arguments.append(
-                self.DEBUG_ARGUMENT
-            )
+            if argument not in arguments:
+
+                arguments.append(argument)
 
         environment[
             "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS"

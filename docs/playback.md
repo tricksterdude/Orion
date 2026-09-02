@@ -40,7 +40,7 @@ Initially developed for Stremio but intended to support additional media players
 
 ### AIOStreams and Stremio
 
-Orion reads the selected AIOStreams playback from Stremio's local metadata endpoint. Open the AIOStreams service page in Orion and use **Launch Stremio** so that endpoint is enabled. Orion does not silently start or close Stremio.
+Orion reads the selected AIOStreams playback from Stremio's local metadata endpoint. Open the AIOStreams service page in Orion and use **Launch Stremio** so that endpoint is enabled with the WebView2 debugging and local-origin compatibility flags required by current Stremio releases. Orion does not silently start or close Stremio.
 
 If Stremio is already open without playback detection, close it first and then use the launch action on the AIOStreams service page. UsenetStreamer detection remains independent and continues to use its Docker stream events.
 

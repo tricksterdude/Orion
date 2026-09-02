@@ -59,8 +59,17 @@ with TemporaryDirectory() as temporary_directory:
             "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS"
         ]
     )
+    assert (
+        "--remote-allow-origins=*"
+        in launches[0][1]["env"][
+            "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS"
+        ]
+    )
 
-    print("✓ Stremio launched with metadata endpoint")
+    print(
+        "✓ Updated Stremio launched with compatible "
+        "metadata endpoint"
+    )
 
     running_process = SimpleNamespace(
         info={"name": "stremio-shell-ng.exe"}

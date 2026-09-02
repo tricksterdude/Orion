@@ -22,6 +22,7 @@ The format is based on **Keep a Changelog** and follows **Semantic Versioning** 
 - Playback metadata is retained when display switching is safely blocked
 - Console and background launchers now enforce the same single Orion instance
 - AIOStreams service page reports whether Stremio playback detection is ready
+- Updated Stremio WebView2 security requirements are included when launching playback detection
 
 ---
 
