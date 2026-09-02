@@ -10,12 +10,14 @@ updates as separate operations.
 ## Linking a configuration
 
 Open the AIOStreams service page in Orion and use **Link securely** once.
-Enter the UUID and password for the saved AIOStreams configuration. Orion
-uses the password only for that request and never writes it to disk.
+Enter the UUID and password for the saved AIOStreams configuration.
 
-AIOStreams returns a revocable remembered-session token. Orion protects the
-token with Windows Data Protection API (DPAPI), which binds it to the current
-Windows account, and saves only the protected value.
+Newer AIOStreams versions return a revocable remembered-session token. Orion
+protects that token with Windows Data Protection API (DPAPI), which binds it
+to the current Windows account. AIOStreams 2.33.x does not provide remembered
+configuration sessions, so Orion instead protects the configuration password
+with DPAPI. The password is never written as readable text and cannot be
+decrypted by another Windows account.
 
 The link can be removed at any time from the same service page.
 
@@ -40,4 +42,5 @@ Orion does not silently overwrite personalised settings.
 - Orion connects only to an AIOStreams instance on the local computer.
 - Every link, unlink and update action requires Orion's per-process security
   token.
-- The configuration password is never stored, logged or placed in a URL.
+- The configuration password is never stored as readable text, logged or
+  placed in a URL.

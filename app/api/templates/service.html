@@ -816,9 +816,9 @@
                     </form>
 
                     <p class="template-link-note">
-                        This is a one-time link. Orion never saves your
-                        configuration password; it keeps only an encrypted,
-                        revocable AIOStreams session on this Windows account.
+                        This is a one-time link. Orion protects the link with
+                        Windows account encryption and never stores your
+                        configuration password as readable text.
                     </p>
                 {% else %}
                     <div class="template-actions">
@@ -875,9 +875,10 @@
                     </div>
 
                     <p class="template-link-note">
-                        Update opens AIOStreams already signed in with the
-                        latest Tamtaro template selected. Review its new
-                        options, then save to apply it.
+                        Update opens AIOStreams with your configuration and
+                        the latest Tamtaro template selected. Review its new
+                        options, then save to apply it. Older AIOStreams
+                        versions may briefly show their saved-profile panel.
                     </p>
                 {% endif %}
             </section>

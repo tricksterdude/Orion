@@ -21,7 +21,7 @@ The format is based on **Keep a Changelog** and follows **Semantic Versioning** 
 - Windows pull-request regression checks for critical Orion workflows
 - Simulated playback lifecycle coverage from 120 Hz through cinema mode and restoration
 - Tamtaro AIOStreams template version detection on the AIOStreams service page
-- One-time secure AIOStreams configuration linking using a Windows-protected session
+- One-time secure AIOStreams configuration linking using Windows-protected credentials
 - Authenticated template update launch with the latest Tamtaro template preselected
 
 ### Fixed

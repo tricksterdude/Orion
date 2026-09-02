@@ -567,6 +567,10 @@ def aiostreams_template_update_route():
         )
 
     response = redirect(launch["target"])
+
+    if launch["auth_mode"] != "session":
+        return response
+
     max_age = max(
         int(
             launch["expires_at"] / 1000

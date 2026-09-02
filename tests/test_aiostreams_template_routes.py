@@ -57,6 +57,7 @@ class TestTemplateUpdates:
         self.links = []
         self.unlinks = 0
         self.launches = []
+        self.legacy = False
 
     def status(self, base_url, force=False):
 
@@ -93,14 +94,29 @@ class TestTemplateUpdates:
             (base_url, browser_host)
         )
 
-        return {
+        result = {
             "target": (
                 "http://localhost:3500/stremio/configure"
                 "?templateId=tamtaro.complete"
             ),
-            "session_token": "secret-session-token",
-            "expires_at": 4102444800000,
+            "auth_mode": (
+                "password"
+                if self.legacy
+                else "session"
+            ),
         }
+
+        if not self.legacy:
+            result.update(
+                {
+                    "session_token": (
+                        "secret-session-token"
+                    ),
+                    "expires_at": 4102444800000,
+                }
+            )
+
+        return result
 
 
 original_service_status = routes.service_status
@@ -188,6 +204,19 @@ try:
         in cookie
         and "Path=/" in cookie
         for cookie in cookies
+    )
+
+    templates.legacy = True
+    legacy_response = client.post(
+        "/services/aiostreams/template/update",
+        data={
+            "token": routes.template_update_token,
+        },
+    )
+
+    assert legacy_response.status_code == 302
+    assert not legacy_response.headers.getlist(
+        "Set-Cookie"
     )
 
     unlink_response = client.post(

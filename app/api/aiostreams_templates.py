@@ -6,7 +6,7 @@ import re
 import time
 from ctypes import wintypes
 from pathlib import Path
-from urllib.parse import urlencode, urlsplit, urlunsplit
+from urllib.parse import quote, urlencode, urlsplit, urlunsplit
 
 import requests
 
@@ -340,17 +340,32 @@ class AIOStreamsTemplateUpdates:
 
     def _save_state(self, state):
 
+        auth_mode = state.get(
+            "auth_mode",
+            "session",
+        )
+        secret = (
+            state["session_token"]
+            if auth_mode == "session"
+            else state["password"]
+        )
         protected = self.protector.protect(
-            state["session_token"].encode("utf-8")
+            secret.encode("utf-8")
         )
 
         payload = {
-            "version": 1,
+            "version": 2,
             "uuid": state["uuid"],
-            "session_token": base64.b64encode(
+            "auth_mode": auth_mode,
+            "protected_secret": base64.b64encode(
                 protected
             ).decode("ascii"),
-            "expires_at": int(state["expires_at"]),
+            "expires_at": int(
+                state.get("expires_at", 0)
+            ),
+            "encrypted_password": state.get(
+                "encrypted_password"
+            ),
             "applied_version": state.get(
                 "applied_version"
             ),
@@ -387,9 +402,15 @@ class AIOStreamsTemplateUpdates:
                 )
             )
 
-            token = self.protector.unprotect(
+            version = int(payload.get("version", 1))
+            encoded_secret = (
+                payload["session_token"]
+                if version == 1
+                else payload["protected_secret"]
+            )
+            secret = self.protector.unprotect(
                 base64.b64decode(
-                    payload["session_token"],
+                    encoded_secret,
                     validate=True,
                 )
             ).decode("utf-8")
@@ -399,16 +420,39 @@ class AIOStreamsTemplateUpdates:
             if not self.UUID_PATTERN.fullmatch(uuid):
                 raise ValueError("invalid UUID")
 
-            return {
+            auth_mode = (
+                "session"
+                if version == 1
+                else payload.get("auth_mode")
+            )
+
+            if auth_mode not in {
+                "session",
+                "password",
+            }:
+                raise ValueError("invalid authentication mode")
+
+            state = {
                 "uuid": uuid,
-                "session_token": token,
                 "expires_at": int(
-                    payload["expires_at"]
+                    payload.get("expires_at", 0)
+                ),
+                "auth_mode": auth_mode,
+                "encrypted_password": payload.get(
+                    "encrypted_password"
                 ),
                 "applied_version": (
                     payload.get("applied_version")
                 ),
             }
+
+            state[
+                "session_token"
+                if auth_mode == "session"
+                else "password"
+            ] = secret
+
+            return state
         except Exception as error:
             raise TemplateUpdateError(
                 "The saved AIOStreams link could not be read."
@@ -423,7 +467,11 @@ class AIOStreamsTemplateUpdates:
         except TemplateUpdateError:
             pass
 
-        if state and base_url:
+        if (
+            state
+            and base_url
+            and state["auth_mode"] == "session"
+        ):
             session = self.session_factory()
 
             try:
@@ -469,7 +517,7 @@ class AIOStreamsTemplateUpdates:
         )
 
     @staticmethod
-    def _response_user_data(response):
+    def _response_user_result(response):
 
         response.raise_for_status()
 
@@ -499,7 +547,11 @@ class AIOStreamsTemplateUpdates:
                 "AIOStreams did not return the saved configuration."
             )
 
-        return user_data
+        encrypted_password = data.get(
+            "encryptedPassword"
+        )
+
+        return user_data, encrypted_password
 
     def link(self, base_url, uuid, password):
 
@@ -526,7 +578,10 @@ class AIOStreamsTemplateUpdates:
                 auth=auth,
                 timeout=15,
             )
-            user_data = self._response_user_data(
+            (
+                user_data,
+                encrypted_password,
+            ) = self._response_user_result(
                 config_response
             )
 
@@ -537,42 +592,70 @@ class AIOStreamsTemplateUpdates:
                 json={"remember": True},
                 timeout=15,
             )
-            login_response.raise_for_status()
-            login_payload = login_response.json()
+            if login_response.status_code in {
+                403,
+                404,
+                405,
+            }:
+                if not encrypted_password:
+                    raise TemplateUpdateError(
+                        "AIOStreams did not return a secure "
+                        "configuration token."
+                    )
 
-            if not isinstance(login_payload, dict):
-                raise TemplateUpdateError(
-                    "AIOStreams returned an invalid session."
+                state = {
+                    "uuid": uuid,
+                    "auth_mode": "password",
+                    "password": password,
+                    "encrypted_password": (
+                        encrypted_password
+                    ),
+                    "expires_at": 0,
+                    "applied_version": (
+                        self._applied_version(user_data)
+                    ),
+                }
+            else:
+                login_response.raise_for_status()
+                login_payload = login_response.json()
+
+                if not isinstance(login_payload, dict):
+                    raise TemplateUpdateError(
+                        "AIOStreams returned an invalid session."
+                    )
+
+                login_data = login_payload.get("data")
+
+                if not isinstance(login_data, dict):
+                    raise TemplateUpdateError(
+                        "AIOStreams returned an invalid session."
+                    )
+
+                token = session.cookies.get(
+                    "aiostreams.config-session"
                 )
 
-            login_data = login_payload.get("data")
-
-            if not isinstance(login_data, dict):
-                raise TemplateUpdateError(
-                    "AIOStreams returned an invalid session."
+                expires_at = login_data.get(
+                    "expiresAt"
                 )
 
-            token = session.cookies.get(
-                "aiostreams.config-session"
-            )
+                if not token or not expires_at:
+                    raise TemplateUpdateError(
+                        "AIOStreams did not create a remembered session."
+                    )
 
-            expires_at = login_data.get(
-                "expiresAt"
-            )
-
-            if not token or not expires_at:
-                raise TemplateUpdateError(
-                    "AIOStreams did not create a remembered session."
-                )
-
-            state = {
-                "uuid": uuid,
-                "session_token": token,
-                "expires_at": int(expires_at),
-                "applied_version": self._applied_version(
-                    user_data
-                ),
-            }
+                state = {
+                    "uuid": uuid,
+                    "auth_mode": "session",
+                    "session_token": token,
+                    "expires_at": int(expires_at),
+                    "encrypted_password": (
+                        encrypted_password
+                    ),
+                    "applied_version": (
+                        self._applied_version(user_data)
+                    ),
+                }
 
             self._save_state(state)
 
@@ -610,34 +693,52 @@ class AIOStreamsTemplateUpdates:
         session = self.session_factory()
 
         try:
-            response = session.get(
-                f"{base_url}/api/v1/user",
-                params={
+            request_options = {
+                "params": {
                     "uuid": state["uuid"],
                     "raw": "true",
                 },
-                cookies={
+                "timeout": 15,
+            }
+
+            if state["auth_mode"] == "session":
+                request_options["cookies"] = {
                     "aiostreams.config-session": (
                         state["session_token"]
                     )
-                },
-                timeout=15,
+                }
+            else:
+                request_options["auth"] = (
+                    state["uuid"],
+                    state["password"],
+                )
+
+            response = session.get(
+                f"{base_url}/api/v1/user",
+                **request_options,
             )
 
-            user_data = self._response_user_data(
-                response
-            )
+            (
+                user_data,
+                encrypted_password,
+            ) = self._response_user_result(response)
 
             state["applied_version"] = (
                 self._applied_version(user_data)
             )
 
-            renewed = response.cookies.get(
-                "aiostreams.config-session"
-            )
+            if encrypted_password:
+                state["encrypted_password"] = (
+                    encrypted_password
+                )
 
-            if renewed:
-                state["session_token"] = renewed
+            if state["auth_mode"] == "session":
+                renewed = response.cookies.get(
+                    "aiostreams.config-session"
+                )
+
+                if renewed:
+                    state["session_token"] = renewed
 
             self._save_state(state)
 
@@ -699,6 +800,9 @@ class AIOStreamsTemplateUpdates:
             return result
 
         result["linked"] = True
+        result["auth_mode"] = state[
+            "auth_mode"
+        ]
 
         try:
             base_url = self._local_base_url(
@@ -804,20 +908,49 @@ class AIOStreamsTemplateUpdates:
             }
         )
 
+        path = "/stremio/configure"
+
+        if state["auth_mode"] == "password":
+            encrypted_password = state.get(
+                "encrypted_password"
+            )
+
+            if not encrypted_password:
+                raise TemplateUpdateError(
+                    "Relink AIOStreams before opening the update."
+                )
+
+            path = (
+                f"/stremio/{quote(state['uuid'], safe='')}"
+                f"/{quote(encrypted_password, safe='')}"
+                "/configure"
+            )
+
         target = urlunsplit(
             (
                 "http",
                 netloc,
-                "/stremio/configure",
+                path,
                 query,
                 "",
             )
         )
 
-        return {
+        launch = {
             "target": target,
-            "session_token": state[
-                "session_token"
-            ],
-            "expires_at": state["expires_at"],
+            "auth_mode": state["auth_mode"],
         }
+
+        if state["auth_mode"] == "session":
+            launch.update(
+                {
+                    "session_token": state[
+                        "session_token"
+                    ],
+                    "expires_at": state[
+                        "expires_at"
+                    ],
+                }
+            )
+
+        return launch

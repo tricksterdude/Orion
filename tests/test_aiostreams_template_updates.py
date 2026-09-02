@@ -90,10 +90,15 @@ class TestResponse:
 
 class TestSession:
 
-    def __init__(self, requests_log):
+    def __init__(
+        self,
+        requests_log,
+        legacy=False,
+    ):
 
         self.requests_log = requests_log
         self.cookies = TestCookies()
+        self.legacy = legacy
 
     def get(self, url, **kwargs):
 
@@ -120,6 +125,9 @@ class TestSession:
             return TestResponse(
                 payload={
                     "data": {
+                        "encryptedPassword": (
+                            "encrypted-config-token"
+                        ),
                         "userData": {
                             "appliedTemplates": [
                                 {
@@ -144,6 +152,13 @@ class TestSession:
         )
 
         if url.endswith("/api/v1/user/session"):
+            if self.legacy:
+                return TestResponse(
+                    payload={"error": "not found"},
+                    status=404,
+                    url=url,
+                )
+
             self.cookies[
                 "aiostreams.config-session"
             ] = SESSION_TOKEN
@@ -188,6 +203,7 @@ with TemporaryDirectory() as temporary:
     )
 
     assert state["uuid"] == UUID
+    assert state["auth_mode"] == "session"
     assert state["session_token"] == SESSION_TOKEN
     assert state["applied_version"] == "3.1.3"
 
@@ -245,6 +261,69 @@ with TemporaryDirectory() as temporary:
     print("✓ Linked template version detected")
     print("✓ Newer Tamtaro version detected")
     print("✓ Authenticated update launch prepared")
+
+
+with TemporaryDirectory() as temporary:
+
+    legacy_log = []
+    legacy_manager = AIOStreamsTemplateUpdates(
+        state_path=(
+            f"{temporary}/legacy-session.json"
+        ),
+        protector=TestProtector(),
+        session_factory=(
+            lambda: TestSession(
+                legacy_log,
+                legacy=True,
+            )
+        ),
+        clock=lambda: 1000,
+    )
+
+    legacy_state = legacy_manager.link(
+        "http://localhost:3500",
+        UUID,
+        PASSWORD,
+    )
+
+    assert legacy_state["auth_mode"] == "password"
+    assert legacy_state["password"] == PASSWORD
+
+    legacy_text = (
+        legacy_manager.state_path.read_text(
+            encoding="utf-8"
+        )
+    )
+
+    assert PASSWORD not in legacy_text
+
+    legacy_status = legacy_manager.status(
+        "http://localhost:3500",
+        force=True,
+    )
+
+    assert legacy_status["update_available"] is True
+    assert legacy_status["auth_mode"] == "password"
+
+    legacy_launch = legacy_manager.update_launch(
+        "http://localhost:3500",
+        "localhost",
+    )
+
+    legacy_url = urlsplit(
+        legacy_launch["target"]
+    )
+
+    assert legacy_launch["auth_mode"] == "password"
+    assert "session_token" not in legacy_launch
+    assert legacy_url.path.startswith(
+        f"/stremio/{UUID}/"
+    )
+    assert legacy_url.path.endswith("/configure")
+    assert PASSWORD not in legacy_launch["target"]
+
+    print("✓ AIOStreams 2.33.x fallback supported")
+    print("✓ Legacy password stored only with Windows protection")
 
 
 invalid_manager = AIOStreamsTemplateUpdates(
