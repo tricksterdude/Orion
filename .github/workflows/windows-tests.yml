@@ -59,6 +59,8 @@ jobs:
             "tests/test_playback_cycle.py",
             "tests/test_runtime_recovery.py",
             "tests/test_service_details_page.py",
+            "tests/test_aiostreams_template_updates.py",
+            "tests/test_aiostreams_template_routes.py",
             "tests/test_service_discovery.py"
           )
 

@@ -1,5 +1,7 @@
 import hmac
 import secrets
+import time
+from urllib.parse import urlsplit
 
 from flask import (
     Blueprint,
@@ -13,6 +15,10 @@ from flask import (
 
 from app.api.container_updates import (
     ContainerUpdateStatus,
+)
+from app.api.aiostreams_templates import (
+    AIOStreamsTemplateUpdates,
+    TemplateUpdateError,
 )
 from app.api.container_updater import (
     ContainerUpdater,
@@ -57,6 +63,9 @@ service_discovery = ContainerServiceDiscovery()
 service_registry = ServiceRegistry()
 service_controller = ServiceController()
 stremio_controller = StremioController()
+aiostreams_template_updates = (
+    AIOStreamsTemplateUpdates()
+)
 system_diagnostics = SystemDiagnostics(
     service_status=service_status,
     stremio_controller=stremio_controller,
@@ -79,6 +88,10 @@ history_management_token = (
 )
 
 service_control_token = (
+    secrets.token_urlsafe(32)
+)
+
+template_update_token = (
     secrets.token_urlsafe(32)
 )
 
@@ -402,11 +415,24 @@ def service_view_route(service_slug):
         }
 
     stremio_status = None
+    template_status = None
 
     if service["slug"] == "aiostreams":
 
         stremio_status = (
             stremio_controller.status()
+        )
+
+        template_status = (
+            aiostreams_template_updates.status(
+                service["url"],
+                force=(
+                    request.args.get(
+                        "template_refresh"
+                    )
+                    == "1"
+                ),
+            )
         )
 
     return render_template(
@@ -415,7 +441,158 @@ def service_view_route(service_slug):
         service_control_token=service_control_token,
         service_result=service_result,
         stremio_status=stremio_status,
+        template_status=template_status,
+        template_update_token=(
+            template_update_token
+        ),
     )
+
+
+def _valid_template_token():
+
+    return hmac.compare_digest(
+        request.form.get("token", ""),
+        template_update_token,
+    )
+
+
+def _aiostreams_service():
+
+    service = service_status.get(
+        "aiostreams"
+    )
+
+    if service is None:
+        abort(404)
+
+    return service
+
+
+@home.post("/services/aiostreams/template/link")
+def aiostreams_template_link_route():
+
+    if not _valid_template_token():
+        abort(403)
+
+    service = _aiostreams_service()
+
+    try:
+        state = aiostreams_template_updates.link(
+            service["url"],
+            request.form.get("uuid", ""),
+            request.form.get("password", ""),
+        )
+
+        installed = state.get(
+            "applied_version"
+        )
+
+        message = (
+            "AIOStreams linked securely. "
+            + (
+                f"Tamtaro {installed} is installed."
+                if installed
+                else (
+                    "No applied Tamtaro Complete version "
+                    "was recorded."
+                )
+            )
+        )
+        status = "updated"
+    except TemplateUpdateError as error:
+        status = "failed"
+        message = str(error)
+
+    return redirect(
+        url_for(
+            "home.service_view_route",
+            service_slug="aiostreams",
+            service_status=status,
+            service_message=message,
+            template_refresh="1",
+        )
+    )
+
+
+@home.post("/services/aiostreams/template/unlink")
+def aiostreams_template_unlink_route():
+
+    if not _valid_template_token():
+        abort(403)
+
+    service = _aiostreams_service()
+    aiostreams_template_updates.unlink(
+        service["url"]
+    )
+
+    return redirect(
+        url_for(
+            "home.service_view_route",
+            service_slug="aiostreams",
+            service_status="updated",
+            service_message=(
+                "The saved AIOStreams link was removed."
+            ),
+        )
+    )
+
+
+@home.post("/services/aiostreams/template/update")
+def aiostreams_template_update_route():
+
+    if not _valid_template_token():
+        abort(403)
+
+    service = _aiostreams_service()
+
+    try:
+        launch = (
+            aiostreams_template_updates
+            .update_launch(
+                service["url"],
+                urlsplit(
+                    request.host_url
+                ).hostname,
+            )
+        )
+    except TemplateUpdateError as error:
+        return redirect(
+            url_for(
+                "home.service_view_route",
+                service_slug="aiostreams",
+                service_status="failed",
+                service_message=str(error),
+                template_refresh="1",
+            )
+        )
+
+    response = redirect(launch["target"])
+    max_age = max(
+        int(
+            launch["expires_at"] / 1000
+            - time.time()
+        ),
+        0,
+    )
+
+    response.set_cookie(
+        "aiostreams.config-session",
+        launch["session_token"],
+        max_age=max_age,
+        httponly=True,
+        samesite="Strict",
+        path="/api",
+    )
+    response.set_cookie(
+        "aiostreams.has-config-session",
+        "1",
+        max_age=max_age,
+        httponly=False,
+        samesite="Strict",
+        path="/",
+    )
+
+    return response
 
 
 @home.post("/services/aiostreams/stremio/launch")
