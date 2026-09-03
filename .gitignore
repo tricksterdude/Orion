@@ -17,6 +17,8 @@ data/display_recovery.json
 data/display_recovery.json.tmp
 data/aiostreams_template_session.json
 data/aiostreams_template_session.json.tmp
+data/secure_settings.json
+data/secure_settings.json.tmp
 
 # Private service backups
 data/container_update_backups/

@@ -186,6 +186,13 @@ try:
 
     print("✓ Overall system health links to diagnostics")
 
+    assert "Private configuration" in page
+    assert "Settings" in page
+    assert 'href="/settings"' in page
+    assert "TMDb not configured" in page
+
+    print("✓ Private settings link displayed")
+
     print("✓ Orion home page rendered")
 
     assert "Display recovered" in page

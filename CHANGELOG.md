@@ -10,6 +10,10 @@ The format is based on **Keep a Changelog** and follows **Semantic Versioning** 
 
 ### Added
 
+- Windows-protected storage and a local Settings page for private values
+- Roadmap architecture for reusable profiles, vendor-neutral AVR adapters,
+  Nuvio Desktop and an optional self-hosted control plane
+
 - Atomic display recovery checkpoints before cinema-mode switching
 - Automatic display restoration after an interrupted Orion session
 - Homepage recovery and failure status messages
@@ -25,6 +29,9 @@ The format is based on **Keep a Changelog** and follows **Semantic Versioning** 
 - Authenticated template update launch with the latest Tamtaro template preselected
 
 ### Fixed
+
+- Removed the TMDb API key from tracked application configuration
+- Missing TMDb credentials no longer cause playback metadata lookup errors
 
 - Playback metadata is retained when display switching is safely blocked
 - Console and background launchers now enforce the same single Orion instance

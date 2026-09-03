@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+    <meta name="robots" content="noindex, nofollow">
+    <title>Settings · Orion</title>
+
+    <style>
+        :root {
+            color-scheme: dark;
+            --background: #050a13;
+            --surface: #0d1728;
+            --surface-light: #132039;
+            --border: #294363;
+            --text: #f4f7ff;
+            --muted: #9bb9e5;
+            --cyan: #38cfff;
+            --green: #51efbc;
+            --red: #ff7085;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            background:
+                radial-gradient(
+                    circle at top right,
+                    rgba(56, 207, 255, 0.1),
+                    transparent 32rem
+                ),
+                var(--background);
+            color: var(--text);
+            font-family: Inter, Segoe UI, Arial, sans-serif;
+        }
+
+        button, input { font: inherit; }
+
+        .page {
+            width: min(1040px, calc(100% - 40px));
+            margin: 0 auto;
+            padding: 50px 0 80px;
+        }
+
+        .back {
+            display: inline-block;
+            margin-bottom: 34px;
+            color: var(--muted);
+            font-weight: 750;
+            text-decoration: none;
+        }
+
+        .back:hover { color: var(--cyan); }
+
+        .eyebrow {
+            margin: 0 0 14px;
+            color: var(--cyan);
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(48px, 8vw, 82px);
+            letter-spacing: -0.05em;
+        }
+
+        .subtitle {
+            max-width: 740px;
+            margin: 18px 0 0;
+            color: var(--muted);
+            font-size: 20px;
+            line-height: 1.55;
+        }
+
+        .result {
+            margin-top: 28px;
+            padding: 16px 18px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: var(--surface);
+            line-height: 1.5;
+        }
+
+        .result-updated {
+            border-color: rgba(81, 239, 188, 0.4);
+            color: var(--green);
+        }
+
+        .result-failed {
+            border-color: rgba(255, 112, 133, 0.45);
+            color: var(--red);
+        }
+
+        .panel {
+            margin-top: 44px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            background:
+                linear-gradient(
+                    145deg,
+                    var(--surface-light),
+                    var(--surface)
+                );
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 24px;
+            padding: 30px 34px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h2 {
+            margin: 0 0 10px;
+            font-size: 32px;
+            letter-spacing: -0.03em;
+        }
+
+        .panel p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 17px;
+            line-height: 1.55;
+        }
+
+        .status {
+            flex: 0 0 auto;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 850;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .status-configured {
+            border-color: rgba(81, 239, 188, 0.35);
+            background: rgba(81, 239, 188, 0.08);
+            color: var(--green);
+        }
+
+        .form-body { padding: 32px 34px 36px; }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        input {
+            width: 100%;
+            padding: 16px 18px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            outline: none;
+            background: #081220;
+            color: var(--text);
+        }
+
+        input:focus { border-color: var(--cyan); }
+
+        .hint {
+            margin-top: 12px !important;
+            font-size: 14px !important;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .button {
+            min-height: 50px;
+            padding: 0 22px;
+            border: 1px solid var(--green);
+            border-radius: 14px;
+            background: rgba(81, 239, 188, 0.12);
+            color: var(--green);
+            cursor: pointer;
+            font-weight: 850;
+        }
+
+        .button-remove {
+            border-color: rgba(255, 112, 133, 0.65);
+            background: rgba(255, 112, 133, 0.09);
+            color: var(--red);
+        }
+
+        .privacy {
+            margin-top: 28px !important;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            font-size: 15px !important;
+        }
+
+        @media (max-width: 640px) {
+            .page { width: min(100% - 24px, 1040px); }
+            .panel-header { flex-direction: column; }
+            .panel-header, .form-body { padding: 24px; }
+            .button { width: 100%; }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="page">
+        <a class="back" href="{{ url_for('home.home_route') }}">
+            ← Back to Orion
+        </a>
+
+        <header>
+            <p class="eyebrow">Private configuration</p>
+            <h1>Settings</h1>
+            <p class="subtitle">
+                Manage private values without editing Orion’s files.
+                Saved values are encrypted for your Windows account.
+            </p>
+        </header>
+
+        {% if result %}
+            <div
+                class="result result-{{ result.status }}"
+                role="status"
+            >
+                {{ result.message }}
+            </div>
+        {% endif %}
+
+        <section class="panel">
+            <header class="panel-header">
+                <div>
+                    <h2>TMDb metadata</h2>
+                    <p>
+                        Used to retrieve movie titles, artwork and
+                        other metadata during playback.
+                    </p>
+                </div>
+
+                <span
+                    class="status{% if tmdb_setting.configured %} status-configured{% endif %}"
+                >
+                    {% if tmdb_setting.configured %}
+                        Configured
+                    {% elif not tmdb_setting.available %}
+                        Needs attention
+                    {% else %}
+                        Not configured
+                    {% endif %}
+                </span>
+            </header>
+
+            <div class="form-body">
+                {% if not tmdb_setting.available %}
+                    <div class="result result-failed" role="alert">
+                        {{ tmdb_setting.message }}
+                    </div>
+                {% endif %}
+
+                <form method="post" action="{{ url_for('home.tmdb_settings_route') }}">
+                    <input
+                        type="hidden"
+                        name="token"
+                        value="{{ settings_management_token }}"
+                    >
+                    <input type="hidden" name="action" value="save">
+
+                    <label for="tmdb-api-key">
+                        {% if tmdb_setting.configured %}
+                            Replacement API key
+                        {% else %}
+                            API key
+                        {% endif %}
+                    </label>
+                    <input
+                        id="tmdb-api-key"
+                        name="api_key"
+                        type="password"
+                        required
+                        minlength="32"
+                        maxlength="32"
+                        pattern="[0-9A-Fa-f]{32}"
+                        autocomplete="new-password"
+                        spellcheck="false"
+                        placeholder="32-character TMDb API key"
+                    >
+
+                    <p class="hint">
+                        Orion never sends the saved key back to this
+                        page or includes it in diagnostic reports.
+                    </p>
+
+                    <div class="actions">
+                        <button class="button" type="submit">
+                            {% if tmdb_setting.configured %}
+                                Replace securely
+                            {% else %}
+                                Save securely
+                            {% endif %}
+                        </button>
+                    </div>
+                </form>
+
+                {% if tmdb_setting.configured %}
+                    <form
+                        method="post"
+                        action="{{ url_for('home.tmdb_settings_route') }}"
+                        onsubmit="return confirm('Remove the saved TMDb API key?');"
+                    >
+                        <input
+                            type="hidden"
+                            name="token"
+                            value="{{ settings_management_token }}"
+                        >
+                        <input type="hidden" name="action" value="remove">
+                        <div class="actions">
+                            <button
+                                class="button button-remove"
+                                type="submit"
+                            >
+                                Remove saved key
+                            </button>
+                        </div>
+                    </form>
+                {% endif %}
+
+                <p class="privacy">
+                    The encrypted settings file works only for the
+                    Windows account that created it and is excluded
+                    from Git.
+                </p>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

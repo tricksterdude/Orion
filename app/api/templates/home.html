@@ -236,6 +236,11 @@
             min-height: 230px;
         }
 
+        .card-settings {
+            grid-column: 1 / -1;
+            min-height: 210px;
+        }
+
         .diagnostics-card-state {
             display: flex;
             align-items: center;
@@ -931,6 +936,39 @@
                                 Open diagnostics →
                             </span>
                         </div>
+                    </div>
+                </div>
+            </a>
+
+            <a
+                class="card card-link card-settings"
+                href="{{ url_for('home.settings_route') }}"
+            >
+                <div class="card-inner">
+                    <div>
+                        <span class="label">
+                            Private configuration
+                        </span>
+
+                        <h2>Settings</h2>
+
+                        <p>
+                            Manage encrypted API keys and prepare
+                            Orion for reusable system profiles.
+                        </p>
+                    </div>
+
+                    <div class="card-footer">
+                        <span
+                            class="pill {% if tmdb_setting.configured %}pill-healthy{% else %}pill-warning{% endif %}"
+                        >
+                            <span class="dot"></span>
+                            TMDb {% if tmdb_setting.configured %}configured{% else %}not configured{% endif %}
+                        </span>
+
+                        <span class="open-label">
+                            Open settings →
+                        </span>
                     </div>
                 </div>
             </a>

@@ -1,12 +1,14 @@
 import json
 from pathlib import Path
 
+from app.config_manager import ConfigManager
+
 
 class Settings:
 
     def __init__(self):
 
-        root = Path(__file__).resolve().parents[2]
+        root = Path(__file__).resolve().parents[1]
 
         with open(
             root / "config" / "settings.json",
@@ -26,7 +28,10 @@ class Settings:
 
     @property
     def tmdb_api_key(self):
-        return self._settings["tmdb"]["api_key"]
+        return ConfigManager().get(
+            "tmdb.api_key",
+            "",
+        )
 
 
 settings = Settings()
