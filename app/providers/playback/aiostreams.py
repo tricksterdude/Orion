@@ -1,3 +1,4 @@
+import json
 import os
 import threading
 from pathlib import Path
@@ -17,6 +18,7 @@ class AIOStreamsPlaybackProvider(PlaybackProvider):
         session,
         on_playback=None,
         on_stopped=None,
+        services_path=None,
     ):
 
         super().__init__(session)
@@ -25,6 +27,11 @@ class AIOStreamsPlaybackProvider(PlaybackProvider):
         self.on_stopped = on_stopped
 
         self.probe = StremioProbe()
+
+        self.services_path = Path(
+            services_path
+            or Path("config") / "services.json"
+        )
 
         self._thread = None
         self._stop_event = threading.Event()
@@ -82,6 +89,113 @@ class AIOStreamsPlaybackProvider(PlaybackProvider):
             seconds
         )
 
+    def _local_aiostreams_ports(self):
+
+        try:
+
+            payload = json.loads(
+                self.services_path.read_text(
+                    encoding="utf-8"
+                )
+            )
+
+        except (
+            OSError,
+            ValueError,
+            TypeError,
+        ):
+
+            return set()
+
+        if not isinstance(payload, dict):
+
+            return set()
+
+        ports = set()
+
+        for service in payload.get(
+            "services",
+            [],
+        ):
+
+            if not isinstance(service, dict):
+
+                continue
+
+            identifiers = {
+                str(service.get("name", ""))
+                .strip()
+                .lower(),
+                str(service.get("container", ""))
+                .strip()
+                .lower(),
+            }
+
+            if "aiostreams" not in identifiers:
+
+                continue
+
+            try:
+
+                parsed = urlparse(
+                    str(service.get("url", ""))
+                )
+                hostname = (
+                    parsed.hostname or ""
+                ).lower()
+
+                if hostname not in {
+                    "localhost",
+                    "127.0.0.1",
+                    "::1",
+                }:
+
+                    continue
+
+                port = (
+                    parsed.port
+                    or service.get("port")
+                )
+
+                if port is not None:
+
+                    ports.add(int(port))
+
+            except (TypeError, ValueError):
+
+                continue
+
+        return ports
+
+    def _supports_stream_url(self, stream_url):
+
+        parsed = urlparse(stream_url)
+        hostname = (
+            parsed.hostname or ""
+        ).lower()
+
+        if hostname not in {
+            "localhost",
+            "127.0.0.1",
+            "::1",
+        }:
+
+            return True
+
+        try:
+
+            port = parsed.port
+
+        except ValueError:
+
+            return False
+
+        return (
+            port is not None
+            and port
+            in self._local_aiostreams_ports()
+        )
+
     def _watch(self):
 
         while not self._stop_event.is_set():
@@ -120,12 +234,10 @@ class AIOStreamsPlaybackProvider(PlaybackProvider):
             self._playing = True
 
             stream_url = selected["url"]
-            parsed = urlparse(stream_url)
 
-            if parsed.hostname in {
-                "localhost",
-                "127.0.0.1",
-            }:
+            if not self._supports_stream_url(
+                stream_url
+            ):
 
                 self._last_url = None
                 self._wait()
