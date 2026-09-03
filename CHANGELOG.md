@@ -20,6 +20,9 @@ The format is based on **Keep a Changelog** and follows **Semantic Versioning** 
 - Safe diagnostic reports that exclude private configuration and playback data
 - Windows pull-request regression checks for critical Orion workflows
 - Simulated playback lifecycle coverage from 120 Hz through cinema mode and restoration
+- Tamtaro AIOStreams template version detection on the AIOStreams service page
+- One-time secure AIOStreams configuration linking using Windows-protected credentials
+- Authenticated template update launch with the latest Tamtaro template preselected
 
 ### Fixed
 
@@ -28,6 +31,10 @@ The format is based on **Keep a Changelog** and follows **Semantic Versioning** 
 - AIOStreams service page reports whether Stremio playback detection is ready
 - Updated Stremio WebView2 security requirements are included when launching playback detection
 - Background playback analysis resolves per-user WinGet FFprobe installations
+- AIOStreams 2.33 template updates now guide users through loading the existing
+  configuration before application so saved services are preselected
+- Playback detection accepts streams served by Orion's configured local
+  AIOStreams service while continuing to ignore unrelated local services
 
 ---
 

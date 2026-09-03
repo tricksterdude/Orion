@@ -55,10 +55,13 @@ jobs:
             "tests/test_home_page.py",
             "tests/test_service_status.py",
             "tests/test_stremio_controller.py",
+            "tests/test_aiostreams_playback.py",
             "tests/test_playback_history.py",
             "tests/test_playback_cycle.py",
             "tests/test_runtime_recovery.py",
             "tests/test_service_details_page.py",
+            "tests/test_aiostreams_template_updates.py",
+            "tests/test_aiostreams_template_routes.py",
             "tests/test_service_discovery.py"
           )
 

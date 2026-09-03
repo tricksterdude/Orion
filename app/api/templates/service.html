@@ -254,6 +254,157 @@
             margin-top: 22px;
         }
 
+        .template-updates {
+            margin-top: 28px;
+            padding: 30px 34px;
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            background: rgba(16, 27, 48, 0.92);
+        }
+
+        .template-updates.available {
+            border-color: rgba(57, 201, 255, 0.68);
+            box-shadow: 0 0 30px rgba(57, 201, 255, 0.08);
+        }
+
+        .template-updates.current {
+            border-color: rgba(77, 240, 193, 0.5);
+        }
+
+        .template-heading {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 24px;
+        }
+
+        .template-heading h2 {
+            margin: 0 0 12px;
+            font-size: 24px;
+        }
+
+        .template-summary {
+            margin: 0;
+            color: var(--muted);
+            font-size: 17px;
+            line-height: 1.6;
+        }
+
+        .template-badge {
+            flex: 0 0 auto;
+            padding: 8px 13px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .available .template-badge {
+            border-color: rgba(57, 201, 255, 0.6);
+            color: var(--cyan);
+        }
+
+        .current .template-badge {
+            border-color: rgba(77, 240, 193, 0.5);
+            color: var(--green);
+        }
+
+        .template-versions {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 22px;
+        }
+
+        .template-version {
+            padding: 16px 18px;
+            border: 1px solid rgba(48, 73, 107, 0.7);
+            border-radius: 15px;
+            background: rgba(5, 10, 20, 0.35);
+        }
+
+        .template-version-label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .template-version-value {
+            color: var(--text);
+            font-size: 20px;
+            font-weight: 900;
+        }
+
+        .template-link-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            align-items: end;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .template-field label {
+            display: block;
+            margin-bottom: 7px;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 850;
+        }
+
+        .template-field input {
+            width: 100%;
+            min-height: 52px;
+            padding: 0 15px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: var(--panel-dark);
+            color: var(--text);
+            font: inherit;
+        }
+
+        .template-field input:focus {
+            border-color: var(--cyan);
+            outline: 2px solid rgba(57, 201, 255, 0.18);
+        }
+
+        .template-actions {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .template-actions form {
+            margin: 0;
+        }
+
+        .template-update-button {
+            border-color: rgba(57, 201, 255, 0.65);
+            background: rgba(57, 201, 255, 0.14);
+            color: var(--cyan);
+        }
+
+        .template-link-note {
+            margin: 18px 0 0;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.55;
+        }
+
+        .template-refresh {
+            color: var(--cyan);
+            font-weight: 800;
+            text-decoration: none;
+        }
+
         .open-button {
             flex: 0 0 auto;
             display: inline-flex;
@@ -346,6 +497,21 @@
             .action-buttons,
             .service-control-form,
             .control-button {
+                width: 100%;
+            }
+
+            .template-heading {
+                flex-direction: column;
+            }
+
+            .template-link-form,
+            .template-versions {
+                grid-template-columns: 1fr;
+            }
+
+            .template-actions,
+            .template-actions form,
+            .template-actions .control-button {
                 width: 100%;
             }
         }
@@ -549,6 +715,187 @@
                             Launch Stremio
                         </button>
                     </form>
+                {% endif %}
+            </section>
+        {% endif %}
+
+        {% if template_status %}
+            <section
+                class="template-updates {{ template_status.state }}"
+                aria-label="AIOStreams template updates"
+            >
+                <div class="template-heading">
+                    <div>
+                        <h2>Template updates</h2>
+
+                        <p class="template-summary">
+                            {{ template_status.message }}
+                        </p>
+                    </div>
+
+                    <span class="template-badge">
+                        {% if template_status.state == 'available' %}
+                            Update available
+                        {% elif template_status.state == 'current' %}
+                            Up to date
+                        {% elif template_status.linked %}
+                            Linked
+                        {% else %}
+                            Not linked
+                        {% endif %}
+                    </span>
+                </div>
+
+                {% if template_status.installed_version or template_status.latest_version %}
+                    <div class="template-versions">
+                        <div class="template-version">
+                            <span class="template-version-label">
+                                Installed
+                            </span>
+                            <span class="template-version-value">
+                                {{ template_status.installed_version or "Unknown" }}
+                            </span>
+                        </div>
+
+                        <div class="template-version">
+                            <span class="template-version-label">
+                                Latest
+                            </span>
+                            <span class="template-version-value">
+                                {{ template_status.latest_version or "Unavailable" }}
+                            </span>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if not template_status.linked or template_status.state == 'relink' %}
+                    <form
+                        class="template-link-form"
+                        method="post"
+                        action="{{ url_for('home.aiostreams_template_link_route') }}"
+                    >
+                        <input
+                            type="hidden"
+                            name="token"
+                            value="{{ template_update_token }}"
+                        >
+
+                        <div class="template-field">
+                            <label for="aiostreams-uuid">
+                                Configuration UUID
+                            </label>
+                            <input
+                                id="aiostreams-uuid"
+                                name="uuid"
+                                type="text"
+                                inputmode="text"
+                                autocomplete="off"
+                                required
+                            >
+                        </div>
+
+                        <div class="template-field">
+                            <label for="aiostreams-password">
+                                Configuration password
+                            </label>
+                            <input
+                                id="aiostreams-password"
+                                name="password"
+                                type="password"
+                                autocomplete="current-password"
+                                required
+                            >
+                        </div>
+
+                        <button
+                            class="control-button"
+                            type="submit"
+                        >
+                            Link securely
+                        </button>
+                    </form>
+
+                    <p class="template-link-note">
+                        This is a one-time link. Orion protects the link with
+                        Windows account encryption and never stores your
+                        configuration password as readable text.
+                    </p>
+                {% else %}
+                    <div class="template-actions">
+                        {% if template_status.update_available %}
+                            <form
+                                method="post"
+                                action="{{ url_for('home.aiostreams_template_update_route') }}"
+                                {% if template_status.requires_browser_unlock %}
+                                    onsubmit="return confirm('AIOStreams 2.33 needs one safe browser unlock. On Confirm Import, choose OK (not Use This Template Now), then load your configuration. Continue?');"
+                                {% else %}
+                                    onsubmit="return confirm('Open the Tamtaro update wizard? Review the new choices before saving.');"
+                                {% endif %}
+                            >
+                                <input
+                                    type="hidden"
+                                    name="token"
+                                    value="{{ template_update_token }}"
+                                >
+
+                                <button
+                                    class="control-button template-update-button"
+                                    type="submit"
+                                >
+                                    {% if template_status.requires_browser_unlock %}
+                                        Prepare update
+                                    {% else %}
+                                        Update template
+                                    {% endif %}
+                                </button>
+                            </form>
+                        {% endif %}
+
+                        <a
+                            class="template-refresh"
+                            href="{{ url_for(
+                                'home.service_view_route',
+                                service_slug='aiostreams',
+                                template_refresh='1'
+                            ) }}"
+                        >
+                            Check again
+                        </a>
+
+                        <form
+                            method="post"
+                            action="{{ url_for('home.aiostreams_template_unlink_route') }}"
+                            onsubmit="return confirm('Remove Orion’s saved AIOStreams link?');"
+                        >
+                            <input
+                                type="hidden"
+                                name="token"
+                                value="{{ template_update_token }}"
+                            >
+
+                            <button
+                                class="control-button stop-button"
+                                type="submit"
+                            >
+                                Unlink
+                            </button>
+                        </form>
+                    </div>
+
+                    <p class="template-link-note">
+                        {% if template_status.requires_browser_unlock %}
+                            AIOStreams 2.33 cannot accept a secure browser
+                            sign-in from Orion. Choose <strong>OK</strong> on
+                            Confirm Import (not “Use This Template Now”), then
+                            unlock your configuration once. AIOStreams will
+                            present the update with your existing services and
+                            saved template choices preselected.
+                        {% else %}
+                            Update opens AIOStreams with your configuration and
+                            the latest Tamtaro template selected. Review its new
+                            options, then save to apply it.
+                        {% endif %}
+                    </p>
                 {% endif %}
             </section>
         {% endif %}

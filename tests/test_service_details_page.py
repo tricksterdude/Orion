@@ -73,6 +73,10 @@ original_stremio_controller = (
     routes.stremio_controller
 )
 
+original_template_updates = (
+    routes.aiostreams_template_updates
+)
+
 
 class TestStremioController:
 
@@ -101,6 +105,23 @@ class TestStremioController:
             "message": "Stremio launched safely.",
         }
 
+
+class TestTemplateUpdates:
+
+    def status(self, _base_url, force=False):
+
+        return {
+            "linked": False,
+            "state": "unlinked",
+            "name": "Tamtaro Complete SEL Setup",
+            "installed_version": None,
+            "latest_version": "3.2.2",
+            "update_available": False,
+            "message": (
+                "Link your saved AIOStreams configuration once."
+            ),
+        }
+
 try:
 
     routes.service_status = (
@@ -108,6 +129,9 @@ try:
     )
     routes.stremio_controller = (
         TestStremioController()
+    )
+    routes.aiostreams_template_updates = (
+        TestTemplateUpdates()
     )
 
     server = OrionAPIServer()
@@ -158,6 +182,8 @@ try:
     )
 
     assert "Playback detection" in aiostreams_page
+    assert "Template updates" in aiostreams_page
+    assert "Link securely" in aiostreams_page
     assert "Launch Stremio" in aiostreams_page
     assert (
         'action="/services/aiostreams/stremio/launch"'
@@ -261,6 +287,10 @@ finally:
 
     routes.stremio_controller = (
         original_stremio_controller
+    )
+
+    routes.aiostreams_template_updates = (
+        original_template_updates
     )
 
 print()
