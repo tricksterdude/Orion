@@ -1,18 +1,16 @@
 {
     "display": {
-        "name": "LG C3",
-        "desktop_refresh_rate": 120,
+        "name": "Primary display",
+        "desktop_refresh_rate": 60,
         "movie_refresh_rate": 23.976,
         "tv_refresh_rate": 50,
-        "hdr": true,
-        "resolution": "3840x2160"
+        "hdr": false,
+        "resolution": "1920x1080"
     },
-
     "audio": {
-        "receiver": "Denon AVR",
-        "preferred_format": "Dolby Atmos"
+        "receiver": "Not configured",
+        "preferred_format": "Automatic"
     },
-
     "playback": {
         "player": "Stremio",
         "restore_desktop_after_playback": true

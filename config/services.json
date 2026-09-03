@@ -1,28 +1,3 @@
 {
-    "services": [
-        {
-            "name": "NZBDAV",
-            "container": "nzbdav",
-            "port": 8500,
-            "url": "http://localhost:8500"
-        },
-        {
-            "name": "UsenetStreamer",
-            "container": "usenetstreamer",
-            "port": 7001,
-            "url": "http://localhost:7001"
-        },
-        {
-            "name": "AIOMetadata",
-            "container": "aiometadata",
-            "port": 3600,
-            "url": "http://localhost:3600"
-        },
-        {
-            "name": "AIOStreams",
-            "container": "aiostreams",
-            "port": 3500,
-            "url": "http://localhost:3500"
-        }
-    ]
+    "services": []
 }
