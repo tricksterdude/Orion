@@ -304,6 +304,8 @@ with TemporaryDirectory() as temporary:
 
     assert legacy_status["update_available"] is True
     assert legacy_status["auth_mode"] == "password"
+    assert legacy_status["requires_browser_unlock"] is True
+    assert "one browser unlock" in legacy_status["message"]
 
     legacy_launch = legacy_manager.update_launch(
         "http://localhost:3500",

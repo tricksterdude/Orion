@@ -70,7 +70,13 @@ class TestTemplateUpdates:
             "installed_version": "3.1.3",
             "latest_version": "3.2.2",
             "update_available": True,
-            "message": "Tamtaro 3.2.2 is available.",
+            "requires_browser_unlock": self.legacy,
+            "message": (
+                "Tamtaro 3.2.2 is available. "
+                "AIOStreams 2.33 needs one browser unlock before applying it."
+                if self.legacy
+                else "Tamtaro 3.2.2 is available."
+            ),
         }
 
     def link(self, base_url, uuid, password):
@@ -218,6 +224,13 @@ try:
     assert not legacy_response.headers.getlist(
         "Set-Cookie"
     )
+
+    legacy_page = client.get(
+        "/services/aiostreams"
+    ).get_data(as_text=True)
+    assert "Prepare update" in legacy_page
+    assert "Use This Template Now" in legacy_page
+    assert "existing services" in legacy_page
 
     unlink_response = client.post(
         "/services/aiostreams/template/unlink",

@@ -826,7 +826,11 @@
                             <form
                                 method="post"
                                 action="{{ url_for('home.aiostreams_template_update_route') }}"
-                                onsubmit="return confirm('Open the Tamtaro update wizard? Review the new choices before saving.');"
+                                {% if template_status.requires_browser_unlock %}
+                                    onsubmit="return confirm('AIOStreams 2.33 needs one safe browser unlock. On Confirm Import, choose OK (not Use This Template Now), then load your configuration. Continue?');"
+                                {% else %}
+                                    onsubmit="return confirm('Open the Tamtaro update wizard? Review the new choices before saving.');"
+                                {% endif %}
                             >
                                 <input
                                     type="hidden"
@@ -838,7 +842,11 @@
                                     class="control-button template-update-button"
                                     type="submit"
                                 >
-                                    Update template
+                                    {% if template_status.requires_browser_unlock %}
+                                        Prepare update
+                                    {% else %}
+                                        Update template
+                                    {% endif %}
                                 </button>
                             </form>
                         {% endif %}
@@ -875,10 +883,18 @@
                     </div>
 
                     <p class="template-link-note">
-                        Update opens AIOStreams with your configuration and
-                        the latest Tamtaro template selected. Review its new
-                        options, then save to apply it. Older AIOStreams
-                        versions may briefly show their saved-profile panel.
+                        {% if template_status.requires_browser_unlock %}
+                            AIOStreams 2.33 cannot accept a secure browser
+                            sign-in from Orion. Choose <strong>OK</strong> on
+                            Confirm Import (not “Use This Template Now”), then
+                            unlock your configuration once. AIOStreams will
+                            present the update with your existing services and
+                            saved template choices preselected.
+                        {% else %}
+                            Update opens AIOStreams with your configuration and
+                            the latest Tamtaro template selected. Review its new
+                            options, then save to apply it.
+                        {% endif %}
                     </p>
                 {% endif %}
             </section>

@@ -767,6 +767,7 @@ class AIOStreamsTemplateUpdates:
         result = {
             "linked": False,
             "state": "unlinked",
+            "requires_browser_unlock": False,
             "name": self.TEMPLATE_NAME,
             "installed_version": None,
             "latest_version": None,
@@ -803,6 +804,9 @@ class AIOStreamsTemplateUpdates:
         result["auth_mode"] = state[
             "auth_mode"
         ]
+        result["requires_browser_unlock"] = (
+            state["auth_mode"] == "password"
+        )
 
         try:
             base_url = self._local_base_url(
@@ -855,11 +859,20 @@ class AIOStreamsTemplateUpdates:
             if update_available
             else "current"
         )
-        result["message"] = (
-            f"Tamtaro {result['latest_version']} is available."
-            if update_available
-            else "The Tamtaro template is up to date."
-        )
+        if update_available:
+            result["message"] = (
+                f"Tamtaro {result['latest_version']} is available."
+            )
+
+            if result["requires_browser_unlock"]:
+                result["message"] += (
+                    " AIOStreams 2.33 needs one browser unlock "
+                    "before applying it."
+                )
+        else:
+            result["message"] = (
+                "The Tamtaro template is up to date."
+            )
 
         return result
 

@@ -31,6 +31,8 @@ The format is based on **Keep a Changelog** and follows **Semantic Versioning** 
 - AIOStreams service page reports whether Stremio playback detection is ready
 - Updated Stremio WebView2 security requirements are included when launching playback detection
 - Background playback analysis resolves per-user WinGet FFprobe installations
+- AIOStreams 2.33 template updates now guide users through loading the existing
+  configuration before application so saved services are preselected
 
 ---
 
