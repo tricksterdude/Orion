@@ -190,6 +190,7 @@ try:
     assert "Settings" in page
     assert 'href="/settings"' in page
     assert "TMDb not configured" in page
+    assert "Profile needs review" in page
 
     print("✓ Private settings link displayed")
 

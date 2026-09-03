@@ -7,6 +7,7 @@ from datetime import datetime
 from pathlib import Path
 
 from app.api.service_names import service_slug
+from app.local_configuration import services_config_path
 
 
 class ServiceRegistry:
@@ -23,7 +24,7 @@ class ServiceRegistry:
 
         self.services_config = Path(
             services_config
-            or project_root / "config" / "services.json"
+            or services_config_path()
         )
 
         self.backup_root = Path(

@@ -64,8 +64,12 @@ try:
     assert 'type="password"' in page
     assert routes.settings_management_token in page
     assert "no-store" in response.headers["Cache-Control"]
+    assert "System profile" in page
+    assert 'href="/setup"' in page
+    assert "Export safe profile" in page
+    assert "Validate and import" in page
 
-    print("✓ Settings page renders without exposing a key")
+    print("✓ Settings and profile controls render without exposing a key")
 
     missing_token = client.post(
         "/settings/tmdb",

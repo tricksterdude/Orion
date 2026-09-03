@@ -225,6 +225,20 @@ class SystemDiagnostics:
 
             path = self.project_root / "config" / filename
 
+            if filename in {
+                "services.json",
+                "providers.json",
+            }:
+                local_path = (
+                    self.project_root
+                    / "data"
+                    / "profile"
+                    / filename
+                )
+
+                if local_path.is_file():
+                    path = local_path
+
             try:
 
                 with path.open(

@@ -76,9 +76,12 @@ first intended adapter because it can be tested on the original system.
 
 ### Installation profiles
 
-Service identities, ports, player choices, display baselines and enabled
-device adapters will move into validated user profiles. Exported profiles
-will omit secrets, machine-private playback history and recovery state.
+Service identities, ports, player choices and display baselines are stored
+in ignored local profile files under `data/profile`. Existing installations
+are migrated from the legacy tracked files on first use. Profiles can be
+validated, backed up, imported and exported; exports omit secrets,
+machine-private playback history and recovery state. Future device adapters
+will extend this versioned schema.
 
 ### Optional remote control plane
 

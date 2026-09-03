@@ -1,12 +1,13 @@
 import json
-from pathlib import Path
+
+from app.local_configuration import media_config_path
 
 
 class MediaProfile:
 
     def __init__(self):
 
-        profile = Path("data/media_profile.json")
+        profile = media_config_path()
 
         with profile.open(
             "r",
