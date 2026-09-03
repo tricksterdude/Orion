@@ -7,6 +7,7 @@ from flask import (
     Blueprint,
     Response,
     abort,
+    make_response,
     redirect,
     render_template,
     request,
@@ -38,6 +39,10 @@ from app.api.service_status import ServiceStatus
 from app.media.title import friendly_media_title
 from app.playback.history import PlaybackHistory
 from app.recovery_status import display_recovery_status
+from app.secure_settings import (
+    SecureSettingsError,
+    SecureSettingsStore,
+)
 from app.stremio_controller import StremioController
 from app.system_diagnostics import SystemDiagnostics
 
@@ -70,6 +75,7 @@ system_diagnostics = SystemDiagnostics(
     service_status=service_status,
     stremio_controller=stremio_controller,
 )
+secure_settings_store = SecureSettingsStore()
 
 container_update_token = (
     secrets.token_urlsafe(32)
@@ -94,6 +100,28 @@ service_control_token = (
 template_update_token = (
     secrets.token_urlsafe(32)
 )
+
+settings_management_token = (
+    secrets.token_urlsafe(32)
+)
+
+
+def _tmdb_setting_status():
+
+    try:
+        return {
+            "configured": secure_settings_store.configured(
+                SecureSettingsStore.TMDB_API_KEY
+            ),
+            "available": True,
+            "message": None,
+        }
+    except SecureSettingsError as error:
+        return {
+            "configured": False,
+            "available": False,
+            "message": str(error),
+        }
 
 
 def configure_playback_handler(handler):
@@ -199,6 +227,89 @@ def home_route():
             display_recovery_status.get()
         ),
         diagnostics=diagnostics_snapshot,
+        tmdb_setting=_tmdb_setting_status(),
+    )
+
+
+@home.get("/settings")
+def settings_route():
+
+    result = None
+    result_status = request.args.get(
+        "settings_status"
+    )
+    result_message = request.args.get(
+        "settings_message"
+    )
+
+    if result_status and result_message:
+        result = {
+            "status": result_status,
+            "message": result_message,
+        }
+
+    response = make_response(
+        render_template(
+            "settings.html",
+            tmdb_setting=_tmdb_setting_status(),
+            settings_management_token=(
+                settings_management_token
+            ),
+            result=result,
+        )
+    )
+    response.headers["Cache-Control"] = (
+        "no-store, max-age=0"
+    )
+    response.headers["Pragma"] = "no-cache"
+
+    return response
+
+
+@home.post("/settings/tmdb")
+def tmdb_settings_route():
+
+    if not hmac.compare_digest(
+        request.form.get("token", ""),
+        settings_management_token,
+    ):
+        abort(403)
+
+    action = request.form.get("action", "save")
+
+    try:
+        if action == "remove":
+            removed = secure_settings_store.delete(
+                SecureSettingsStore.TMDB_API_KEY
+            )
+            status = "updated"
+            message = (
+                "The TMDb API key was removed."
+                if removed
+                else "No TMDb API key was stored."
+            )
+        elif action == "save":
+            secure_settings_store.set(
+                SecureSettingsStore.TMDB_API_KEY,
+                request.form.get("api_key", ""),
+            )
+            status = "updated"
+            message = (
+                "The TMDb API key was encrypted and saved "
+                "for this Windows account."
+            )
+        else:
+            abort(400)
+    except SecureSettingsError as error:
+        status = "failed"
+        message = str(error)
+
+    return redirect(
+        url_for(
+            "home.settings_route",
+            settings_status=status,
+            settings_message=message,
+        )
     )
 
 

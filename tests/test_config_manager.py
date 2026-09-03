@@ -10,5 +10,6 @@ print()
 
 print("Application :", config.get("application"))
 print("Author      :", config.get("author"))
-print("TMDb Found  :", bool(config.get("tmdb.api_key")))
-print("Key Length  :", len(config.get("tmdb.api_key")))
+tmdb_key = config.get("tmdb.api_key", "")
+print("TMDb Found  :", bool(tmdb_key))
+print("Key Length  :", len(tmdb_key))

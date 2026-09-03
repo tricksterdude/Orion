@@ -51,6 +51,8 @@ jobs:
             "tests/test_ffprobe_cli.py",
             "tests/test_single_instance.py",
             "tests/test_system_diagnostics.py",
+            "tests/test_secure_settings.py",
+            "tests/test_settings_page.py",
             "tests/test_diagnostics_page.py",
             "tests/test_home_page.py",
             "tests/test_service_status.py",

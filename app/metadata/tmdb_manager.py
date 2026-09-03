@@ -32,6 +32,9 @@ class TMDbManager:
 
     def lookup_imdb(self, imdb_id):
 
+        if not self.api_key:
+            return None
+
         url = (
             f"https://api.themoviedb.org/3/find/{imdb_id}"
             f"?api_key={self.api_key}"

@@ -2,109 +2,96 @@
 
 ## Overview
 
-Orion is built using a modular architecture where each subsystem has a single responsibility.
+Orion is a local-first Windows application. Playback and hardware decisions
+remain on the cinema PC even if an optional remote control plane is added in
+the future.
 
+```text
+                         Orion runtime
+                               |
+         +---------------------+---------------------+
+         |                     |                     |
+     Local API            Playback pipeline      Operations
+         |                     |                     |
+ Dashboard/settings      Provider adapters       Docker services
+ History/diagnostics     FFprobe analysis        Health and updates
+         |                     |
+ Encrypted secrets       Cinema coordinator
+                               |
+                    +----------+----------+
+                    |                     |
+              Display adapter       Audio/AVR adapters
 ```
-                 Orion
 
-              Main Application
-                     │
- ┌───────────────────┼───────────────────┐
- │                   │                   │
-Dashboard        Diagnostics        Playback
- │                   │                   │
-Services        Orion Doctor     Cinema Engine
- │                   │                   │
-Docker          Health Score     Display Controller
- │                   │                   │
-Health          Recommendations  Audio Manager
-```
+## Current subsystems
 
----
+### Local API and dashboard
 
-## Core Modules
+The Flask server listens on `127.0.0.1`. It renders the dashboard, service
+pages, settings, diagnostics and playback history. State-changing forms use
+per-process security tokens.
 
-### Dashboard
+### Service operations
 
-Displays the current health and status of the system.
+Configured Docker services are monitored through their Windows host
+addresses. Orion can discover published containers, register them safely,
+control an explicitly configured container, and perform guarded image
+updates with configuration backups.
 
----
+### Playback providers
 
-### Service Manager
+Provider adapters translate player-specific observations into Orion’s common
+playback model. AIOStreams/Stremio and UsenetStreamer are currently
+supported. Nuvio Desktop is planned as another adapter rather than a separate
+cinema engine.
 
-Maintains the list of monitored services.
+### Technical analysis
 
-Examples:
+FFprobe resolves the selected stream’s resolution, video codec and frame
+rate. Audio properties, bitrate and stronger HDR/Dolby Vision detection are
+the next analysis layer.
 
-- UsenetStreamer
-- NZBHydra2
-- NZBDAV
-- AIOStreams
-- AIOMetadata
+### Cinema and display
 
----
+The cinema coordinator chooses a display refresh rate from the analysed
+media. Orion saves a recovery checkpoint before switching and restores the
+configured desktop baseline after normal, manual or interrupted playback
+termination.
 
-### Health Manager
+### Private settings
 
-Checks HTTP endpoints and measures:
+Non-secret defaults remain in tracked JSON configuration. Private settings
+are encrypted with Windows Data Protection API for the current Windows
+account and stored only in ignored local data files. They are never rendered
+back into a page or included in diagnostic reports.
 
-- Availability
-- Response time
-- Status code
+## Planned extension contracts
 
----
+### AVR adapters
 
-### Orion Doctor
+Cinema logic will depend on a common AVR interface, not a Denon-specific
+implementation. Each adapter will report supported capabilities such as
+status, power, input, mute, volume and listening mode. Denon/Marantz is the
+first intended adapter because it can be tested on the original system.
 
-Runs diagnostic checks against:
+### Installation profiles
 
-- Hardware
-- Services
-- System resources
-- Playback components
+Service identities, ports, player choices, display baselines and enabled
+device adapters will move into validated user profiles. Exported profiles
+will omit secrets, machine-private playback history and recovery state.
 
-Produces recommendations and a health score.
+### Optional remote control plane
 
----
+A later self-hosted component may provide remote status and notifications.
+The local Windows agent will retain all playback detection and hardware
+control. Loss of the remote service must not interrupt local playback.
 
-### Hardware Manager
+## Design rules
 
-Collects information about:
-
-- CPU
-- GPU
-- Memory
-- Operating System
-
----
-
-### Display Manager
-
-Reads information about the active display.
-
-Examples:
-
-- Resolution
-- Refresh rate
-- Display name
-
----
-
-### Playback Subsystem
-
-Currently provides:
-
-- Playback session management
-- Stremio process detection
-
-Future versions will introduce the Cinema Engine, responsible for automatic playback optimisation.
-
----
-
-## Design Principles
-
-- Single Responsibility Principle
-- Modular components
-- Easy to test
-- Easy to extend
-- Minimal external dependencies
+- One responsibility per subsystem
+- Stable common models with replaceable provider/device adapters
+- Capability checks before offering hardware actions
+- Local-only and read-only behaviour by default
+- Atomic writes and recovery data around risky state changes
+- Secrets excluded from source control, templates, URLs, logs and reports
+- External dependencies isolated behind small, testable boundaries
