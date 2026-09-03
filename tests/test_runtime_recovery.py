@@ -11,12 +11,17 @@ print("=" * 60)
 print()
 
 
-assert (
+desktop_refresh = (
     MediaManager().get_desktop_refresh_rate()
-    == 120
 )
 
-print("✓ Existing MediaProfile supplies 120 Hz baseline")
+assert (
+    isinstance(desktop_refresh, (int, float))
+    and not isinstance(desktop_refresh, bool)
+    and 20 <= desktop_refresh <= 360
+)
+
+print("✓ MediaProfile supplies a valid desktop baseline")
 
 
 class FakeRestore:

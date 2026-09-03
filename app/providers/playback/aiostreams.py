@@ -5,6 +5,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from app.api.models import PlaybackRequest
+from app.local_configuration import services_config_path
 from app.providers.playback.base import PlaybackProvider
 from app.technical.stremio_probe import StremioProbe
 
@@ -30,7 +31,7 @@ class AIOStreamsPlaybackProvider(PlaybackProvider):
 
         self.services_path = Path(
             services_path
-            or Path("config") / "services.json"
+            or services_config_path()
         )
 
         self._thread = None

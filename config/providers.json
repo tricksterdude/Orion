@@ -1,6 +1,3 @@
 {
-    "providers": [
-        "AIOStreams",
-        "UsenetStreamer"
-    ]
+    "providers": []
 }

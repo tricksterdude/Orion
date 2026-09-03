@@ -953,18 +953,26 @@
                         <h2>Settings</h2>
 
                         <p>
-                            Manage encrypted API keys and prepare
-                            Orion for reusable system profiles.
+                            Manage encrypted API keys, local cinema
+                            settings and reusable system profiles.
                         </p>
                     </div>
 
                     <div class="card-footer">
-                        <span
-                            class="pill {% if tmdb_setting.configured %}pill-healthy{% else %}pill-warning{% endif %}"
-                        >
-                            <span class="dot"></span>
-                            TMDb {% if tmdb_setting.configured %}configured{% else %}not configured{% endif %}
-                        </span>
+                        <div class="diagnostics-card-state">
+                            <span
+                                class="pill {% if tmdb_setting.configured %}pill-healthy{% else %}pill-warning{% endif %}"
+                            >
+                                <span class="dot"></span>
+                                TMDb {% if tmdb_setting.configured %}configured{% else %}not configured{% endif %}
+                            </span>
+                            <span
+                                class="pill {% if setup_profile.completed %}pill-healthy{% else %}pill-warning{% endif %}"
+                            >
+                                <span class="dot"></span>
+                                Profile {% if setup_profile.completed %}ready{% else %}needs review{% endif %}
+                            </span>
+                        </div>
 
                         <span class="open-label">
                             Open settings →
@@ -1059,7 +1067,10 @@
             </div>
         </section>
 
-        <section class="discovery-panel">
+        <section
+            class="discovery-panel"
+            id="discovered-services"
+        >
             <header class="discovery-header">
                 <div>
                     <span class="label">Docker discovery</span>

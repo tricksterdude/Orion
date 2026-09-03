@@ -42,14 +42,15 @@ the Docker services that support the cinema system.
 The roadmap is ordered by dependency and risk rather than by marketing
 version numbers.
 
-### 1. Secure setup and reusable profiles — in progress
+### 1. Secure setup and reusable profiles — foundation complete
 
-- Move private values out of tracked configuration files
-- Manage encrypted credentials from Orion’s Settings page
-- Add a first-run setup wizard
-- Make Docker container names, ports and service addresses configurable
-- Add import/export for non-secret system profiles
-- Validate a profile before applying it and explain required fixes clearly
+- ✅ Move private values out of tracked configuration files
+- ✅ Manage encrypted credentials from Orion’s Settings page
+- ✅ Add a guided local system-setup screen
+- ✅ Keep installation-specific service, provider and media settings outside
+  tracked files
+- ✅ Add validated import/export for non-secret system profiles
+- Continue expanding the wizard as new playback and hardware adapters arrive
 
 ### 2. Complete playback verification
 

@@ -6,6 +6,7 @@ from datetime import datetime
 from pathlib import Path
 
 from app.docker_cli import docker_executable
+from app.local_configuration import services_config_path
 
 
 class OptionalServiceManager:
@@ -57,11 +58,7 @@ class OptionalServiceManager:
 
         self.services_config = Path(
             services_config
-            or (
-                project_root
-                / "config"
-                / "services.json"
-            )
+            or services_config_path()
         )
 
         self.optional_services = (

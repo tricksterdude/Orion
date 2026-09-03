@@ -36,12 +36,17 @@ from app.api.service_controller import ServiceController
 from app.api.service_names import service_slug
 from app.api.service_registry import ServiceRegistry
 from app.api.service_status import ServiceStatus
+from app.display.adapter import DisplayAdapter
 from app.media.title import friendly_media_title
 from app.playback.history import PlaybackHistory
 from app.recovery_status import display_recovery_status
 from app.secure_settings import (
     SecureSettingsError,
     SecureSettingsStore,
+)
+from app.setup_profile import (
+    SetupProfileError,
+    SetupProfileManager,
 )
 from app.stremio_controller import StremioController
 from app.system_diagnostics import SystemDiagnostics
@@ -76,6 +81,7 @@ system_diagnostics = SystemDiagnostics(
     stremio_controller=stremio_controller,
 )
 secure_settings_store = SecureSettingsStore()
+setup_profile_manager = SetupProfileManager()
 
 container_update_token = (
     secrets.token_urlsafe(32)
@@ -120,6 +126,27 @@ def _tmdb_setting_status():
         return {
             "configured": False,
             "available": False,
+            "message": str(error),
+        }
+
+
+def _setup_profile_status():
+
+    try:
+        profile = setup_profile_manager.snapshot()
+        return {
+            "available": True,
+            "completed": setup_profile_manager.completed(),
+            "service_count": len(profile["services"]),
+            "provider_count": len(profile["providers"]),
+            "message": None,
+        }
+    except SetupProfileError as error:
+        return {
+            "available": False,
+            "completed": False,
+            "service_count": 0,
+            "provider_count": 0,
             "message": str(error),
         }
 
@@ -228,6 +255,7 @@ def home_route():
         ),
         diagnostics=diagnostics_snapshot,
         tmdb_setting=_tmdb_setting_status(),
+        setup_profile=_setup_profile_status(),
     )
 
 
@@ -252,6 +280,7 @@ def settings_route():
         render_template(
             "settings.html",
             tmdb_setting=_tmdb_setting_status(),
+            setup_profile=_setup_profile_status(),
             settings_management_token=(
                 settings_management_token
             ),
@@ -264,6 +293,212 @@ def settings_route():
     response.headers["Pragma"] = "no-cache"
 
     return response
+
+
+@home.get("/setup")
+def setup_route():
+
+    result = None
+    result_status = request.args.get("setup_status")
+    result_message = request.args.get("setup_message")
+
+    if result_status and result_message:
+        result = {
+            "status": result_status,
+            "message": result_message,
+        }
+
+    try:
+        profile = setup_profile_manager.snapshot()
+        profile_error = None
+    except SetupProfileError as error:
+        profile = None
+        profile_error = str(error)
+
+    detected_display = None
+
+    try:
+        mode = DisplayAdapter().current_mode()
+
+        if mode is not None:
+            detected_display = {
+                "resolution": f"{mode.width}x{mode.height}",
+                "refresh": mode.refresh,
+            }
+    except Exception:
+        pass
+
+    response = make_response(
+        render_template(
+            "setup.html",
+            profile=profile,
+            profile_error=profile_error,
+            detected_display=detected_display,
+            supported_providers=(
+                setup_profile_manager.SUPPORTED_PROVIDERS
+            ),
+            settings_management_token=(
+                settings_management_token
+            ),
+            result=result,
+        )
+    )
+    response.headers["Cache-Control"] = (
+        "no-store, max-age=0"
+    )
+
+    return response
+
+
+@home.post("/setup/save")
+def setup_save_route():
+
+    if not hmac.compare_digest(
+        request.form.get("token", ""),
+        settings_management_token,
+    ):
+        abort(403)
+
+    try:
+        current = setup_profile_manager.snapshot()
+        profile = {
+            "version": setup_profile_manager.VERSION,
+            "media": {
+                "display": {
+                    "name": request.form.get(
+                        "display_name",
+                        "",
+                    ),
+                    "resolution": request.form.get(
+                        "resolution",
+                        "",
+                    ),
+                    "desktop_refresh_rate": request.form.get(
+                        "desktop_refresh_rate",
+                        "",
+                    ),
+                    "hdr": (
+                        request.form.get("hdr") == "on"
+                    ),
+                },
+                "audio": {
+                    "receiver": request.form.get(
+                        "receiver",
+                        "",
+                    ),
+                    # Audio format follows the playing content.  The
+                    # profile must not imply that Orion forces a codec.
+                    "preferred_format": "Automatic",
+                },
+                "playback": {
+                    "player": request.form.get(
+                        "player",
+                        "",
+                    ),
+                    "restore_desktop_after_playback": (
+                        request.form.get(
+                            "restore_desktop"
+                        )
+                        == "on"
+                    ),
+                },
+            },
+            "services": current["services"],
+            "providers": request.form.getlist(
+                "providers"
+            ),
+        }
+        setup_profile_manager.save(profile)
+        service_status.reload()
+        status = "updated"
+        message = (
+            "The local Orion profile was saved. Restart Orion "
+            "before the next playback session."
+        )
+    except SetupProfileError as error:
+        status = "failed"
+        message = str(error)
+
+    return redirect(
+        url_for(
+            "home.setup_route",
+            setup_status=status,
+            setup_message=message,
+        )
+    )
+
+
+@home.post("/settings/profile/export")
+def profile_export_route():
+
+    if not hmac.compare_digest(
+        request.form.get("token", ""),
+        settings_management_token,
+    ):
+        abort(403)
+
+    try:
+        text = setup_profile_manager.export_text()
+    except SetupProfileError as error:
+        return redirect(
+            url_for(
+                "home.settings_route",
+                settings_status="failed",
+                settings_message=str(error),
+            )
+        )
+
+    response = Response(
+        text,
+        mimetype="application/json",
+    )
+    response.headers["Content-Disposition"] = (
+        "attachment; filename=orion-profile.json"
+    )
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+
+    return response
+
+
+@home.post("/settings/profile/import")
+def profile_import_route():
+
+    if not hmac.compare_digest(
+        request.form.get("token", ""),
+        settings_management_token,
+    ):
+        abort(403)
+
+    upload = request.files.get("profile")
+
+    try:
+        if upload is None or not upload.filename:
+            raise SetupProfileError(
+                "Choose an Orion profile JSON file."
+            )
+
+        content = upload.stream.read(
+            setup_profile_manager.MAX_IMPORT_BYTES + 1
+        )
+        setup_profile_manager.import_bytes(content)
+        service_status.reload()
+        status = "updated"
+        message = (
+            "The Orion profile was imported. Restart Orion "
+            "before the next playback session."
+        )
+    except SetupProfileError as error:
+        status = "failed"
+        message = str(error)
+
+    return redirect(
+        url_for(
+            "home.settings_route",
+            settings_status=status,
+            settings_message=message,
+        )
+    )
 
 
 @home.post("/settings/tmdb")

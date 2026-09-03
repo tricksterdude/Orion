@@ -5,6 +5,7 @@ from types import SimpleNamespace
 
 from app.api.service_names import service_slug
 from app.health_manager import HealthManager
+from app.local_configuration import services_config_path
 
 
 class ServiceStatus:
@@ -40,15 +41,7 @@ class ServiceStatus:
     @staticmethod
     def _load_configured_services():
 
-        project_root = (
-            Path(__file__).resolve().parents[2]
-        )
-
-        config_path = (
-            project_root
-            / "config"
-            / "services.json"
-        )
+        config_path = services_config_path()
 
         with config_path.open(
             "r",

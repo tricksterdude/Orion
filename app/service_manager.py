@@ -1,5 +1,6 @@
 import json
 
+from app.local_configuration import services_config_path
 from models.service import Service
 
 
@@ -12,7 +13,10 @@ class ServiceManager:
 
         self.services.clear()
 
-        with open("config/services.json", "r") as file:
+        with services_config_path().open(
+            "r",
+            encoding="utf-8",
+        ) as file:
 
             data = json.load(file)
 

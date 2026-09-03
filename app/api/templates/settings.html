@@ -205,6 +205,38 @@
             color: var(--red);
         }
 
+        .button-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--cyan);
+            border-color: var(--cyan);
+            background: rgba(56, 207, 255, 0.09);
+            text-decoration: none;
+        }
+
+        .profile-summary {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 24px;
+        }
+
+        .summary-item {
+            padding: 18px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: rgba(5, 10, 19, 0.35);
+        }
+
+        .summary-item strong {
+            display: block;
+            margin-top: 6px;
+            font-size: 24px;
+        }
+
+        .file-input { padding: 12px; }
+
         .privacy {
             margin-top: 28px !important;
             padding-top: 24px;
@@ -217,6 +249,7 @@
             .panel-header { flex-direction: column; }
             .panel-header, .form-body { padding: 24px; }
             .button { width: 100%; }
+            .profile-summary { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -231,8 +264,9 @@
             <p class="eyebrow">Private configuration</p>
             <h1>Settings</h1>
             <p class="subtitle">
-                Manage private values without editing Orion’s files.
-                Saved values are encrypted for your Windows account.
+                Manage private values and this computer’s local
+                cinema profile without editing Orion’s tracked files.
+                Saved private values are encrypted for your Windows account.
             </p>
         </header>
 
@@ -347,6 +381,107 @@
                     Windows account that created it and is excluded
                     from Git.
                 </p>
+            </div>
+        </section>
+
+        <section class="panel">
+            <header class="panel-header">
+                <div>
+                    <h2>System profile</h2>
+                    <p>
+                        Keep display, playback and Docker service
+                        choices outside Orion’s tracked files.
+                    </p>
+                </div>
+
+                <span
+                    class="status{% if setup_profile.completed %} status-configured{% endif %}"
+                >
+                    {% if not setup_profile.available %}
+                        Needs attention
+                    {% elif setup_profile.completed %}
+                        Setup complete
+                    {% else %}
+                        Review needed
+                    {% endif %}
+                </span>
+            </header>
+
+            <div class="form-body">
+                {% if setup_profile.available %}
+                    <div class="profile-summary">
+                        <div class="summary-item">
+                            <span>Docker services</span>
+                            <strong>{{ setup_profile.service_count }}</strong>
+                        </div>
+                        <div class="summary-item">
+                            <span>Playback providers</span>
+                            <strong>{{ setup_profile.provider_count }}</strong>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="result result-failed" role="alert">
+                        {{ setup_profile.message }}
+                    </div>
+                {% endif %}
+
+                <div class="actions">
+                    <a
+                        class="button button-link"
+                        href="{{ url_for('home.setup_route') }}"
+                    >
+                        Review setup
+                    </a>
+
+                    {% if setup_profile.available %}
+                        <form
+                            method="post"
+                            action="{{ url_for('home.profile_export_route') }}"
+                        >
+                            <input
+                                type="hidden"
+                                name="token"
+                                value="{{ settings_management_token }}"
+                            >
+                            <button class="button" type="submit">
+                                Export safe profile
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+
+                <form
+                    method="post"
+                    action="{{ url_for('home.profile_import_route') }}"
+                    enctype="multipart/form-data"
+                >
+                    <input
+                        type="hidden"
+                        name="token"
+                        value="{{ settings_management_token }}"
+                    >
+                    <label for="profile-file">
+                        Import profile
+                    </label>
+                    <input
+                        class="file-input"
+                        id="profile-file"
+                        name="profile"
+                        type="file"
+                        accept="application/json,.json"
+                        required
+                    >
+                    <p class="hint">
+                        Import validates the entire file and creates
+                        a backup before changing local configuration.
+                        Private keys are never included in profiles.
+                    </p>
+                    <div class="actions">
+                        <button class="button" type="submit">
+                            Validate and import
+                        </button>
+                    </div>
+                </form>
             </div>
         </section>
     </main>

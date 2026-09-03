@@ -1,12 +1,13 @@
 import json
-from pathlib import Path
+
+from app.local_configuration import media_config_path
 
 
 class MediaProfile:
 
     def __init__(self):
 
-        profile = Path("data/media_profile.json")
+        profile = media_config_path()
 
         with profile.open(
             "r",
@@ -35,7 +36,6 @@ class MediaProfile:
         return {
             "display": self.display["name"],
             "desktop_refresh": self.display["desktop_refresh_rate"],
-            "movie_refresh": self.display["movie_refresh_rate"],
             "hdr": self.display["hdr"],
             "receiver": self.audio["receiver"],
             "audio": self.audio["preferred_format"],
