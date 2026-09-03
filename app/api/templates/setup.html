@@ -164,6 +164,11 @@
 
         input:focus { border-color: var(--cyan); }
 
+        input[readonly] {
+            color: var(--green);
+            cursor: default;
+        }
+
         .choice-list {
             display: flex;
             flex-wrap: wrap;
@@ -380,8 +385,9 @@
                         <h2>Playback and audio</h2>
                         <p>
                             Select the playback adapters Orion should watch.
-                            AVR control is not enabled by these descriptive
-                            audio fields.
+                            Orion follows the audio format of each playing
+                            file. AVR control is not enabled by the receiver
+                            description.
                         </p>
                     </header>
                     <div class="panel-body grid">
@@ -408,15 +414,19 @@
                             >
                         </div>
                         <div class="field-full">
-                            <label for="audio-format">Preferred audio format</label>
+                            <label for="audio-format">Audio handling</label>
                             <input
                                 id="audio-format"
-                                name="preferred_audio_format"
                                 type="text"
-                                maxlength="80"
-                                required
-                                value="{{ profile.media.audio.preferred_format }}"
+                                readonly
+                                value="Automatic — follows each playing file"
                             >
+                            <p class="hint">
+                                Orion will not force Atmos, DTS or another
+                                codec. Future AVR support will negotiate the
+                                receiver's capabilities while preserving the
+                                content's native audio whenever possible.
+                            </p>
                         </div>
                         <div class="field-full">
                             <label>Playback providers</label>

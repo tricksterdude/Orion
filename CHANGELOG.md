@@ -10,7 +10,7 @@ The format is based on **Keep a Changelog** and follows **Semantic Versioning** 
 
 ### Added
 
-- Guided system setup for display, playback-provider and audio preferences
+- Guided system setup for display, playback-provider and content-directed audio
 - Local installation profiles that survive repository updates
 - Validated non-secret profile import/export with pre-change ZIP backups
 - Windows-protected storage and a local Settings page for private values

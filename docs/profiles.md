@@ -11,7 +11,7 @@ into `data/profile`:
 
 - `services.json` — monitored service names, containers, ports and addresses
 - `providers.json` — enabled playback-provider adapters
-- `media.json` — display baseline, descriptive audio preferences and player
+- `media.json` — display baseline, automatic audio policy and player
 - `setup.json` — whether the guided setup has been reviewed
 
 The whole directory is ignored by Git. Existing installations keep their
@@ -37,7 +37,7 @@ The Settings page exports `orion-profile.json`. Its versioned, allow-listed
 schema contains only:
 
 - Media/display preferences
-- Descriptive audio and playback preferences
+- Receiver description, automatic content-directed audio and playback preferences
 - Configured Docker service endpoints
 - Enabled Orion playback providers
 

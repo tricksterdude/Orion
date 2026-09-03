@@ -172,10 +172,10 @@ class SetupProfileManager:
                     audio.get("receiver"),
                     "Audio receiver",
                 ),
-                "preferred_format": cls._text(
-                    audio.get("preferred_format"),
-                    "Preferred audio format",
-                ),
+                # Version 1 exported profiles may contain the old
+                # descriptive codec preference.  Normalise it because
+                # playback audio must always follow the source content.
+                "preferred_format": "Automatic",
             },
             "playback": {
                 "player": cls._text(

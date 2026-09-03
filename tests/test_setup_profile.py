@@ -29,7 +29,7 @@ PROFILE = {
         },
         "audio": {
             "receiver": "Living room AVR",
-            "preferred_format": "Dolby Atmos",
+            "preferred_format": "Automatic",
         },
         "playback": {
             "player": "Stremio",

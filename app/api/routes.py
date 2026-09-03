@@ -394,10 +394,9 @@ def setup_save_route():
                         "receiver",
                         "",
                     ),
-                    "preferred_format": request.form.get(
-                        "preferred_audio_format",
-                        "",
-                    ),
+                    # Audio format follows the playing content.  The
+                    # profile must not imply that Orion forces a codec.
+                    "preferred_format": "Automatic",
                 },
                 "playback": {
                     "player": request.form.get(

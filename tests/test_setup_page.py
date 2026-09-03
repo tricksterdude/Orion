@@ -159,6 +159,9 @@ try:
     assert manager.saved["media"]["display"][
         "desktop_refresh_rate"
     ] == "120"
+    assert manager.saved["media"]["audio"][
+        "preferred_format"
+    ] == "Automatic"
 
     print("✓ Setup changes require a token and preserve services")
 
