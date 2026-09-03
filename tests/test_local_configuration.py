@@ -121,6 +121,8 @@ with TemporaryDirectory() as directory:
 
     assert services == {"services": []}
     assert media["display"]["desktop_refresh_rate"] == 60
+    assert "movie_refresh_rate" not in media["display"]
+    assert "tv_refresh_rate" not in media["display"]
     assert configuration.local_path("media").is_file()
 
     print("✓ New installations receive neutral safe defaults")

@@ -11,14 +11,6 @@ class MediaManager:
 
         return self.profile.display["desktop_refresh_rate"]
 
-    def get_movie_refresh_rate(self):
-
-        return self.profile.display["movie_refresh_rate"]
-
-    def get_tv_refresh_rate(self):
-
-        return self.profile.display["tv_refresh_rate"]
-
     def get_display_name(self):
 
         return self.profile.display["name"]

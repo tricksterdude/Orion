@@ -18,8 +18,6 @@ PROFILE = {
         "display": {
             "name": "Living room display",
             "desktop_refresh_rate": 120,
-            "movie_refresh_rate": 23.976,
-            "tv_refresh_rate": 50,
             "hdr": True,
             "resolution": "3840x2160",
         },
@@ -120,6 +118,9 @@ try:
     assert "Living room display" in page
     assert "3840x2160" in page
     assert "120 Hz" in page
+    assert "Automatic — derived from stream FPS" in page
+    assert 'name="movie_refresh_rate"' not in page
+    assert 'name="tv_refresh_rate"' not in page
     assert "AIOStreams" in page
     assert routes.settings_management_token in page
     assert "no-store" in response.headers["Cache-Control"]
@@ -136,8 +137,6 @@ try:
             "display_name": "Cinema display",
             "resolution": "3840x2160",
             "desktop_refresh_rate": "120",
-            "movie_refresh_rate": "23.976",
-            "tv_refresh_rate": "50",
             "hdr": "on",
             "restore_desktop": "on",
             "player": "Stremio",

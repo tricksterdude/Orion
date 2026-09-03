@@ -22,8 +22,6 @@ PROFILE = {
         "display": {
             "name": "Cinema display",
             "desktop_refresh_rate": 120,
-            "movie_refresh_rate": 23.976,
-            "tv_refresh_rate": 50,
             "hdr": True,
             "resolution": "3840x2160",
         },

@@ -28,8 +28,6 @@ class LocalConfiguration:
                 "display": {
                     "name": "Primary display",
                     "desktop_refresh_rate": 60,
-                    "movie_refresh_rate": 23.976,
-                    "tv_refresh_rate": 50,
                     "hdr": False,
                     "resolution": "1920x1080",
                 },

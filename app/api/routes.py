@@ -377,14 +377,6 @@ def setup_save_route():
                         "desktop_refresh_rate",
                         "",
                     ),
-                    "movie_refresh_rate": request.form.get(
-                        "movie_refresh_rate",
-                        "",
-                    ),
-                    "tv_refresh_rate": request.form.get(
-                        "tv_refresh_rate",
-                        "",
-                    ),
                     "hdr": (
                         request.form.get("hdr") == "on"
                     ),

@@ -23,6 +23,9 @@ defaults.
 Open **Settings → Review setup**. Orion shows the current Windows resolution
 and refresh rate alongside the stored profile. Confirm that **Desktop Hz** is
 the normal non-playback refresh rate that Orion must restore after playback.
+Movie and television refresh targets are not profile settings: Orion measures
+each stream's FPS and selects the closest supported display mode for that
+playback session.
 
 Saving creates a timestamped ZIP backup, validates every field, writes the
 local files atomically, and verifies the result. Restart Orion before the next

@@ -36,7 +36,6 @@ class MediaProfile:
         return {
             "display": self.display["name"],
             "desktop_refresh": self.display["desktop_refresh_rate"],
-            "movie_refresh": self.display["movie_refresh_rate"],
             "hdr": self.display["hdr"],
             "receiver": self.audio["receiver"],
             "audio": self.audio["preferred_format"],

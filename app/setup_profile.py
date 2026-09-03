@@ -152,18 +152,6 @@ class SetupProfileManager:
                     20,
                     360,
                 ),
-                "movie_refresh_rate": cls._number(
-                    display.get("movie_refresh_rate"),
-                    "Movie refresh rate",
-                    20,
-                    120,
-                ),
-                "tv_refresh_rate": cls._number(
-                    display.get("tv_refresh_rate"),
-                    "TV refresh rate",
-                    20,
-                    120,
-                ),
                 "hdr": hdr,
                 "resolution": resolution,
             },
