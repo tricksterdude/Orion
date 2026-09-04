@@ -1,11 +1,15 @@
 import base64
 import json
 import subprocess
-from fractions import Fraction
 from pathlib import Path
 from urllib.parse import unquote
 
 from app.ffprobe_cli import ffprobe_executable
+from app.technical.ffprobe_metadata import (
+    FFPROBE_ENTRIES,
+    analyse_ffprobe_document,
+    parse_frame_rate,
+)
 
 
 class NZBDAVProbe:
@@ -87,14 +91,8 @@ class NZBDAVProbe:
                     "Authorization: Basic "
                     f"{authorization}\r\n"
                 ),
-                "-select_streams",
-                "v:0",
                 "-show_entries",
-                (
-                    "stream=codec_name,width,height,"
-                    "r_frame_rate,avg_frame_rate,"
-                    "color_transfer,color_primaries"
-                ),
+                FFPROBE_ENTRIES,
                 "-of",
                 "json",
                 url,
@@ -118,59 +116,15 @@ class NZBDAVProbe:
 
         data = json.loads(result.stdout)
 
-        streams = data.get(
-            "streams",
-            [],
-        )
-
-        if not streams:
-
-            raise RuntimeError(
-                "FFprobe found no video stream"
-            )
-
-        stream = streams[0]
-
-        frame_rate = (
-            stream.get("avg_frame_rate")
-            or stream.get("r_frame_rate")
-        )
-
-        fps = self.parse_frame_rate(
-            frame_rate
-        )
-
-        transfer = (
-            stream.get("color_transfer")
-            or ""
-        ).lower()
-
-        hdr = transfer in {
-            "smpte2084",
-            "arib-std-b67",
-        }
-
         filename = unquote(
             url.rsplit("/", 1)[-1]
         )
 
-        return {
-            "url": url,
-            "filename": filename,
-            "fps": fps,
-            "width": stream.get("width"),
-            "height": stream.get("height"),
-            "codec": stream.get(
-                "codec_name"
-            ),
-            "color_transfer": transfer,
-            "color_primaries": (
-                stream.get(
-                    "color_primaries"
-                )
-            ),
-            "hdr": hdr,
-        }
+        return analyse_ffprobe_document(
+            data,
+            filename=filename,
+            url=url,
+        )
 
     @staticmethod
     def parse_frame_rate(value):
@@ -179,7 +133,4 @@ class NZBDAVProbe:
 
             return None
 
-        return round(
-            float(Fraction(value)),
-            3,
-        )
+        return parse_frame_rate(value)

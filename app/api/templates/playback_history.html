@@ -276,17 +276,22 @@
         .details {
             display: grid;
             grid-template-columns:
-                repeat(5, minmax(0, 1fr));
+                repeat(3, minmax(0, 1fr));
         }
 
         .detail {
             min-width: 0;
             padding: 18px 20px;
             border-right: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
         }
 
-        .detail:last-child {
+        .detail:nth-child(3n) {
             border-right: 0;
+        }
+
+        .detail:nth-last-child(-n + 3) {
+            border-bottom: 0;
         }
 
         .detail-label {
@@ -360,11 +365,19 @@
                 border-bottom: 1px solid var(--border);
             }
 
+            .detail:nth-last-child(-n + 3) {
+                border-bottom: 1px solid var(--border);
+            }
+
             .detail:nth-child(even) {
                 border-right: 0;
             }
 
-            .detail:last-child {
+            .detail:nth-child(odd) {
+                border-right: 1px solid var(--border);
+            }
+
+            .detail:nth-last-child(-n + 2) {
                 border-bottom: 0;
             }
         }
@@ -396,6 +409,11 @@
 
             .detail {
                 border-right: 0;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .detail:last-child {
+                border-bottom: 0;
             }
         }
     </style>
@@ -472,6 +490,8 @@
             {% set cinema = session.cinema or {} %}
             {% set current = cinema.current_mode or {} %}
             {% set target = cinema.target_mode or {} %}
+            {% set audio_output = session.audio_output or {} %}
+            {% set audio_processing = session.audio_processing or {} %}
 
             <article class="session">
                 <div class="session-heading">
@@ -579,6 +599,52 @@
                             {{ media.resolution or "Unknown" }}
                             &middot;
                             {{ media.video_codec or "Unknown codec" }}
+                        </span>
+                    </div>
+
+                    <div class="detail">
+                        <span class="detail-label">
+                            Stream audio
+                        </span>
+
+                        <span class="detail-value">
+                            {{ media.audio_codec or "Unknown codec" }}
+                            {% if media.immersive_audio %}
+                                &middot; {{ media.immersive_audio }}
+                            {% endif %}
+                            {% if media.audio_channels %}
+                                &middot; {{ media.audio_channels }}
+                            {% endif %}
+                            {% if media.audio_sample_rate %}
+                                &middot;
+                                {{ (media.audio_sample_rate / 1000) | round(1) }} kHz
+                            {% endif %}
+                            {% if media.audio_bitrate %}
+                                &middot;
+                                {{ (media.audio_bitrate / 1000) | round | int }} kbps
+                            {% endif %}
+                            {% if audio_processing.processor %}
+                                <br>
+                                {{ audio_processing.processor }}
+                                {% if audio_processing.installed %}
+                                    <span class="yes">available</span>
+                                {% else %}
+                                    <span class="no">not detected</span>
+                                {% endif %}
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <div class="detail">
+                        <span class="detail-label">
+                            Windows output
+                        </span>
+
+                        <span class="detail-value">
+                            {{ audio_output.name or "Not observed" }}
+                            {% if audio_output.form_factor %}
+                                &middot; {{ audio_output.form_factor }}
+                            {% endif %}
                         </span>
                     </div>
 

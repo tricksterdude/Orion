@@ -3,6 +3,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from app.api.models import PlaybackRequest
+from app.audio.windows_output import AudioEndpoint
 from app.display.mode import DisplayMode
 from app.playback.history import PlaybackHistory
 
@@ -12,6 +13,31 @@ print("PLAYBACK HISTORY TEST")
 print("=" * 60)
 print()
 
+
+class FakeAudioOutput:
+
+    def default_endpoint(self):
+
+        return AudioEndpoint(
+            name="DENON-AVR HDMI",
+            active=True,
+            form_factor="HDMI/display audio",
+        )
+
+
+class FakeSpatialProcessors:
+
+    def recommendation(self, immersive_audio):
+
+        assert immersive_audio == "Dolby Atmos"
+
+        return {
+            "policy": "Automatic",
+            "processor": "Dolby Access",
+            "installed": True,
+            "control": "observe_only",
+        }
+
 with TemporaryDirectory() as temporary_directory:
 
     history_path = (
@@ -19,7 +45,11 @@ with TemporaryDirectory() as temporary_directory:
         / "playback_history.jsonl"
     )
 
-    history = PlaybackHistory(history_path)
+    history = PlaybackHistory(
+        history_path,
+        audio_output=FakeAudioOutput(),
+        spatial_processors=FakeSpatialProcessors(),
+    )
 
     request = PlaybackRequest(
         title="The Matrix",
@@ -35,6 +65,10 @@ with TemporaryDirectory() as temporary_directory:
         video_codec="hevc",
         audio_codec="truehd",
         audio_channels="7.1",
+        audio_sample_rate=48000,
+        audio_bitrate=4000000,
+        audio_profile="Dolby TrueHD",
+        immersive_audio="Dolby Atmos",
         source="Test Provider",
     )
 
@@ -112,6 +146,12 @@ with TemporaryDirectory() as temporary_directory:
     )
 
     assert record["cinema"]["switched"] is True
+    assert record["playback"]["audio_codec"] == "truehd"
+    assert record["playback"]["audio_sample_rate"] == 48000
+    assert record["playback"]["immersive_audio"] == "Dolby Atmos"
+    assert record["audio_output"]["name"] == "DENON-AVR HDMI"
+    assert record["audio_processing"]["processor"] == "Dolby Access"
+    assert record["audio_processing"]["control"] == "observe_only"
 
     print("Saved playback:")
     print(

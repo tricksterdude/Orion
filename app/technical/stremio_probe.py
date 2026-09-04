@@ -2,13 +2,17 @@ import base64
 import json
 import subprocess
 import zlib
-from fractions import Fraction
 from urllib.parse import unquote, urlparse
 
 import requests
 import websocket
 
 from app.ffprobe_cli import ffprobe_executable
+from app.technical.ffprobe_metadata import (
+    FFPROBE_ENTRIES,
+    analyse_ffprobe_document,
+    parse_frame_rate,
+)
 
 
 class StremioProbe:
@@ -134,14 +138,8 @@ class StremioProbe:
                 ffprobe_executable(),
                 "-v",
                 "error",
-                "-select_streams",
-                "v:0",
                 "-show_entries",
-                (
-                    "stream=codec_name,width,height,"
-                    "r_frame_rate,avg_frame_rate,"
-                    "color_transfer,color_primaries"
-                ),
+                FFPROBE_ENTRIES,
                 "-of",
                 "json",
                 selected["url"],
@@ -165,63 +163,16 @@ class StremioProbe:
 
         data = json.loads(result.stdout)
 
-        streams = data.get("streams", [])
-
-        if not streams:
-
-            raise RuntimeError(
-                "FFprobe found no video stream"
-            )
-
-        video = streams[0]
-
-        frame_rate = (
-            video.get("avg_frame_rate")
-            or video.get("r_frame_rate")
-        )
-
-        fps = self.parse_frame_rate(
-            frame_rate
-        )
-
-        transfer = (
-            video.get("color_transfer")
-            or ""
-        ).lower()
-
         filename = (
             selected.get("filename")
             or ""
         )
 
-        filename_upper = filename.upper()
-
-        dolby_vision = (
-            ".DV." in filename_upper
-            or "DOLBY.VISION" in filename_upper
+        return analyse_ffprobe_document(
+            data,
+            filename=filename,
+            source_host=selected.get("source_host"),
         )
-
-        hdr = transfer in {
-            "smpte2084",
-            "arib-std-b67",
-        }
-
-        return {
-            "filename": filename or None,
-            "source_host": selected.get(
-                "source_host"
-            ),
-            "fps": fps,
-            "width": video.get("width"),
-            "height": video.get("height"),
-            "codec": video.get("codec_name"),
-            "color_transfer": transfer,
-            "color_primaries": video.get(
-                "color_primaries"
-            ),
-            "hdr": hdr,
-            "dolby_vision": dolby_vision,
-        }
 
     def _page_target(self):
 
@@ -247,7 +198,4 @@ class StremioProbe:
 
             return None
 
-        return round(
-            float(Fraction(value)),
-            3,
-        )
+        return parse_frame_rate(value)

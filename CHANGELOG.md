@@ -10,6 +10,10 @@ The format is based on **Keep a Changelog** and follows **Semantic Versioning** 
 
 ### Added
 
+- Read-only FFprobe audio metadata for AIOStreams and UsenetStreamer playback
+- Default Windows audio-output observation and configured-receiver diagnostics
+- Read-only Dolby Access and DTS Sound Unbound detection with content mapping
+- Stream audio and observed Windows output details in playback history
 - Guided system setup for display, playback-provider and content-directed audio
 - Stream-derived playback refresh with only the desktop restoration rate configured
 - Local installation profiles that survive repository updates
