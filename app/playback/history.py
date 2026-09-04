@@ -7,6 +7,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
+from app.audio.windows_output import WindowsAudioOutput
+from app.audio.spatial_processors import SpatialAudioProcessors
+
 
 class PlaybackHistory:
 
@@ -15,11 +18,19 @@ class PlaybackHistory:
     def __init__(
         self,
         path="data/playback_history.jsonl",
+        audio_output=None,
+        spatial_processors=None,
     ):
 
         self.path = Path(path)
         self.current = None
         self.started_monotonic = None
+        self.audio_output = (
+            audio_output or WindowsAudioOutput()
+        )
+        self.spatial_processors = (
+            spatial_processors or SpatialAudioProcessors()
+        )
         self._lock = threading.Lock()
 
     @staticmethod
@@ -53,6 +64,8 @@ class PlaybackHistory:
             "ended_at": None,
             "duration_seconds": None,
             "playback": None,
+            "audio_output": None,
+            "audio_processing": None,
             "cinema": None,
             "display_restored": None,
         }
@@ -70,6 +83,33 @@ class PlaybackHistory:
         self.current["playback"] = asdict(
             request
         )
+
+        try:
+
+            endpoint = self.audio_output.default_endpoint()
+            self.current["audio_output"] = endpoint.as_dict()
+
+        # Audio observation must never interrupt playback history.
+        except Exception:
+
+            self.current["audio_output"] = None
+
+        try:
+
+            self.current["audio_processing"] = (
+                self.spatial_processors.recommendation(
+                    getattr(
+                        request,
+                        "immersive_audio",
+                        None,
+                    )
+                )
+            )
+
+        # Optional app detection must never interrupt playback.
+        except Exception:
+
+            self.current["audio_processing"] = None
 
         if cinema_result is None:
 

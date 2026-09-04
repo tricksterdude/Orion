@@ -49,6 +49,10 @@ jobs:
           $tests = @(
             "tests/test_docker_cli.py",
             "tests/test_ffprobe_cli.py",
+            "tests/test_ffprobe_metadata.py",
+            "tests/test_media_probes.py",
+            "tests/test_windows_audio_output.py",
+            "tests/test_spatial_audio.py",
             "tests/test_single_instance.py",
             "tests/test_system_diagnostics.py",
             "tests/test_secure_settings.py",
@@ -63,6 +67,7 @@ jobs:
             "tests/test_stremio_controller.py",
             "tests/test_aiostreams_playback.py",
             "tests/test_playback_history.py",
+            "tests/test_playback_history_page.py",
             "tests/test_playback_cycle.py",
             "tests/test_runtime_recovery.py",
             "tests/test_service_details_page.py",

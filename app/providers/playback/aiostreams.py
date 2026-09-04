@@ -287,6 +287,25 @@ class AIOStreamsPlaybackProvider(PlaybackProvider):
                         "dolby_vision"
                     ],
                     video_codec=technical["codec"],
+                    audio_codec=technical.get(
+                        "audio_codec"
+                    ),
+                    audio_channels=technical.get(
+                        "audio_channels"
+                    ),
+                    audio_sample_rate=technical.get(
+                        "audio_sample_rate"
+                    ),
+                    audio_bitrate=technical.get(
+                        "audio_bitrate"
+                    ),
+                    audio_profile=technical.get(
+                        "audio_profile"
+                    ),
+                    immersive_audio=technical.get(
+                        "immersive_audio"
+                    ),
+                    bitrate=technical.get("bitrate"),
                     source="AIOStreams",
                 )
 
@@ -305,6 +324,21 @@ class AIOStreamsPlaybackProvider(PlaybackProvider):
                 )
                 print(
                     f"Video : {request.video_codec}"
+                )
+                print(
+                    f"Audio : {request.audio_codec}"
+                )
+                print(
+                    f"Layout: {request.audio_channels}"
+                )
+                print(
+                    f"Rate  : {request.audio_sample_rate} Hz"
+                )
+                print(
+                    f"Audio bitrate: {request.audio_bitrate}"
+                )
+                print(
+                    f"Immersive: {request.immersive_audio}"
                 )
                 print(
                     f"HDR   : {request.hdr}"

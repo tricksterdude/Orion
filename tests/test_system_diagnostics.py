@@ -4,6 +4,7 @@ import tempfile
 from pathlib import Path
 from types import SimpleNamespace
 
+from app.audio.windows_output import WindowsAudioOutputError
 from app.system_diagnostics import SystemDiagnostics
 
 
@@ -55,6 +56,50 @@ class FakeDisplay:
             height=2160,
             refresh=120,
         )
+
+
+class FakeAudioOutput:
+
+    def __init__(
+        self,
+        name="Living room AVR HDMI",
+        active=True,
+        available=True,
+    ):
+
+        self.name = name
+        self.active = active
+        self.available = available
+
+    def default_endpoint(self):
+
+        if not self.available:
+
+            raise WindowsAudioOutputError(
+                "Audio unavailable"
+            )
+
+        return SimpleNamespace(
+            name=self.name,
+            active=self.active,
+            form_factor="HDMI/display audio",
+        )
+
+
+class FakeSpatialProcessors:
+
+    def installed(self):
+
+        return [
+            {
+                "id": "dolby_access",
+                "name": "Dolby Access",
+            },
+            {
+                "id": "dts_sound_unbound",
+                "name": "DTS Sound Unbound",
+            },
+        ]
 
 
 class CommandRunner:
@@ -113,6 +158,18 @@ def project_root():
         "providers.json",
         {"providers": []},
     )
+    media_directory = root / "data" / "profile"
+    media_directory.mkdir(parents=True, exist_ok=True)
+    (media_directory / "media.json").write_text(
+        json.dumps(
+            {
+                "audio": {
+                    "receiver": "Living room AVR",
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
 
     return temporary, root
 
@@ -122,6 +179,7 @@ def build_diagnostics(
     command_runner=None,
     processes=None,
     stremio=None,
+    audio_output=None,
     clock=None,
 ):
 
@@ -130,6 +188,10 @@ def build_diagnostics(
         docker_resolver=lambda: "docker.exe",
         ffprobe_resolver=lambda: "ffprobe.exe",
         display_factory=FakeDisplay,
+        audio_output_factory=(
+            lambda: audio_output or FakeAudioOutput()
+        ),
+        spatial_processors_factory=FakeSpatialProcessors,
         command_runner=command_runner or CommandRunner(),
         process_iter=(
             lambda attributes: processes
@@ -177,7 +239,7 @@ try:
     assert snapshot["status"] == "healthy"
     assert snapshot["label"] == "Healthy"
     assert snapshot["counts"] == {
-        "healthy": 7,
+        "healthy": 8,
         "warning": 0,
         "action_required": 0,
     }
@@ -189,12 +251,43 @@ try:
         "docker",
         "ffprobe",
         "display",
+        "audio_output",
         "single_instance",
         "stremio",
         "services",
     ]
 
     print("✓ Healthy system produces a healthy summary")
+
+    audio_check = next(
+        check
+        for check in snapshot["checks"]
+        if check["id"] == "audio_output"
+    )
+    assert audio_check["status"] == "healthy"
+    assert "Living room AVR HDMI" in audio_check["detail"]
+    assert "Dolby Access" in audio_check["detail"]
+    assert "DTS Sound Unbound" in audio_check["detail"]
+
+    print("✓ Configured receiver matches Windows audio output")
+
+    wrong_audio = build_diagnostics(
+        root,
+        audio_output=FakeAudioOutput(
+            name="Television speakers"
+        ),
+    )
+    wrong_audio_snapshot = wrong_audio.run(
+        services=services
+    )
+    wrong_audio_check = next(
+        check
+        for check in wrong_audio_snapshot["checks"]
+        if check["id"] == "audio_output"
+    )
+    assert wrong_audio_check["status"] == "warning"
+
+    print("✓ Unexpected Windows audio output produces a warning")
 
     child_process_snapshot = diagnostics.run(
         services=services,
@@ -369,6 +462,10 @@ try:
     assert "alice" not in report
     assert "[redacted]" in report
     assert "playback history are excluded" in report
+    assert "Living room AVR HDMI" not in report
+    assert "active default endpoint" in report
+    assert "Dolby Access" in report
+    assert "DTS Sound Unbound" in report
 
     print("✓ Safe report redacts secrets, URLs and account paths")
 

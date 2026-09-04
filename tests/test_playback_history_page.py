@@ -48,7 +48,23 @@ try:
                 "hdr": True,
                 "dolby_vision": False,
                 "video_codec": "hevc",
+                "audio_codec": "Dolby TrueHD",
+                "audio_channels": "7.1",
+                "audio_sample_rate": 48000,
+                "audio_bitrate": 4000000,
+                "immersive_audio": "Dolby Atmos",
                 "source": "UsenetStreamer",
+            },
+            "audio_output": {
+                "name": "DENON-AVR HDMI",
+                "active": True,
+                "form_factor": "HDMI/display audio",
+            },
+            "audio_processing": {
+                "policy": "Automatic",
+                "processor": "Dolby Access",
+                "installed": True,
+                "control": "observe_only",
             },
             "cinema": {
                 "current_mode": {
@@ -87,6 +103,14 @@ try:
         assert "The Matrix (1999)" in page
         assert "UsenetStreamer" in page
         assert "23.976 fps" in page
+        assert "Dolby TrueHD" in page
+        assert "Dolby Atmos" in page
+        assert "7.1" in page
+        assert "48.0 kHz" in page
+        assert "4000 kbps" in page
+        assert "DENON-AVR HDMI" in page
+        assert "Dolby Access" in page
+        assert "available" in page
         assert "Display restored" in page
         assert 'href="/"' in page
         assert "Back to Orion" in page

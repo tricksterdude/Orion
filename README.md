@@ -52,13 +52,19 @@ version numbers.
 - ✅ Add validated import/export for non-secret system profiles
 - Continue expanding the wizard as new playback and hardware adapters arrive
 
-### 2. Complete playback verification
+### 2. Complete playback verification — audio foundation complete
 
-- Extract audio codec, channel layout and bitrate
+- ✅ Extract audio codec, profile, channel layout, sample rate and bitrate
 - Improve HDR and Dolby Vision identification
-- Verify the active Windows audio device and HDMI route
-- Compare expected media properties with the actual display and audio state
-- Surface mismatches in the live session and playback history
+- ✅ Observe the default Windows audio output without changing it
+- ✅ Compare the configured receiver with the Windows output
+- ✅ Detect Dolby Access and DTS Sound Unbound and map immersive content
+  to the relevant processor without changing Windows
+- ✅ Surface stream audio and the observed output in playback history
+- Automate spatial-processor selection only after current-mode detection,
+  reversible switching and recovery are proven safe
+- Compare the expected stream format with the AVR's reported input signal
+  once receiver adapters are available
 
 ### 3. Vendor-neutral AVR control
 

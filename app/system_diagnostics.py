@@ -10,6 +10,8 @@ from pathlib import Path
 
 import psutil
 
+from app.audio.spatial_processors import SpatialAudioProcessors
+from app.audio.windows_output import WindowsAudioOutput
 from app.display.adapter import DisplayAdapter
 from app.docker_cli import docker_executable
 from app.ffprobe_cli import ffprobe_executable
@@ -41,6 +43,8 @@ class SystemDiagnostics:
         docker_resolver=None,
         ffprobe_resolver=None,
         display_factory=None,
+        audio_output_factory=None,
+        spatial_processors_factory=None,
         command_runner=None,
         process_iter=None,
         clock=None,
@@ -64,6 +68,13 @@ class SystemDiagnostics:
         )
         self.display_factory = (
             display_factory or DisplayAdapter
+        )
+        self.audio_output_factory = (
+            audio_output_factory or WindowsAudioOutput
+        )
+        self.spatial_processors_factory = (
+            spatial_processors_factory
+            or SpatialAudioProcessors
         )
         self.command_runner = (
             command_runner or self._run_command
@@ -114,6 +125,7 @@ class SystemDiagnostics:
         summary,
         guidance,
         detail=None,
+        report_detail=None,
     ):
 
         return {
@@ -126,6 +138,7 @@ class SystemDiagnostics:
             "summary": summary,
             "guidance": guidance,
             "detail": detail,
+            "report_detail": report_detail,
         }
 
     def _safe_check(self, check_id, name, function):
@@ -389,6 +402,198 @@ class SystemDiagnostics:
             ),
         )
 
+    def _configured_receiver(self):
+
+        candidates = (
+            self.project_root
+            / "data"
+            / "profile"
+            / "media.json",
+            self.project_root
+            / "data"
+            / "media_profile.json",
+        )
+
+        for path in candidates:
+
+            try:
+
+                document = json.loads(
+                    path.read_text(encoding="utf-8")
+                )
+                receiver = (
+                    document.get("audio", {})
+                    .get("receiver")
+                )
+
+                if isinstance(receiver, str) and receiver.strip():
+
+                    return receiver.strip()
+
+            except (OSError, ValueError, TypeError):
+
+                continue
+
+        return None
+
+    @staticmethod
+    def _device_key(value):
+
+        return re.sub(
+            r"[^a-z0-9]+",
+            "",
+            str(value or "").casefold(),
+        )
+
+    def _audio_check(self):
+
+        try:
+
+            endpoint = (
+                self.audio_output_factory()
+                .default_endpoint()
+            )
+
+        except Exception:
+
+            return self._check(
+                "audio_output",
+                "Windows audio output",
+                "warning",
+                "Orion could not identify the default Windows audio output.",
+                (
+                    "Confirm a playback device is enabled in Windows, "
+                    "then refresh diagnostics. Orion will not change it."
+                ),
+            )
+
+        detail = f"Default output: {endpoint.name}."
+        processor_report = "No optional spatial processor was detected."
+
+        try:
+
+            processors = (
+                self.spatial_processors_factory()
+                .installed()
+            )
+            processor_names = [
+                processor["name"]
+                for processor in processors
+                if processor.get("name")
+            ]
+
+            if processor_names:
+
+                joined = ", ".join(processor_names)
+                detail += f" Spatial processors: {joined}."
+                processor_report = (
+                    f"Optional spatial processors detected: {joined}."
+                )
+
+            else:
+
+                detail += " Spatial processors: none detected."
+
+        except Exception:
+
+            detail += " Spatial processor availability was not observed."
+            processor_report = (
+                "Optional spatial processor availability was not observed."
+            )
+
+        if endpoint.form_factor:
+
+            detail += f" Type: {endpoint.form_factor}."
+
+        if not endpoint.active:
+
+            return self._check(
+                "audio_output",
+                "Windows audio output",
+                "warning",
+                "The default Windows audio output is not active.",
+                (
+                    "Select the intended HDMI or receiver output in "
+                    "Windows before playback."
+                ),
+                detail,
+                (
+                    "The default audio endpoint is not active. "
+                    + processor_report
+                ),
+            )
+
+        receiver = self._configured_receiver()
+        receiver_key = self._device_key(receiver)
+        endpoint_key = self._device_key(endpoint.name)
+        unconfigured = receiver_key in {
+            "",
+            "notconfigured",
+            "none",
+        }
+
+        if unconfigured:
+
+            return self._check(
+                "audio_output",
+                "Windows audio output",
+                "warning",
+                (
+                    "The default Windows audio output is active, but "
+                    "no receiver is identified in Orion's profile."
+                ),
+                (
+                    "Review System Setup and describe the intended "
+                    "receiver or audio output."
+                ),
+                detail,
+                (
+                    "The default audio endpoint is active. "
+                    + processor_report
+                ),
+            )
+
+        matches = (
+            receiver_key in endpoint_key
+            or endpoint_key in receiver_key
+        )
+
+        if matches:
+
+            return self._check(
+                "audio_output",
+                "Windows audio output",
+                "healthy",
+                "The configured receiver is the default Windows audio output.",
+                "No action is required.",
+                detail,
+                (
+                    "The configured receiver matches the active default "
+                    "endpoint. "
+                    + processor_report
+                ),
+            )
+
+        return self._check(
+            "audio_output",
+            "Windows audio output",
+            "warning",
+            (
+                "The default Windows audio output does not match "
+                "Orion's configured receiver."
+            ),
+            (
+                "Select the intended HDMI receiver output in Windows "
+                "or correct the receiver description in System Setup."
+            ),
+            detail,
+            (
+                "The configured receiver does not match the default "
+                "endpoint. "
+                + processor_report
+            ),
+        )
+
     @staticmethod
     def _is_orion_command(command_line):
 
@@ -629,6 +834,11 @@ class SystemDiagnostics:
             ),
             ("display", "Display control", self._display_check),
             (
+                "audio_output",
+                "Windows audio output",
+                self._audio_check,
+            ),
+            (
                 "single_instance",
                 "Orion runtime",
                 self._instance_check,
@@ -752,10 +962,16 @@ class SystemDiagnostics:
                 f"{check['name']}: {check['summary']}"
             )
 
-            if check.get("detail"):
+            report_detail = check.get("report_detail")
+
+            if report_detail is None:
+
+                report_detail = check.get("detail")
+
+            if report_detail:
 
                 lines.append(
-                    f"  Detail: {check['detail']}"
+                    f"  Detail: {report_detail}"
                 )
 
             if check["status"] != "healthy":

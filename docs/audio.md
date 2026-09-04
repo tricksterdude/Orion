@@ -8,18 +8,33 @@ session.
 
 ## Current status
 
-The common playback model already has fields for audio codec, channel layout
-and bitrate, but current probes do not yet populate or verify them. AVR
-control is planned and has not been implemented.
+The AIOStreams and UsenetStreamer probes now populate codec, profile, channel
+layout, sample rate, audio bitrate and immersive-format hints from FFprobe.
+Orion reads the default Windows multimedia output through the Core Audio API,
+compares its name with the configured receiver description, and records the
+observed endpoint with playback history.
+
+Dolby Access and DTS Sound Unbound are treated as optional Windows processing
+adapters, not AVR brands. Orion detects whether each app is installed and
+maps Atmos or DTS:X content to the relevant processor in playback history.
+It does not yet change the Windows spatial-sound mode.
+
+This is an observation layer, not proof of the signal received or decoded by
+the AVR. That comparison requires a receiver adapter capable of reporting its
+input and output formats. AVR control remains planned and is not enabled.
+Automatic processor selection also remains disabled until Orion can read the
+current spatial mode, switch it through a reliable interface, and restore the
+previous mode after playback or recovery.
 
 ## Delivery stages
 
-### 1. Observe media and Windows
+### 1. Observe media and Windows — implemented
 
 - Extract codec, channels, sample rate and bitrate from the selected stream
-- Identify the active Windows output endpoint
-- Confirm that the expected HDMI device is active
-- Report expected versus observed audio without changing the system
+- Identify the default active Windows multimedia output endpoint
+- Compare the configured receiver description with that endpoint
+- Detect Dolby Access and DTS Sound Unbound for the current Windows account
+- Report stream and Windows observations without changing the system
 
 ### 2. Define a vendor-neutral AVR contract
 

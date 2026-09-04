@@ -23,3 +23,11 @@ class StreamInfo:
     video_codec: str | None = None
 
     audio_codec: str | None = None
+
+    audio_channels: str | None = None
+
+    audio_sample_rate: int | None = None
+
+    audio_bitrate: int | None = None
+
+    immersive_audio: str | None = None
