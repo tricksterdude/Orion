@@ -66,6 +66,15 @@ try:
                 "installed": True,
                 "control": "observe_only",
             },
+            "receiver": {
+                "adapter": "denon_marantz",
+                "name": "Denon / Marantz",
+                "available": True,
+                "sound_mode": "DOLBY ATMOS",
+                "selected_input": "GAME",
+                "expected_immersive_audio": "Dolby Atmos",
+                "matches_expected_audio": True,
+            },
             "cinema": {
                 "current_mode": {
                     "refresh": 120,
@@ -110,6 +119,9 @@ try:
         assert "4000 kbps" in page
         assert "DENON-AVR HDMI" in page
         assert "Dolby Access" in page
+        assert "Denon / Marantz" in page
+        assert "DOLBY ATMOS" in page
+        assert "Matches stream audio" in page
         assert "available" in page
         assert "Display restored" in page
         assert 'href="/"' in page

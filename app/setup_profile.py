@@ -10,6 +10,8 @@ from app.local_configuration import (
     LocalConfiguration,
     LocalConfigurationError,
 )
+from app.receivers.base import ReceiverConfigurationError
+from app.receivers.manager import ReceiverManager
 
 
 class SetupProfileError(RuntimeError):
@@ -140,6 +142,19 @@ class SetupProfileManager:
                 "The media profile contains invalid switches."
             )
 
+        try:
+
+            receiver_adapter, receiver_host = (
+                ReceiverManager.validate_configuration(
+                    audio.get("receiver_adapter"),
+                    audio.get("receiver_host"),
+                )
+            )
+
+        except ReceiverConfigurationError as error:
+
+            raise SetupProfileError(str(error))
+
         return {
             "display": {
                 "name": cls._text(
@@ -164,6 +179,8 @@ class SetupProfileManager:
                 # descriptive codec preference.  Normalise it because
                 # playback audio must always follow the source content.
                 "preferred_format": "Automatic",
+                "receiver_adapter": receiver_adapter,
+                "receiver_host": receiver_host,
             },
             "playback": {
                 "player": cls._text(

@@ -26,6 +26,14 @@ Automatic processor selection also remains disabled until Orion can read the
 current spatial mode, switch it through a reliable interface, and restore the
 previous mode after playback or recovery.
 
+Windows' public Spatial Audio APIs let applications render spatial objects and
+test whether spatial streams are available. Microsoft documents the selected
+output format as a user-controlled endpoint setting; it does not publish an
+application setter for switching between Dolby Access and DTS Sound Unbound.
+Orion therefore does not use undocumented registry edits or simulated Settings
+clicks for automatic switching. See Microsoft's
+[Spatial Sound guidance](https://learn.microsoft.com/windows/win32/coreaudio/spatial-sound).
+
 ## Delivery stages
 
 ### 1. Observe media and Windows — implemented
@@ -36,7 +44,7 @@ previous mode after playback or recovery.
 - Detect Dolby Access and DTS Sound Unbound for the current Windows account
 - Report stream and Windows observations without changing the system
 
-### 2. Define a vendor-neutral AVR contract
+### 2. Define a vendor-neutral AVR contract — implemented
 
 Adapters will expose only capabilities actually supported by a receiver:
 
@@ -50,9 +58,13 @@ Adapters will expose only capabilities actually supported by a receiver:
 Orion’s cinema logic will call this common interface. Vendor command formats,
 authentication and discovery remain inside individual adapters.
 
-### 3. Add vendor adapters
+### 3. Add vendor adapters — Denon/Marantz observation implemented
 
-- Denon/Marantz first, tested against the original system
+- Denon/Marantz status is read through its documented network-control protocol
+- The first adapter reports power, input, volume, mute and sound mode without
+  sending state-changing commands
+- Playback history compares reported `DOLBY ATMOS` or `DTS:X` modes with the
+  stream's expected immersive format
 - Yamaha and Onkyo/Pioneer next where their network APIs permit
 - Additional manufacturers without changes to the playback pipeline
 - Manual IP configuration whenever automatic discovery is unavailable

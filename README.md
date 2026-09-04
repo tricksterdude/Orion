@@ -61,19 +61,22 @@ version numbers.
 - ✅ Detect Dolby Access and DTS Sound Unbound and map immersive content
   to the relevant processor without changing Windows
 - ✅ Surface stream audio and the observed output in playback history
-- Automate spatial-processor selection only after current-mode detection,
-  reversible switching and recovery are proven safe
-- Compare the expected stream format with the AVR's reported input signal
-  once receiver adapters are available
+- ✅ Add a vendor-neutral receiver contract and read-only Denon/Marantz
+  monitoring
+- ✅ Compare expected Atmos or DTS:X content with the receiver's reported
+  sound mode when network monitoring is configured
+- Keep Windows processor selection guided: Microsoft leaves the active
+  spatial format under user control and does not publish a supported setter
 
 ### 3. Vendor-neutral AVR control
 
-- Define one AVR capability interface for power, input, volume, mute,
+- ✅ Define one AVR capability interface for power, input, volume, mute,
   listening mode and status
 - Add network discovery and a safe manual-address fallback
-- Build Denon/Marantz as the first adapter, then add Yamaha, Onkyo/Pioneer
-  and other vendors without changing Orion’s cinema logic
-- Allow read-only monitoring before users opt into control
+- ✅ Build read-only Denon/Marantz monitoring as the first adapter
+- Add Yamaha, Onkyo/Pioneer and other vendors without changing Orion’s
+  cinema logic
+- ✅ Allow read-only monitoring before users opt into control
 - Restore AVR state after playback where that is safe and supported
 
 ### 4. More playback providers

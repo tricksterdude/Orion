@@ -15,6 +15,8 @@ from app.audio.windows_output import WindowsAudioOutput
 from app.display.adapter import DisplayAdapter
 from app.docker_cli import docker_executable
 from app.ffprobe_cli import ffprobe_executable
+from app.local_configuration import LocalConfiguration
+from app.receivers.manager import ReceiverManager
 from app.stremio_controller import StremioController
 from config.version import VERSION
 
@@ -45,6 +47,7 @@ class SystemDiagnostics:
         display_factory=None,
         audio_output_factory=None,
         spatial_processors_factory=None,
+        receiver_manager=None,
         command_runner=None,
         process_iter=None,
         clock=None,
@@ -75,6 +78,14 @@ class SystemDiagnostics:
         self.spatial_processors_factory = (
             spatial_processors_factory
             or SpatialAudioProcessors
+        )
+        self.receiver_manager = (
+            receiver_manager
+            or ReceiverManager(
+                configuration=LocalConfiguration(
+                    self.project_root
+                )
+            )
         )
         self.command_runner = (
             command_runner or self._run_command
@@ -501,6 +512,49 @@ class SystemDiagnostics:
                 "Optional spatial processor availability was not observed."
             )
 
+        receiver_problem = False
+
+        try:
+
+            receiver = self.receiver_manager.observe()
+
+            if receiver and receiver.get("available"):
+
+                receiver_parts = [
+                    receiver.get("name"),
+                    receiver.get("selected_input"),
+                    receiver.get("sound_mode"),
+                ]
+                receiver_summary = ", ".join(
+                    str(part)
+                    for part in receiver_parts
+                    if part
+                )
+                detail += f" Receiver: {receiver_summary}."
+                processor_report += (
+                    " Read-only receiver status is available."
+                )
+
+            elif receiver:
+
+                receiver_problem = True
+                detail += (
+                    " Receiver: "
+                    + str(
+                        receiver.get("error")
+                        or "status unavailable"
+                    )
+                )
+                processor_report += (
+                    " Configured receiver status is unavailable."
+                )
+
+        except Exception:
+
+            processor_report += (
+                " Receiver monitoring was not available."
+            )
+
         if endpoint.form_factor:
 
             detail += f" Type: {endpoint.form_factor}."
@@ -559,6 +613,28 @@ class SystemDiagnostics:
         )
 
         if matches:
+
+            if receiver_problem:
+
+                return self._check(
+                    "audio_output",
+                    "Windows audio output",
+                    "warning",
+                    (
+                        "The Windows output matches the configured "
+                        "receiver, but its network status is unavailable."
+                    ),
+                    (
+                        "Confirm the receiver address and enable its "
+                        "network-control setting, then refresh diagnostics."
+                    ),
+                    detail,
+                    (
+                        "The configured receiver matches the active default "
+                        "endpoint, but receiver status is unavailable. "
+                        + processor_report
+                    ),
+                )
 
             return self._check(
                 "audio_output",

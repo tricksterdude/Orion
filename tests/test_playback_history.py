@@ -38,6 +38,23 @@ class FakeSpatialProcessors:
             "control": "observe_only",
         }
 
+
+class FakeReceiverManager:
+
+    def observe(self, request):
+
+        assert request.immersive_audio == "Dolby Atmos"
+
+        return {
+            "adapter": "denon_marantz",
+            "name": "Denon / Marantz",
+            "available": True,
+            "sound_mode": "DOLBY ATMOS",
+            "selected_input": "GAME",
+            "expected_immersive_audio": "Dolby Atmos",
+            "matches_expected_audio": True,
+        }
+
 with TemporaryDirectory() as temporary_directory:
 
     history_path = (
@@ -49,6 +66,7 @@ with TemporaryDirectory() as temporary_directory:
         history_path,
         audio_output=FakeAudioOutput(),
         spatial_processors=FakeSpatialProcessors(),
+        receiver_manager=FakeReceiverManager(),
     )
 
     request = PlaybackRequest(
@@ -152,6 +170,8 @@ with TemporaryDirectory() as temporary_directory:
     assert record["audio_output"]["name"] == "DENON-AVR HDMI"
     assert record["audio_processing"]["processor"] == "Dolby Access"
     assert record["audio_processing"]["control"] == "observe_only"
+    assert record["receiver"]["sound_mode"] == "DOLBY ATMOS"
+    assert record["receiver"]["matches_expected_audio"] is True
 
     print("Saved playback:")
     print(

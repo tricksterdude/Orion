@@ -31,6 +31,11 @@ Saving creates a timestamped ZIP backup, validates every field, writes the
 local files atomically, and verifies the result. Restart Orion before the next
 playback session so all runtime components reload the profile.
 
+Receiver network monitoring is optional. Select a supported receiver family
+and enter only a private/local IP address or host name. Orion's first
+Denon/Marantz adapter sends documented status queries and does not expose
+controls or change receiver state.
+
 Docker services continue to be discovered and added from the homepage. Their
 container names, ports and addresses are included in the local profile.
 
@@ -40,7 +45,8 @@ The Settings page exports `orion-profile.json`. Its versioned, allow-listed
 schema contains only:
 
 - Media/display preferences
-- Receiver description, automatic content-directed audio and playback preferences
+- Receiver description, optional local adapter/address, automatic
+  content-directed audio and playback preferences
 - Configured Docker service endpoints
 - Enabled Orion playback providers
 

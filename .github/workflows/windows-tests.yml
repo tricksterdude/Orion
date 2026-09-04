@@ -53,6 +53,7 @@ jobs:
             "tests/test_media_probes.py",
             "tests/test_windows_audio_output.py",
             "tests/test_spatial_audio.py",
+            "tests/test_receivers.py",
             "tests/test_single_instance.py",
             "tests/test_system_diagnostics.py",
             "tests/test_secure_settings.py",

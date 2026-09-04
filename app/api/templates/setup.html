@@ -37,7 +37,7 @@
             font-family: Inter, Segoe UI, Arial, sans-serif;
         }
 
-        button, input { font: inherit; }
+        button, input, select { font: inherit; }
 
         .page {
             width: min(1120px, calc(100% - 40px));
@@ -152,7 +152,7 @@
             text-transform: uppercase;
         }
 
-        input[type="text"], input[type="number"] {
+        input[type="text"], input[type="number"], select {
             width: 100%;
             padding: 15px 16px;
             border: 1px solid var(--border);
@@ -162,7 +162,7 @@
             color: var(--text);
         }
 
-        input:focus { border-color: var(--cyan); }
+        input:focus, select:focus { border-color: var(--cyan); }
 
         input[readonly] {
             color: var(--green);
@@ -396,6 +396,48 @@
                                 value="{{ profile.media.audio.receiver }}"
                             >
                         </div>
+                        <div>
+                            <label for="receiver-adapter">
+                                Network receiver family
+                            </label>
+                            <select
+                                id="receiver-adapter"
+                                name="receiver_adapter"
+                            >
+                                <option
+                                    value="none"
+                                    {% if profile.media.audio.receiver_adapter == 'none' %}selected{% endif %}
+                                >
+                                    Not configured
+                                </option>
+                                {% for adapter in receiver_adapters %}
+                                    <option
+                                        value="{{ adapter.id }}"
+                                        {% if profile.media.audio.receiver_adapter == adapter.id %}selected{% endif %}
+                                    >
+                                        {{ adapter.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label for="receiver-host">
+                                Receiver IP address or host name
+                            </label>
+                            <input
+                                id="receiver-host"
+                                name="receiver_host"
+                                type="text"
+                                maxlength="253"
+                                placeholder="For example: 192.168.1.50"
+                                value="{{ profile.media.audio.receiver_host }}"
+                            >
+                            <p class="hint">
+                                Optional. Orion currently makes only
+                                read-only status requests to configured
+                                receivers.
+                            </p>
+                        </div>
                         <div class="field-full">
                             <label for="audio-format">Audio handling</label>
                             <input
@@ -406,9 +448,9 @@
                             >
                             <p class="hint">
                                 Orion will not force Atmos, DTS or another
-                                codec. Future AVR support will negotiate the
-                                receiver's capabilities while preserving the
-                                content's native audio whenever possible.
+                                codec. Receiver monitoring compares the
+                                expected content with the reported sound mode;
+                                it does not change volume, input or sound mode.
                             </p>
                         </div>
                         <div class="field-full">

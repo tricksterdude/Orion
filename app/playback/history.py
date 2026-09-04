@@ -7,8 +7,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
-from app.audio.windows_output import WindowsAudioOutput
 from app.audio.spatial_processors import SpatialAudioProcessors
+from app.audio.windows_output import WindowsAudioOutput
+from app.receivers.manager import ReceiverManager
 
 
 class PlaybackHistory:
@@ -20,6 +21,7 @@ class PlaybackHistory:
         path="data/playback_history.jsonl",
         audio_output=None,
         spatial_processors=None,
+        receiver_manager=None,
     ):
 
         self.path = Path(path)
@@ -30,6 +32,9 @@ class PlaybackHistory:
         )
         self.spatial_processors = (
             spatial_processors or SpatialAudioProcessors()
+        )
+        self.receiver_manager = (
+            receiver_manager or ReceiverManager()
         )
         self._lock = threading.Lock()
 
@@ -66,6 +71,7 @@ class PlaybackHistory:
             "playback": None,
             "audio_output": None,
             "audio_processing": None,
+            "receiver": None,
             "cinema": None,
             "display_restored": None,
         }
@@ -110,6 +116,20 @@ class PlaybackHistory:
         except Exception:
 
             self.current["audio_processing"] = None
+
+        try:
+
+            self.current["receiver"] = (
+                self.receiver_manager.observe(request)
+            )
+
+        # Receiver monitoring is optional and must never delay recovery.
+        except Exception:
+
+            self.current["receiver"] = {
+                "available": False,
+                "error": "Receiver status was not available.",
+            }
 
         if cinema_result is None:
 
