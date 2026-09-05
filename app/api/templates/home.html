@@ -270,6 +270,10 @@
             border-top: 1px solid var(--border);
         }
 
+        .audio-guidance-action[hidden] {
+            display: none;
+        }
+
         .audio-guidance-instruction {
             margin: 0;
             color: var(--muted);
@@ -1544,12 +1548,19 @@
                 const expected = data.expected_audio || "the stream audio";
                 const receiverName = data.receiver_name || "The receiver";
                 const receiverMode = data.receiver_mode || "an unknown mode";
+                let automatic = "";
+
+                if (data.control_status === "switched") {
+                    automatic = `Orion automatically selected ${data.processor || expected}. `;
+                } else if (data.control_status === "current") {
+                    automatic = `${data.processor || expected} was already selected. `;
+                }
 
                 if (data.state === "matched") {
-                    return `${receiverName} reports ${receiverMode}, matching ${expected}.`;
+                    return `${automatic}${receiverName} reports ${receiverMode}, matching ${expected}.`;
                 }
                 if (data.state === "compatible") {
-                    return `${receiverName} reports ${receiverMode}, confirming the correct audio family. Exact immersive rendering depends on the configured speakers.`;
+                    return `${automatic}${receiverName} reports ${receiverMode}, confirming the correct audio family. Exact immersive rendering depends on the configured speakers.`;
                 }
                 if (data.state === "mismatch") {
                     return `${expected} is playing, but ${receiverName} reports ${receiverMode}.`;
