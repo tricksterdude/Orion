@@ -190,6 +190,8 @@ try:
     assert "Settings" in page
     assert 'href="/settings"' in page
     assert 'href="/setup"' in page
+    assert 'href="/checkup"' in page
+    assert "Cinema Checkup" in page
     assert "Finish setting up Orion" in page
     assert "Review detected setup" in page
     assert "TMDb not configured" in page

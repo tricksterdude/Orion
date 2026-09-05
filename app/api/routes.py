@@ -40,7 +40,9 @@ from app.audio.guidance_status import audio_guidance_status
 from app.audio.spatial_control import SpatialAudioController
 from app.audio.windows_output import WindowsAudioOutput
 from app.audio.windows_settings import WindowsSoundSettings
+from app.cinema_checkup import CinemaCheckup, CinemaCheckupError
 from app.display.adapter import DisplayAdapter
+from app.display.restore import DisplayRestore
 from app.media.title import friendly_media_title
 from app.onboarding import OnboardingAssistant, OnboardingError
 from app.playback.history import PlaybackHistory
@@ -96,6 +98,14 @@ onboarding_assistant = OnboardingAssistant(
     stremio=stremio_controller,
     service_discovery=service_discovery,
 )
+cinema_checkup = CinemaCheckup(
+    diagnostics=system_diagnostics,
+    setup_profile=setup_profile_manager,
+    display=DisplayAdapter(),
+    display_recovery=DisplayRestore(),
+    spatial_audio=spatial_audio_controller,
+    history=history_store,
+)
 
 container_update_token = (
     secrets.token_urlsafe(32)
@@ -128,6 +138,10 @@ settings_management_token = (
 )
 
 audio_guidance_token = (
+    secrets.token_urlsafe(32)
+)
+
+cinema_checkup_token = (
     secrets.token_urlsafe(32)
 )
 
@@ -673,6 +687,82 @@ def diagnostics_report_route():
     response.headers["X-Content-Type-Options"] = "nosniff"
 
     return response
+
+
+@home.get("/checkup")
+def cinema_checkup_route():
+
+    result = None
+    result_status = request.args.get(
+        "checkup_status"
+    )
+    result_message = request.args.get(
+        "checkup_message"
+    )
+
+    if result_status and result_message:
+        result = {
+            "status": result_status,
+            "message": result_message,
+        }
+
+    response = make_response(
+        render_template(
+            "cinema_checkup.html",
+            checkup=cinema_checkup.latest(),
+            cinema_checkup_token=(
+                cinema_checkup_token
+            ),
+            result=result,
+            playback_active=bool(
+                audio_guidance_status.get().get("active")
+            ),
+        )
+    )
+    response.headers["Cache-Control"] = (
+        "no-store, max-age=0"
+    )
+
+    return response
+
+
+@home.post("/checkup/run")
+def cinema_checkup_run_route():
+
+    if not hmac.compare_digest(
+        request.form.get("token", ""),
+        cinema_checkup_token,
+    ):
+        abort(403)
+
+    try:
+        snapshot = cinema_checkup.run(
+            services=service_status.get_all(),
+            playback_active=bool(
+                audio_guidance_status.get().get("active")
+            ),
+        )
+        status = (
+            "updated"
+            if snapshot["status"] == "healthy"
+            else "current"
+        )
+        message = (
+            "Cinema Checkup completed: "
+            + snapshot["label"]
+            + "."
+        )
+    except CinemaCheckupError as error:
+        status = "failed"
+        message = str(error)
+
+    return redirect(
+        url_for(
+            "home.cinema_checkup_route",
+            checkup_status=status,
+            checkup_message=message,
+        )
+    )
 
 
 @home.post("/containers/<container_slug>/update")

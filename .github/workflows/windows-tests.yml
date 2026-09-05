@@ -63,6 +63,8 @@ jobs:
             "tests/test_settings_page.py",
             "tests/test_local_configuration.py",
             "tests/test_onboarding.py",
+            "tests/test_cinema_checkup.py",
+            "tests/test_cinema_checkup_page.py",
             "tests/test_setup_profile.py",
             "tests/test_setup_page.py",
             "tests/test_provider_selection.py",

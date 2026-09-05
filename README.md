@@ -29,6 +29,8 @@ the Docker services that support the cinema system.
 - Container update detection and controlled one-click updates
 - AIOStreams Tamtaro template update assistance
 - Privacy-safe health diagnostics and downloadable support report
+- One-button Cinema Checkup preflight with clear readiness guidance and no
+  hardware or service changes
 - Windows pull-request regression checks for critical workflows
 
 ### Safety
@@ -57,6 +59,8 @@ version numbers.
 
 ### 2. Complete playback verification — audio foundation complete
 
+- ✅ Add a one-button, read-only cinema preflight that verifies the profile,
+  playback dependencies, desktop baseline, recovery state, audio and AVR path
 - ✅ Extract audio codec, profile, channel layout, sample rate and bitrate
 - Improve HDR and Dolby Vision identification
 - ✅ Observe the default Windows audio output without changing it

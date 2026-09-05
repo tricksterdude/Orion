@@ -10,6 +10,9 @@ The format is based on **Keep a Changelog** and follows **Semantic Versioning** 
 
 ### Added
 
+- One-button, read-only Cinema Checkup covering the configured profile,
+  services, player detection, FFprobe, desktop baseline, recovery state,
+  audio path and AVR monitoring
 - Streamlined one-page onboarding with safe display, audio, Stremio,
   playback-provider and Docker-service detection
 - Direct Setup, Diagnostics and History shortcuts on the homepage

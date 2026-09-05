@@ -14,7 +14,7 @@ the future.
      Local API            Playback pipeline      Operations
          |                     |                     |
  Dashboard/settings      Provider adapters       Docker services
- History/diagnostics     FFprobe analysis        Health and updates
+ History/checkup         FFprobe analysis        Health and updates
          |                     |
  Encrypted secrets       Cinema coordinator
                                |
@@ -30,6 +30,11 @@ the future.
 The Flask server listens on `127.0.0.1`. It renders the dashboard, service
 pages, settings, diagnostics and playback history. State-changing forms use
 per-process security tokens.
+
+Cinema Checkup composes the existing diagnostic adapters with setup-profile,
+desktop-baseline, recovery-checkpoint and recent-playback evidence checks. It
+is read-only, refuses to run during playback, and stores only its latest local
+result.
 
 ### Service operations
 
