@@ -200,6 +200,106 @@
             color: var(--red);
         }
 
+        .audio-guidance {
+            margin-top: 28px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 26px;
+            background:
+                linear-gradient(
+                    145deg,
+                    var(--surface-light),
+                    var(--surface)
+                );
+        }
+
+        .audio-guidance[hidden] {
+            display: none;
+        }
+
+        .audio-guidance-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 24px;
+            padding: 28px 30px 22px;
+        }
+
+        .audio-guidance h2 {
+            margin: 8px 0 0;
+            font-size: clamp(27px, 4vw, 38px);
+            letter-spacing: -0.03em;
+        }
+
+        .audio-guidance-summary {
+            margin: 0;
+            padding: 0 30px 24px;
+            color: var(--muted);
+            font-size: 18px;
+            line-height: 1.55;
+        }
+
+        .audio-guidance-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1px;
+            background: var(--border);
+            border-top: 1px solid var(--border);
+        }
+
+        .audio-guidance-detail {
+            min-width: 0;
+            padding: 22px 30px;
+            background: var(--surface);
+        }
+
+        .audio-guidance-value {
+            display: block;
+            margin-top: 8px;
+            overflow-wrap: anywhere;
+            font-size: 18px;
+            font-weight: 800;
+        }
+
+        .audio-guidance-action {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            padding: 24px 30px;
+            border-top: 1px solid var(--border);
+        }
+
+        .audio-guidance-action[hidden] {
+            display: none;
+        }
+
+        .audio-guidance-instruction {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .audio-guidance-button {
+            flex-shrink: 0;
+            padding: 12px 20px;
+            border: 1px solid rgba(255, 209, 102, 0.48);
+            border-radius: 999px;
+            background: rgba(255, 209, 102, 0.12);
+            color: var(--yellow);
+            cursor: pointer;
+            font-weight: 850;
+        }
+
+        .audio-guidance-button:hover {
+            background: rgba(255, 209, 102, 0.20);
+        }
+
+        .audio-guidance-button:focus-visible {
+            outline: 3px solid var(--yellow);
+            outline-offset: 3px;
+        }
+
         .cards {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -740,6 +840,16 @@
             .recovery-banner {
                 grid-template-columns: 1fr;
             }
+
+            .audio-guidance-header,
+            .audio-guidance-action {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .audio-guidance-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -810,6 +920,113 @@
                 </div>
             {% endif %}
         </header>
+
+        <section
+            id="audio-guidance"
+            class="audio-guidance"
+            aria-live="polite"
+            {% if not audio_guidance.active %}hidden{% endif %}
+        >
+            <div class="audio-guidance-header">
+                <div>
+                    <span class="label">Active playback</span>
+                    <h2 id="audio-guidance-title">
+                        Live audio guidance
+                    </h2>
+                </div>
+
+                <span
+                    id="audio-guidance-state"
+                    class="
+                        pill
+                        {% if audio_guidance.state in ('matched', 'compatible') %}
+                            pill-healthy
+                        {% elif audio_guidance.state == 'mismatch' %}
+                            pill-warning
+                        {% elif audio_guidance.state in ('unavailable', 'recovery_failed') %}
+                            pill-offline
+                        {% else %}
+                            pill-unavailable
+                        {% endif %}
+                    "
+                >
+                    <span class="dot"></span>
+                    <span id="audio-guidance-state-text">
+                        Monitoring
+                    </span>
+                </span>
+            </div>
+
+            <p
+                id="audio-guidance-summary"
+                class="audio-guidance-summary"
+            >
+                Orion is checking the stream against the receiver.
+            </p>
+
+            <div class="audio-guidance-grid">
+                <div class="audio-guidance-detail">
+                    <span class="label">Stream</span>
+                    <span
+                        id="audio-guidance-stream"
+                        class="audio-guidance-value"
+                    >
+                        {{ audio_guidance.stream_audio or "Analysing" }}
+                    </span>
+                </div>
+
+                <div class="audio-guidance-detail">
+                    <span class="label">Receiver mode</span>
+                    <span
+                        id="audio-guidance-receiver"
+                        class="audio-guidance-value"
+                    >
+                        {{ audio_guidance.receiver_mode or "Checking" }}
+                    </span>
+                </div>
+
+                <div class="audio-guidance-detail">
+                    <span class="label">Recommended</span>
+                    <span
+                        id="audio-guidance-processor"
+                        class="audio-guidance-value"
+                    >
+                        {{ audio_guidance.processor or "Automatic" }}
+                    </span>
+                </div>
+            </div>
+
+            <div
+                id="audio-guidance-action"
+                class="audio-guidance-action"
+                {% if audio_guidance.state not in ('mismatch', 'recovery_failed') %}hidden{% endif %}
+            >
+                <p
+                    id="audio-guidance-instruction"
+                    class="audio-guidance-instruction"
+                >
+                    Open Windows sound settings and select the recommended
+                    spatial format for the Denon output.
+                </p>
+
+                <form
+                    method="post"
+                    action="{{ url_for('home.audio_guidance_settings_route') }}"
+                >
+                    <input
+                        type="hidden"
+                        name="token"
+                        value="{{ audio_guidance_token }}"
+                    >
+                    <button
+                        class="audio-guidance-button"
+                        type="submit"
+                    >
+                        Open Windows sound settings
+                    </button>
+                </form>
+            </div>
+        </section>
 
         <section class="cards">
             <a class="card card-link" href="/history/view">
@@ -1283,5 +1500,125 @@
             );
         </script>
     {% endif %}
+
+    <script>
+        (() => {
+            const panel = document.getElementById("audio-guidance");
+            const state = document.getElementById("audio-guidance-state");
+            const stateText = document.getElementById(
+                "audio-guidance-state-text"
+            );
+            const summary = document.getElementById(
+                "audio-guidance-summary"
+            );
+            const stream = document.getElementById(
+                "audio-guidance-stream"
+            );
+            const receiver = document.getElementById(
+                "audio-guidance-receiver"
+            );
+            const processor = document.getElementById(
+                "audio-guidance-processor"
+            );
+            const action = document.getElementById(
+                "audio-guidance-action"
+            );
+            const instruction = document.getElementById(
+                "audio-guidance-instruction"
+            );
+
+            const labels = {
+                checking: "Checking receiver",
+                matched: "Audio matches",
+                compatible: "Compatible audio path",
+                mismatch: "Attention needed",
+                unavailable: "Receiver unavailable",
+                recovery_failed: "Restoration required",
+                observing: "Monitoring"
+            };
+
+            const pillClass = (value) => {
+                if (value === "matched" || value === "compatible") return "pill-healthy";
+                if (value === "mismatch") return "pill-warning";
+                if (value === "unavailable" || value === "recovery_failed") return "pill-offline";
+                return "pill-unavailable";
+            };
+
+            const describe = (data) => {
+                const expected = data.expected_audio || "the stream audio";
+                const receiverName = data.receiver_name || "The receiver";
+                const receiverMode = data.receiver_mode || "an unknown mode";
+                let automatic = "";
+
+                if (data.control_status === "switched") {
+                    automatic = `Orion automatically selected ${data.processor || expected}. `;
+                } else if (data.control_status === "current") {
+                    automatic = `${data.processor || expected} was already selected. `;
+                }
+
+                if (data.state === "matched") {
+                    return `${automatic}${receiverName} reports ${receiverMode}, matching ${expected}.`;
+                }
+                if (data.state === "compatible") {
+                    return `${automatic}${receiverName} reports ${receiverMode}, confirming the correct audio family. Exact immersive rendering depends on the configured speakers.`;
+                }
+                if (data.state === "mismatch") {
+                    return `${expected} is playing, but ${receiverName} reports ${receiverMode}.`;
+                }
+                if (data.state === "unavailable") {
+                    return `Orion cannot currently read the configured receiver.`;
+                }
+                if (data.state === "recovery_failed") {
+                    return `Orion could not restore the saved Windows spatial-audio format. The recovery checkpoint has been retained.`;
+                }
+                if (data.state === "checking") {
+                    return `Orion is waiting for the receiver's sound mode to settle.`;
+                }
+                return `Orion is observing the current audio path.`;
+            };
+
+            const applyStatus = (data) => {
+                panel.hidden = !data.active;
+
+                if (!data.active) return;
+
+                state.className = `pill ${pillClass(data.state)}`;
+                stateText.textContent = labels[data.state] || "Monitoring";
+                summary.textContent = describe(data);
+                stream.textContent = data.stream_audio || "Analysing";
+                receiver.textContent = data.receiver_mode || "Checking";
+                processor.textContent = data.processor || "Automatic";
+                action.hidden = !["mismatch", "recovery_failed"].includes(data.state);
+
+                if (data.state === "recovery_failed") {
+                    instruction.textContent = `Open Windows sound settings and restore the intended spatial format before the next playback session.`;
+                } else if (data.state === "mismatch") {
+                    if (data.processor && data.processor_installed === false) {
+                        instruction.textContent = `${data.processor} was not detected. Install it before selecting its spatial format.`;
+                    } else {
+                        instruction.textContent = `Open Windows sound settings for ${data.output_name || "the active output"} and select ${data.processor || data.expected_audio}.`;
+                    }
+                }
+            };
+
+            const refresh = async () => {
+                try {
+                    const response = await fetch(
+                        "{{ url_for('home.audio_guidance_status_route') }}",
+                        {cache: "no-store"}
+                    );
+
+                    if (response.ok) {
+                        applyStatus(await response.json());
+                    }
+                } catch (error) {
+                    // A transient dashboard refresh error must not affect playback.
+                }
+            };
+
+            applyStatus({{ audio_guidance | tojson }});
+            window.setInterval(refresh, 3000);
+        })();
+    </script>
 </body>
 </html>

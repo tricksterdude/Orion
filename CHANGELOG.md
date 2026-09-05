@@ -14,6 +14,9 @@ The format is based on **Keep a Changelog** and follows **Semantic Versioning** 
 - Optional Denon/Marantz network status monitoring for power, input, volume,
   mute and sound mode
 - Expected-versus-reported immersive audio comparison in playback history
+- Live homepage audio guidance with a protected Windows sound-settings action
+- Opt-in Atmos/DTS:X endpoint switching with exact-GUID verification and
+  crash-safe restoration through separately installed SoundVolume helpers
 - Read-only FFprobe audio metadata for AIOStreams and UsenetStreamer playback
 - Default Windows audio-output observation and configured-receiver diagnostics
 - Read-only Dolby Access and DTS Sound Unbound detection with content mapping
@@ -42,6 +45,7 @@ The format is based on **Keep a Changelog** and follows **Semantic Versioning** 
 
 ### Fixed
 
+- Dolby/DTS family compatibility is reported without assuming height speakers
 - AVR sound mode is refreshed during active playback so history records the
   settled listening mode instead of an initial stereo state
 - Removed the TMDb API key from tracked application configuration

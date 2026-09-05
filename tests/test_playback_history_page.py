@@ -74,7 +74,13 @@ try:
                 "selected_input": "GAME",
                 "expected_immersive_audio": "Dolby Atmos",
                 "matches_expected_audio": True,
+                "match_quality": "exact",
             },
+            "audio_control": {
+                "status": "switched",
+                "changed": True,
+            },
+            "audio_restored": True,
             "cinema": {
                 "current_mode": {
                     "refresh": 120,
@@ -89,6 +95,15 @@ try:
 
         assert test_history._append(
             session
+        )
+
+        legacy_session = dict(session)
+        legacy_session["session_id"] = "legacy-page-test"
+        legacy_session.pop("audio_control")
+        legacy_session.pop("audio_restored")
+
+        assert test_history._append(
+            legacy_session
         )
 
         routes.history_store = (
@@ -121,7 +136,9 @@ try:
         assert "Dolby Access" in page
         assert "Denon / Marantz" in page
         assert "DOLBY ATMOS" in page
-        assert "Matches stream audio" in page
+        assert "Exact immersive mode" in page
+        assert "Spatial format switched automatically" in page
+        assert "Previous spatial format restored" in page
         assert "available" in page
         assert "Display restored" in page
         assert 'href="/"' in page
@@ -163,7 +180,9 @@ try:
         )
 
         assert delete_response.status_code == 302
-        assert test_history.read() == []
+        remaining = test_history.read()
+        assert len(remaining) == 1
+        assert remaining[0]["session_id"] == "legacy-page-test"
 
         print("✓ Individual history deletion secured")
 

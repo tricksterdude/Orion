@@ -207,6 +207,16 @@ try:
 
     print("✓ Playback history link displayed")
 
+    assert "Live audio guidance" in page
+    assert 'id="audio-guidance"' in page
+    assert 'action="/audio-guidance/open-settings"' in page
+    assert routes.audio_guidance_token in page
+    assert "/audio-guidance/status" in page
+    assert ".audio-guidance-action[hidden]" in page
+    assert "Orion automatically selected" in page
+
+    print("✓ Live audio guidance panel secured and ready")
+
     assert "2" in page
     assert "Recent sessions" in page
 

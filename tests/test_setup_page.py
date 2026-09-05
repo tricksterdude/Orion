@@ -26,6 +26,7 @@ PROFILE = {
             "preferred_format": "Dolby Atmos",
             "receiver_adapter": "denon_marantz",
             "receiver_host": "192.168.1.50",
+            "spatial_control": "automatic",
         },
         "playback": {
             "player": "Stremio",
@@ -126,6 +127,8 @@ try:
     assert "AIOStreams" in page
     assert "Denon / Marantz" in page
     assert "192.168.1.50" in page
+    assert 'name="spatial_control"' in page
+    assert "Automatic — switch and restore with a checkpoint" in page
     assert routes.settings_management_token in page
     assert "no-store" in response.headers["Cache-Control"]
 
@@ -147,6 +150,7 @@ try:
             "receiver": "AVR",
             "receiver_adapter": "denon_marantz",
             "receiver_host": "192.168.1.60",
+            "spatial_control": "automatic",
             "preferred_audio_format": "Atmos",
             "providers": [
                 "AIOStreams",
@@ -173,6 +177,9 @@ try:
     assert manager.saved["media"]["audio"][
         "receiver_host"
     ] == "192.168.1.60"
+    assert manager.saved["media"]["audio"][
+        "spatial_control"
+    ] == "automatic"
 
     print("✓ Setup changes require a token and preserve services")
 

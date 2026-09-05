@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
+from app.audio.guidance_status import audio_guidance_status
 from app.audio.spatial_processors import SpatialAudioProcessors
 from app.audio.windows_output import WindowsAudioOutput
 from app.receivers.manager import ReceiverManager
@@ -24,6 +25,7 @@ class PlaybackHistory:
         audio_output=None,
         spatial_processors=None,
         receiver_manager=None,
+        guidance_status=None,
     ):
 
         self.path = Path(path)
@@ -38,9 +40,13 @@ class PlaybackHistory:
         self.receiver_manager = (
             receiver_manager or ReceiverManager()
         )
+        self.guidance_status = (
+            guidance_status or audio_guidance_status
+        )
         self._receiver_request = None
         self._receiver_attached_monotonic = None
         self._receiver_refreshed_monotonic = None
+        self._receiver_settled = False
         self._lock = threading.Lock()
 
     @staticmethod
@@ -67,9 +73,11 @@ class PlaybackHistory:
     def start(self):
 
         self.started_monotonic = time.monotonic()
+        self.guidance_status.clear()
         self._receiver_request = None
         self._receiver_attached_monotonic = None
         self._receiver_refreshed_monotonic = None
+        self._receiver_settled = False
 
         self.current = {
             "session_id": str(uuid4()),
@@ -79,6 +87,8 @@ class PlaybackHistory:
             "playback": None,
             "audio_output": None,
             "audio_processing": None,
+            "audio_control": None,
+            "audio_restored": None,
             "receiver": None,
             "cinema": None,
             "display_restored": None,
@@ -99,6 +109,7 @@ class PlaybackHistory:
         )
         self._receiver_request = request
         self._receiver_attached_monotonic = time.monotonic()
+        self._receiver_settled = False
 
         try:
 
@@ -142,6 +153,9 @@ class PlaybackHistory:
             }
 
         self._receiver_refreshed_monotonic = time.monotonic()
+        self._publish_audio_guidance(
+            settled=self._receiver_settled
+        )
 
         if cinema_result is None:
 
@@ -165,6 +179,27 @@ class PlaybackHistory:
                 "switched"
             ),
         }
+
+    def attach_audio_control(self, result):
+
+        if self.current is None:
+
+            return
+
+        self.current["audio_control"] = (
+            dict(result)
+            if isinstance(result, dict)
+            else None
+        )
+        self._publish_audio_guidance(
+            settled=self._receiver_settled
+        )
+
+    def attach_audio_restoration(self, restored):
+
+        if self.current is not None:
+
+            self.current["audio_restored"] = bool(restored)
 
     def refresh_receiver(self):
 
@@ -211,8 +246,41 @@ class PlaybackHistory:
             return False
 
         self.current["receiver"] = observed
+        self._receiver_settled = True
+        self._publish_audio_guidance(
+            settled=True
+        )
 
         return True
+
+    def _publish_audio_guidance(self, settled):
+
+        if (
+            self.current is None
+            or self._receiver_request is None
+        ):
+
+            return
+
+        try:
+
+            self.guidance_status.update(
+                self._receiver_request,
+                audio_output=self.current.get(
+                    "audio_output"
+                ),
+                processing=self.current.get(
+                    "audio_processing"
+                ),
+                receiver=self.current.get("receiver"),
+                control=self.current.get("audio_control"),
+                settled=settled,
+            )
+
+        # Live guidance must never interrupt playback.
+        except Exception:
+
+            return
 
     def finish(self, restored):
 
@@ -231,6 +299,7 @@ class PlaybackHistory:
                 1,
             )
 
+        audio_restored = self.current.get("audio_restored")
         saved = self._append(self.current)
 
         self.current = None
@@ -238,6 +307,14 @@ class PlaybackHistory:
         self._receiver_request = None
         self._receiver_attached_monotonic = None
         self._receiver_refreshed_monotonic = None
+        self._receiver_settled = False
+        if audio_restored is False:
+
+            self.guidance_status.recovery_failed()
+
+        else:
+
+            self.guidance_status.clear()
 
         return saved
 

@@ -65,6 +65,7 @@ class FakeReceiverManager:
             "selected_input": "GAME",
             "expected_immersive_audio": "Dolby Atmos",
             "matches_expected_audio": True,
+            "match_quality": "exact",
         }
 
 with TemporaryDirectory() as temporary_directory:
@@ -134,6 +135,14 @@ with TemporaryDirectory() as temporary_directory:
 
     assert history.refresh_receiver() is True
 
+    history.attach_audio_control(
+        {
+            "status": "switched",
+            "changed": True,
+        }
+    )
+    history.attach_audio_restoration(True)
+
     saved = history.finish(restored=True)
 
     assert saved is True
@@ -191,6 +200,8 @@ with TemporaryDirectory() as temporary_directory:
     assert record["audio_processing"]["control"] == "observe_only"
     assert record["receiver"]["sound_mode"] == "DOLBY ATMOS"
     assert record["receiver"]["matches_expected_audio"] is True
+    assert record["audio_control"]["status"] == "switched"
+    assert record["audio_restored"] is True
 
     print("\u2713 Receiver status refreshed after playback settled")
 

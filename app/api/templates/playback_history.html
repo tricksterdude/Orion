@@ -492,6 +492,7 @@
             {% set target = cinema.target_mode or {} %}
             {% set audio_output = session.audio_output or {} %}
             {% set audio_processing = session.audio_processing or {} %}
+            {% set audio_control = session.audio_control or {} %}
             {% set receiver = session.receiver or {} %}
 
             <article class="session">
@@ -633,6 +634,24 @@
                                     <span class="no">not detected</span>
                                 {% endif %}
                             {% endif %}
+                            {% if audio_control.status == 'switched' %}
+                                <br><span class="yes">
+                                    Spatial format switched automatically
+                                </span>
+                            {% elif audio_control.status == 'failed' %}
+                                <br><span class="status-bad">
+                                    Automatic spatial switch failed
+                                </span>
+                            {% endif %}
+                            {% if session.audio_restored is sameas true %}
+                                <br><span class="yes">
+                                    Previous spatial format restored
+                                </span>
+                            {% elif session.audio_restored is sameas false %}
+                                <br><span class="status-bad">
+                                    Spatial format restoration needs attention
+                                </span>
+                            {% endif %}
                         </span>
                     </div>
 
@@ -663,7 +682,15 @@
                                 {% if receiver.selected_input %}
                                     &middot; {{ receiver.selected_input }}
                                 {% endif %}
-                                {% if receiver.matches_expected_audio is sameas true %}
+                                {% if receiver.match_quality == 'exact' %}
+                                    <br><span class="yes">
+                                        Exact immersive mode
+                                    </span>
+                                {% elif receiver.match_quality == 'compatible' %}
+                                    <br><span class="yes">
+                                        Compatible audio family
+                                    </span>
+                                {% elif receiver.matches_expected_audio is sameas true %}
                                     <br><span class="yes">
                                         Matches stream audio
                                     </span>

@@ -449,8 +449,44 @@
                             <p class="hint">
                                 Orion will not force Atmos, DTS or another
                                 codec. Receiver monitoring compares the
-                                expected content with the reported sound mode;
-                                it does not change volume, input or sound mode.
+                                expected content with the reported sound mode.
+                                Optional spatial switching changes only the
+                                Windows endpoint format; it never changes AVR
+                                volume, input or listening mode.
+                            </p>
+                        </div>
+                        <div class="field-full">
+                            <label for="spatial-control">
+                                Windows spatial-audio switching
+                            </label>
+                            <select
+                                id="spatial-control"
+                                name="spatial_control"
+                            >
+                                <option
+                                    value="guided"
+                                    {% if profile.media.audio.spatial_control == 'guided' %}selected{% endif %}
+                                >
+                                    Guided — show the required Dolby or DTS setting
+                                </option>
+                                <option
+                                    value="automatic"
+                                    {% if profile.media.audio.spatial_control == 'automatic' %}selected{% endif %}
+                                >
+                                    Automatic — switch and restore with a checkpoint
+                                </option>
+                            </select>
+                            <p class="hint">
+                                Automatic mode requires locally installed
+                                SoundVolumeView and SoundVolumeCommandLine.
+                                Orion changes only the default multimedia
+                                endpoint's spatial format, verifies the GUID,
+                                and restores the previous value after playback.
+                                {% if spatial_audio_setup.helpers_available %}
+                                    Both helpers are detected on this computer.
+                                {% else %}
+                                    The required helpers are not currently detected.
+                                {% endif %}
                             </p>
                         </div>
                         <div class="field-full">

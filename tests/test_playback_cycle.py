@@ -64,6 +64,38 @@ class FakeHistory:
 
         events.append(f"history:restored:{restored}")
 
+    def attach_audio_control(self, result):
+
+        events.append(
+            f"audio-control:{result['status']}"
+        )
+
+    def attach_audio_restoration(self, restored):
+
+        events.append(
+            f"audio-restored:{restored}"
+        )
+
+
+class FakeSpatialAudio:
+
+    def begin(self, request):
+
+        events.append(
+            f"audio:{request.immersive_audio}"
+        )
+
+        return {
+            "status": "switched",
+            "changed": True,
+        }
+
+    def restore(self):
+
+        events.append("audio:previous")
+
+        return True
+
 
 class FakeProviders:
 
@@ -76,6 +108,7 @@ runtime = OrionRuntime.__new__(OrionRuntime)
 runtime.restore = FakeRestore()
 runtime.engine = FakeEngine()
 runtime.history = FakeHistory()
+runtime.spatial_audio = FakeSpatialAudio()
 runtime.providers = FakeProviders()
 runtime.display_checkpoint_ready = False
 runtime.clear_playback_requests = (
@@ -85,6 +118,7 @@ runtime.clear_playback_requests = (
 request = SimpleNamespace(
     source="AIOStreams",
     fps=23.976,
+    immersive_audio="Dolby Atmos",
 )
 
 assert runtime.start_playback_session() is True
@@ -95,9 +129,13 @@ assert events == [
     "playback:started",
     "checkpoint:120",
     "history:started",
+    "audio:Dolby Atmos",
     "display:23.976",
     "metadata:AIOStreams:23.976",
+    "audio-control:switched",
     "display:120",
+    "audio:previous",
+    "audio-restored:True",
     "history:restored:True",
     "playback:stopped",
     "requests:cleared",
@@ -109,6 +147,7 @@ assert runtime.display_checkpoint_ready is False
 print("✓ 120 Hz desktop checkpoint is saved before switching")
 print("✓ AIOStreams 23.976 FPS metadata drives cinema mode")
 print("✓ Playback stop restores 120 Hz and records restoration")
+print("✓ Spatial audio switches per stream and restores afterwards")
 print("✓ Provider and playback state are reset cleanly")
 print()
 print("✓ Orion simulated playback cycle test passed")
