@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Cinema Checkup · Orion</title>
+
+    <style>
+        :root {
+            color-scheme: dark;
+            --background: #050a13;
+            --surface: #0d1728;
+            --surface-light: #132039;
+            --border: #294363;
+            --text: #f4f7ff;
+            --muted: #9bb9e5;
+            --cyan: #38cfff;
+            --green: #51efbc;
+            --yellow: #ffd166;
+            --red: #ff7085;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            background:
+                radial-gradient(
+                    circle at top right,
+                    rgba(56, 207, 255, 0.12),
+                    transparent 34rem
+                ),
+                var(--background);
+            color: var(--text);
+            font-family: Inter, Segoe UI, Arial, sans-serif;
+        }
+
+        button { font: inherit; }
+
+        .page {
+            width: min(1160px, calc(100% - 40px));
+            margin: 0 auto;
+            padding: 50px 0 80px;
+        }
+
+        .back {
+            display: inline-block;
+            margin-bottom: 34px;
+            color: var(--muted);
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .back:hover { color: var(--cyan); }
+
+        .eyebrow {
+            margin: 0 0 14px;
+            color: var(--cyan);
+            font-size: 14px;
+            font-weight: 850;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(52px, 9vw, 92px);
+            line-height: 1;
+            letter-spacing: -0.055em;
+        }
+
+        .subtitle {
+            max-width: 800px;
+            margin: 20px 0 0;
+            color: var(--muted);
+            font-size: 20px;
+            line-height: 1.55;
+        }
+
+        .action-panel {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 28px;
+            margin-top: 34px;
+            padding: 26px 28px;
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            background:
+                linear-gradient(
+                    145deg,
+                    var(--surface-light),
+                    var(--surface)
+                );
+        }
+
+        .action-panel h2 {
+            margin: 0 0 8px;
+            font-size: 25px;
+        }
+
+        .action-panel p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .run-button {
+            min-width: 220px;
+            min-height: 54px;
+            padding: 0 24px;
+            border: 1px solid var(--green);
+            border-radius: 14px;
+            background: rgba(81, 239, 188, 0.12);
+            color: var(--green);
+            cursor: pointer;
+            font-weight: 900;
+        }
+
+        .run-button:hover:not(:disabled) {
+            background: rgba(81, 239, 188, 0.20);
+        }
+
+        .run-button:disabled {
+            border-color: var(--border);
+            color: var(--muted);
+            cursor: not-allowed;
+        }
+
+        .notice {
+            margin-top: 22px;
+            padding: 16px 18px;
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            background: var(--surface);
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .notice-success {
+            border-color: rgba(81, 239, 188, 0.42);
+            color: var(--green);
+        }
+
+        .notice-error {
+            border-color: rgba(255, 112, 133, 0.45);
+            color: var(--red);
+        }
+
+        .summary {
+            margin-top: 28px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 26px;
+            background: var(--surface);
+        }
+
+        .summary-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            padding: 28px 30px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .summary-head h2 {
+            margin: 0 0 8px;
+            font-size: 34px;
+        }
+
+        .summary-head p {
+            margin: 0;
+            color: var(--muted);
+        }
+
+        .overall {
+            flex-shrink: 0;
+            padding: 11px 17px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            font-weight: 900;
+        }
+
+        .overall-healthy {
+            border-color: rgba(81, 239, 188, 0.38);
+            background: rgba(81, 239, 188, 0.10);
+            color: var(--green);
+        }
+
+        .overall-warning {
+            border-color: rgba(255, 209, 102, 0.42);
+            background: rgba(255, 209, 102, 0.10);
+            color: var(--yellow);
+        }
+
+        .overall-action_required {
+            border-color: rgba(255, 112, 133, 0.42);
+            background: rgba(255, 112, 133, 0.10);
+            color: var(--red);
+        }
+
+        .counts {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1px;
+            background: var(--border);
+        }
+
+        .count {
+            padding: 22px 30px;
+            background: var(--surface);
+        }
+
+        .count strong {
+            display: block;
+            font-size: 34px;
+        }
+
+        .count span {
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 850;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .checks {
+            display: grid;
+            gap: 14px;
+            margin-top: 24px;
+        }
+
+        .check {
+            display: grid;
+            grid-template-columns: 150px minmax(0, 1fr) auto;
+            align-items: start;
+            gap: 24px;
+            padding: 22px 24px;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            background: var(--surface);
+        }
+
+        .category {
+            color: var(--cyan);
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+
+        .check h3 {
+            margin: 0 0 7px;
+            font-size: 19px;
+        }
+
+        .check p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .detail {
+            margin-top: 8px !important;
+            color: var(--text) !important;
+            font-size: 14px;
+        }
+
+        .guidance {
+            margin-top: 10px !important;
+            color: var(--yellow) !important;
+            font-size: 14px;
+        }
+
+        .status {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .status-healthy { color: var(--green); }
+        .status-warning { color: var(--yellow); }
+        .status-action_required { color: var(--red); }
+
+        .empty {
+            margin-top: 28px;
+            padding: 44px 30px;
+            border: 1px dashed var(--border);
+            border-radius: 22px;
+            color: var(--muted);
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 760px) {
+            .page { width: min(100% - 24px, 1160px); }
+            .action-panel, .summary-head {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+            .run-button { width: 100%; }
+            .counts { grid-template-columns: 1fr; }
+            .check { grid-template-columns: 1fr; gap: 10px; }
+            .status { width: fit-content; }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="page">
+        <a class="back" href="{{ url_for('home.home_route') }}">
+            ← Back to Orion
+        </a>
+
+        <header>
+            <p class="eyebrow">One-button preflight</p>
+            <h1>Cinema Checkup</h1>
+            <p class="subtitle">
+                Confirm that Orion, Windows, Docker, playback detection,
+                display recovery, spatial audio and your receiver are ready
+                before the next film.
+            </p>
+        </header>
+
+        {% if result %}
+            <div
+                class="notice {% if result.status == 'updated' %}notice-success{% elif result.status == 'failed' %}notice-error{% endif %}"
+                role="status"
+            >
+                {{ result.message }}
+            </div>
+        {% endif %}
+
+        <section class="action-panel">
+            <div>
+                <h2>Safe, read-only preflight</h2>
+                <p>
+                    This check does not start playback, change refresh rate,
+                    switch spatial audio, control the AVR, or modify Docker.
+                </p>
+                {% if playback_active %}
+                    <p>
+                        Stop the current title and wait for restoration before
+                        running the checkup.
+                    </p>
+                {% endif %}
+            </div>
+            <form method="post" action="{{ url_for('home.cinema_checkup_run_route') }}">
+                <input
+                    type="hidden"
+                    name="token"
+                    value="{{ cinema_checkup_token }}"
+                >
+                <button
+                    class="run-button"
+                    type="submit"
+                    {% if playback_active %}disabled{% endif %}
+                >
+                    Run Cinema Checkup
+                </button>
+            </form>
+        </section>
+
+        {% if checkup %}
+            <section class="summary">
+                <div class="summary-head">
+                    <div>
+                        <h2>Latest result</h2>
+                        <p class="local-time" data-time="{{ checkup.generated_at }}">
+                            {{ checkup.generated_at }}
+                        </p>
+                    </div>
+                    <span class="overall overall-{{ checkup.status }}">
+                        {{ checkup.label }}
+                    </span>
+                </div>
+                <div class="counts">
+                    <div class="count">
+                        <strong>{{ checkup.counts.healthy }}</strong>
+                        <span>Ready</span>
+                    </div>
+                    <div class="count">
+                        <strong>{{ checkup.counts.warning }}</strong>
+                        <span>Notes</span>
+                    </div>
+                    <div class="count">
+                        <strong>{{ checkup.counts.action_required }}</strong>
+                        <span>Need attention</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="checks" aria-label="Cinema checkup results">
+                {% for check in checkup.checks %}
+                    <article class="check">
+                        <span class="category">{{ check.category }}</span>
+                        <div>
+                            <h3>{{ check.name }}</h3>
+                            <p>{{ check.summary }}</p>
+                            {% if check.detail %}
+                                <p class="detail">{{ check.detail }}</p>
+                            {% endif %}
+                            {% if check.status != 'healthy' %}
+                                <p class="guidance">{{ check.guidance }}</p>
+                            {% endif %}
+                        </div>
+                        <span class="status status-{{ check.status }}">
+                            {{ check.label }}
+                        </span>
+                    </article>
+                {% endfor %}
+            </section>
+        {% else %}
+            <div class="empty">
+                No checkup has been run yet.<br>
+                Run it once to create a local readiness baseline.
+            </div>
+        {% endif %}
+    </main>
+
+    <script>
+        document.querySelectorAll(".local-time").forEach(
+            (element) => {
+                const date = new Date(element.dataset.time);
+
+                if (!Number.isNaN(date.getTime())) {
+                    element.textContent = date.toLocaleString();
+                }
+            }
+        );
+    </script>
+</body>
+</html>

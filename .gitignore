@@ -17,6 +17,8 @@ data/display_recovery.json
 data/display_recovery.json.tmp
 data/audio_spatial_recovery.json
 data/audio_spatial_recovery.json.tmp
+data/cinema_checkup.json
+data/cinema_checkup.json.tmp
 data/aiostreams_template_session.json
 data/aiostreams_template_session.json.tmp
 data/secure_settings.json
