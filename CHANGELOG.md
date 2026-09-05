@@ -10,6 +10,10 @@ The format is based on **Keep a Changelog** and follows **Semantic Versioning** 
 
 ### Added
 
+- Vendor-neutral, read-only AV receiver adapter contract
+- Optional Denon/Marantz network status monitoring for power, input, volume,
+  mute and sound mode
+- Expected-versus-reported immersive audio comparison in playback history
 - Read-only FFprobe audio metadata for AIOStreams and UsenetStreamer playback
 - Default Windows audio-output observation and configured-receiver diagnostics
 - Read-only Dolby Access and DTS Sound Unbound detection with content mapping
@@ -38,6 +42,8 @@ The format is based on **Keep a Changelog** and follows **Semantic Versioning** 
 
 ### Fixed
 
+- AVR sound mode is refreshed during active playback so history records the
+  settled listening mode instead of an initial stereo state
 - Removed the TMDb API key from tracked application configuration
 - Missing TMDb credentials no longer cause playback metadata lookup errors
 

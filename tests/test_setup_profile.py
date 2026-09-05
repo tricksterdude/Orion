@@ -28,6 +28,8 @@ PROFILE = {
         "audio": {
             "receiver": "Living room AVR",
             "preferred_format": "Automatic",
+            "receiver_adapter": "denon_marantz",
+            "receiver_host": "192.168.1.50",
         },
         "playback": {
             "player": "Stremio",
@@ -77,6 +79,27 @@ with TemporaryDirectory() as directory:
     assert "password" not in exported.casefold()
 
     print("✓ Export contains only the non-secret profile schema")
+
+    legacy = json.loads(json.dumps(PROFILE))
+    legacy["media"]["audio"].pop("receiver_adapter")
+    legacy["media"]["audio"].pop("receiver_host")
+    migrated = manager.validate(legacy)
+
+    assert migrated["media"]["audio"]["receiver_adapter"] == "none"
+    assert migrated["media"]["audio"]["receiver_host"] == ""
+
+    print("✓ Earlier profiles keep receiver networking disabled")
+
+    unsafe_receiver = json.loads(json.dumps(PROFILE))
+    unsafe_receiver["media"]["audio"]["receiver_host"] = "example.com"
+
+    try:
+        manager.validate(unsafe_receiver)
+        raise AssertionError("Public receiver address was accepted")
+    except SetupProfileError as error:
+        assert "local network" in str(error).casefold()
+
+    print("✓ Receiver monitoring is restricted to local addresses")
 
     imported = json.loads(exported)
     imported["media"]["display"]["name"] = "Imported display"

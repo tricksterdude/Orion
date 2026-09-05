@@ -24,6 +24,8 @@ PROFILE = {
         "audio": {
             "receiver": "Living room AVR",
             "preferred_format": "Dolby Atmos",
+            "receiver_adapter": "denon_marantz",
+            "receiver_host": "192.168.1.50",
         },
         "playback": {
             "player": "Stremio",
@@ -122,6 +124,8 @@ try:
     assert 'name="movie_refresh_rate"' not in page
     assert 'name="tv_refresh_rate"' not in page
     assert "AIOStreams" in page
+    assert "Denon / Marantz" in page
+    assert "192.168.1.50" in page
     assert routes.settings_management_token in page
     assert "no-store" in response.headers["Cache-Control"]
 
@@ -141,6 +145,8 @@ try:
             "restore_desktop": "on",
             "player": "Stremio",
             "receiver": "AVR",
+            "receiver_adapter": "denon_marantz",
+            "receiver_host": "192.168.1.60",
             "preferred_audio_format": "Atmos",
             "providers": [
                 "AIOStreams",
@@ -161,6 +167,12 @@ try:
     assert manager.saved["media"]["audio"][
         "preferred_format"
     ] == "Automatic"
+    assert manager.saved["media"]["audio"][
+        "receiver_adapter"
+    ] == "denon_marantz"
+    assert manager.saved["media"]["audio"][
+        "receiver_host"
+    ] == "192.168.1.60"
 
     print("✓ Setup changes require a token and preserve services")
 

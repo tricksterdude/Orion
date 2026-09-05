@@ -121,6 +121,8 @@ with TemporaryDirectory() as directory:
 
     assert services == {"services": []}
     assert media["display"]["desktop_refresh_rate"] == 60
+    assert media["audio"]["receiver_adapter"] == "none"
+    assert media["audio"]["receiver_host"] == ""
     assert "movie_refresh_rate" not in media["display"]
     assert "tv_refresh_rate" not in media["display"]
     assert configuration.local_path("media").is_file()

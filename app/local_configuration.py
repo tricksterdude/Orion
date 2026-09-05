@@ -34,6 +34,8 @@ class LocalConfiguration:
                 "audio": {
                     "receiver": "Not configured",
                     "preferred_format": "Automatic",
+                    "receiver_adapter": "none",
+                    "receiver_host": "",
                 },
                 "playback": {
                     "player": "Stremio",

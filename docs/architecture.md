@@ -50,8 +50,10 @@ cinema engine.
 FFprobe resolves the selected stream’s resolution, video codec, frame rate,
 audio codec/profile, channel layout, sample rate and bitrate. The Windows
 Core Audio observer reports the active default multimedia output without
-changing it. AVR-reported signal verification and stronger HDR/Dolby Vision
-detection remain later analysis layers.
+changing it. A vendor-neutral receiver boundary supports optional read-only
+Denon/Marantz monitoring while keeping its network protocol out of cinema
+logic. Stronger signal-format and HDR/Dolby Vision identification remain
+later analysis layers.
 
 ### Cinema and display
 

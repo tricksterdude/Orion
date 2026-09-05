@@ -40,6 +40,7 @@ from app.display.adapter import DisplayAdapter
 from app.media.title import friendly_media_title
 from app.playback.history import PlaybackHistory
 from app.recovery_status import display_recovery_status
+from app.receivers.manager import ReceiverManager
 from app.secure_settings import (
     SecureSettingsError,
     SecureSettingsStore,
@@ -337,6 +338,7 @@ def setup_route():
             supported_providers=(
                 setup_profile_manager.SUPPORTED_PROVIDERS
             ),
+            receiver_adapters=ReceiverManager.options(),
             settings_management_token=(
                 settings_management_token
             ),
@@ -389,6 +391,14 @@ def setup_save_route():
                     # Audio format follows the playing content.  The
                     # profile must not imply that Orion forces a codec.
                     "preferred_format": "Automatic",
+                    "receiver_adapter": request.form.get(
+                        "receiver_adapter",
+                        "none",
+                    ),
+                    "receiver_host": request.form.get(
+                        "receiver_host",
+                        "",
+                    ),
                 },
                 "playback": {
                     "player": request.form.get(

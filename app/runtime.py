@@ -420,6 +420,10 @@ class OrionRuntime:
                             )
                         )
 
+                if session_active:
+
+                    self.history.refresh_receiver()
+
                 time.sleep(1)
 
         except KeyboardInterrupt:

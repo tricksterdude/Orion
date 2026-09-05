@@ -102,6 +102,17 @@ class FakeSpatialProcessors:
         ]
 
 
+class FakeReceiverManager:
+
+    def __init__(self, result=None):
+
+        self.result = result
+
+    def observe(self):
+
+        return self.result
+
+
 class CommandRunner:
 
     def __init__(self, failures=None):
@@ -180,6 +191,7 @@ def build_diagnostics(
     processes=None,
     stremio=None,
     audio_output=None,
+    receiver_manager=None,
     clock=None,
 ):
 
@@ -192,6 +204,9 @@ def build_diagnostics(
             lambda: audio_output or FakeAudioOutput()
         ),
         spatial_processors_factory=FakeSpatialProcessors,
+        receiver_manager=(
+            receiver_manager or FakeReceiverManager()
+        ),
         command_runner=command_runner or CommandRunner(),
         process_iter=(
             lambda attributes: processes
@@ -270,6 +285,29 @@ try:
     assert "DTS Sound Unbound" in audio_check["detail"]
 
     print("✓ Configured receiver matches Windows audio output")
+
+    unavailable_receiver = build_diagnostics(
+        root,
+        receiver_manager=FakeReceiverManager(
+            {
+                "available": False,
+                "error": "Receiver status unavailable.",
+            }
+        ),
+    )
+    unavailable_snapshot = unavailable_receiver.run(
+        services=services
+    )
+    unavailable_audio = next(
+        check
+        for check in unavailable_snapshot["checks"]
+        if check["id"] == "audio_output"
+    )
+
+    assert unavailable_audio["status"] == "warning"
+    assert "network status" in unavailable_audio["summary"]
+
+    print("✓ Unavailable configured receiver produces a warning")
 
     wrong_audio = build_diagnostics(
         root,

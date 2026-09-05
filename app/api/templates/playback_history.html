@@ -290,7 +290,7 @@
             border-right: 0;
         }
 
-        .detail:nth-last-child(-n + 3) {
+        .detail:nth-last-child(-n + 2) {
             border-bottom: 0;
         }
 
@@ -365,7 +365,7 @@
                 border-bottom: 1px solid var(--border);
             }
 
-            .detail:nth-last-child(-n + 3) {
+            .detail:nth-last-child(-n + 2) {
                 border-bottom: 1px solid var(--border);
             }
 
@@ -492,6 +492,7 @@
             {% set target = cinema.target_mode or {} %}
             {% set audio_output = session.audio_output or {} %}
             {% set audio_processing = session.audio_processing or {} %}
+            {% set receiver = session.receiver or {} %}
 
             <article class="session">
                 <div class="session-heading">
@@ -644,6 +645,39 @@
                             {{ audio_output.name or "Not observed" }}
                             {% if audio_output.form_factor %}
                                 &middot; {{ audio_output.form_factor }}
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <div class="detail">
+                        <span class="detail-label">
+                            AV receiver
+                        </span>
+
+                        <span class="detail-value">
+                            {% if receiver.available %}
+                                {{ receiver.name or "Receiver" }}
+                                {% if receiver.sound_mode %}
+                                    &middot; {{ receiver.sound_mode }}
+                                {% endif %}
+                                {% if receiver.selected_input %}
+                                    &middot; {{ receiver.selected_input }}
+                                {% endif %}
+                                {% if receiver.matches_expected_audio is sameas true %}
+                                    <br><span class="yes">
+                                        Matches stream audio
+                                    </span>
+                                {% elif receiver.matches_expected_audio is sameas false %}
+                                    <br><span class="status-bad">
+                                        Does not match stream audio
+                                    </span>
+                                {% endif %}
+                            {% elif receiver.error %}
+                                <span class="no">
+                                    {{ receiver.error }}
+                                </span>
+                            {% else %}
+                                Not configured
                             {% endif %}
                         </span>
                     </div>
