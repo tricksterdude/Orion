@@ -10,6 +10,10 @@ The format is based on **Keep a Changelog** and follows **Semantic Versioning** 
 
 ### Added
 
+- Streamlined one-page onboarding with safe display, audio, Stremio,
+  playback-provider and Docker-service detection
+- Direct Setup, Diagnostics and History shortcuts on the homepage
+- One-confirmation registration of preselected, recognised cinema containers
 - Vendor-neutral, read-only AV receiver adapter contract
 - Optional Denon/Marantz network status monitoring for power, input, volume,
   mute and sound mode
@@ -45,6 +49,8 @@ The format is based on **Keep a Changelog** and follows **Semantic Versioning** 
 
 ### Fixed
 
+- Playback-history delete forms now remain valid across an Orion restart while
+  retaining same-site request protection
 - Dolby/DTS family compatibility is reported without assuming height speakers
 - AVR sound mode is refreshed during active playback so history records the
   settled listening mode instead of an initial stereo state

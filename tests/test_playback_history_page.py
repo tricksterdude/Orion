@@ -14,6 +14,9 @@ print()
 original_history_store = (
     routes.history_store
 )
+original_history_token = (
+    routes.history_management_token
+)
 
 try:
 
@@ -110,6 +113,8 @@ try:
             test_history
         )
 
+        page_token = routes.history_management_token
+
         server = OrionAPIServer()
         client = server.app.test_client()
 
@@ -148,7 +153,8 @@ try:
             'action="/history/page-test/delete"'
             in page
         )
-        assert routes.history_management_token in page
+        assert page_token in page
+        assert "no-store" in response.headers["Cache-Control"]
 
         print(
             "✓ Playback history page rendered"
@@ -172,10 +178,14 @@ try:
 
         assert missing_token_response.status_code == 403
 
+        routes.history_management_token = (
+            "replacement-process-token"
+        )
+
         delete_response = client.post(
             "/history/page-test/delete",
             data={
-                "token": routes.history_management_token,
+                "token": page_token,
             },
         )
 
@@ -185,6 +195,7 @@ try:
         assert remaining[0]["session_id"] == "legacy-page-test"
 
         print("✓ Individual history deletion secured")
+        print("✓ Open history forms survive an Orion restart")
 
         assert test_history._append(
             {
@@ -203,7 +214,7 @@ try:
         clear_response = client.post(
             "/history/delete-all",
             data={
-                "token": routes.history_management_token,
+                "token": page_token,
             },
         )
 
@@ -216,6 +227,9 @@ finally:
 
     routes.history_store = (
         original_history_store
+    )
+    routes.history_management_token = (
+        original_history_token
     )
 
 print()

@@ -98,6 +98,72 @@
             color: var(--red);
         }
 
+        .readiness {
+            margin-top: 28px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            background: var(--surface);
+        }
+
+        .readiness-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 22px 26px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .readiness-header strong { font-size: 21px; }
+
+        .readiness-count {
+            color: var(--green);
+            font-weight: 850;
+        }
+
+        .readiness-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .readiness-item {
+            min-width: 0;
+            padding: 20px 22px;
+            border-right: 1px solid var(--border);
+        }
+
+        .readiness-item:last-child { border-right: 0; }
+
+        .readiness-name {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            font-weight: 850;
+        }
+
+        .readiness-dot {
+            width: 9px;
+            height: 9px;
+            flex: 0 0 auto;
+            border-radius: 50%;
+            background: var(--yellow);
+        }
+
+        .is-ready .readiness-dot {
+            background: var(--green);
+            box-shadow: 0 0 12px rgba(81, 239, 188, 0.7);
+        }
+
+        .readiness-detail {
+            display: block;
+            margin-top: 8px;
+            overflow-wrap: anywhere;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
         .panel {
             margin-top: 28px;
             overflow: hidden;
@@ -208,6 +274,63 @@
 
         .service span { color: var(--muted); }
 
+        .discovered-list {
+            display: grid;
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .discovered-service {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 14px;
+            margin: 0;
+            padding: 15px 16px;
+            border: 1px solid var(--border);
+            border-radius: 13px;
+            color: var(--text);
+            letter-spacing: 0;
+            text-transform: none;
+        }
+
+        .discovered-service input { accent-color: var(--green); }
+
+        .discovered-copy {
+            min-width: 0;
+        }
+
+        .discovered-copy span {
+            display: block;
+            margin-top: 4px;
+            overflow-wrap: anywhere;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .recommended {
+            color: var(--green);
+            font-size: 12px;
+            font-weight: 850;
+            text-transform: uppercase;
+        }
+
+        .advanced {
+            grid-column: 1 / -1;
+            padding: 18px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: rgba(5, 10, 19, 0.25);
+        }
+
+        .advanced summary {
+            cursor: pointer;
+            color: var(--cyan);
+            font-weight: 850;
+        }
+
+        .advanced .grid { margin-top: 20px; }
+
         .actions {
             display: flex;
             align-items: center;
@@ -236,9 +359,19 @@
         @media (max-width: 760px) {
             .page { width: min(100% - 24px, 1120px); }
             .grid, .grid-three { grid-template-columns: 1fr; }
+            .readiness-grid { grid-template-columns: 1fr; }
+            .readiness-item {
+                border-right: 0;
+                border-bottom: 1px solid var(--border);
+            }
+            .readiness-item:last-child { border-bottom: 0; }
             .field-full { grid-column: auto; }
             .panel-header, .panel-body { padding: 22px; }
             .service { flex-direction: column; }
+            .discovered-service {
+                grid-template-columns: auto minmax(0, 1fr);
+            }
+            .recommended { grid-column: 2; }
             .button { width: 100%; }
         }
     </style>
@@ -246,17 +379,17 @@
 
 <body>
     <main class="page">
-        <a class="back" href="{{ url_for('home.settings_route') }}">
-            ← Back to Settings
+        <a class="back" href="{{ url_for('home.home_route') }}">
+            ← Back to Orion
         </a>
 
         <header>
-            <p class="eyebrow">Reusable local profile</p>
-            <h1>System Setup</h1>
+            <p class="eyebrow">One-page guided setup</p>
+            <h1>Set up Orion</h1>
             <p class="subtitle">
-                Confirm how this cinema PC should behave. Orion stores
-                these choices locally so repository updates cannot
-                overwrite them.
+                Orion has detected what it safely can. Review the
+                pre-filled choices once, adjust anything unusual, then
+                confirm the whole cinema system with one button.
             </p>
         </header>
 
@@ -274,6 +407,36 @@
                 {{ profile_error }}
             </div>
         {% elif profile %}
+            {% if onboarding %}
+                <section class="readiness" aria-label="Detected setup summary">
+                    <div class="readiness-header">
+                        <strong>
+                            {% if onboarding.completed %}
+                                Current setup
+                            {% else %}
+                                Detected for you
+                            {% endif %}
+                        </strong>
+                        <span class="readiness-count">
+                            {{ onboarding.detected_count }}/{{ onboarding.area_count }} areas ready
+                        </span>
+                    </div>
+                    <div class="readiness-grid">
+                        {% for area in onboarding.areas %}
+                            <div class="readiness-item{% if area.ready %} is-ready{% endif %}">
+                                <span class="readiness-name">
+                                    <span class="readiness-dot"></span>
+                                    {{ area.name }}
+                                </span>
+                                <span class="readiness-detail">
+                                    {{ area.detail }}
+                                </span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endif %}
+
             {% if detected_display %}
                 <div class="notice">
                     Windows currently reports
@@ -396,48 +559,56 @@
                                 value="{{ profile.media.audio.receiver }}"
                             >
                         </div>
-                        <div>
-                            <label for="receiver-adapter">
-                                Network receiver family
-                            </label>
-                            <select
-                                id="receiver-adapter"
-                                name="receiver_adapter"
-                            >
-                                <option
-                                    value="none"
-                                    {% if profile.media.audio.receiver_adapter == 'none' %}selected{% endif %}
-                                >
-                                    Not configured
-                                </option>
-                                {% for adapter in receiver_adapters %}
-                                    <option
-                                        value="{{ adapter.id }}"
-                                        {% if profile.media.audio.receiver_adapter == adapter.id %}selected{% endif %}
+                        <details
+                            class="advanced"
+                            {% if profile.media.audio.receiver_adapter != 'none' %}open{% endif %}
+                        >
+                            <summary>Optional network receiver monitoring</summary>
+                            <div class="grid">
+                                <div>
+                                    <label for="receiver-adapter">
+                                        Receiver family
+                                    </label>
+                                    <select
+                                        id="receiver-adapter"
+                                        name="receiver_adapter"
                                     >
-                                        {{ adapter.name }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div>
-                            <label for="receiver-host">
-                                Receiver IP address or host name
-                            </label>
-                            <input
-                                id="receiver-host"
-                                name="receiver_host"
-                                type="text"
-                                maxlength="253"
-                                placeholder="For example: 192.168.1.50"
-                                value="{{ profile.media.audio.receiver_host }}"
-                            >
-                            <p class="hint">
-                                Optional. Orion currently makes only
-                                read-only status requests to configured
-                                receivers.
-                            </p>
-                        </div>
+                                        <option
+                                            value="none"
+                                            {% if profile.media.audio.receiver_adapter == 'none' %}selected{% endif %}
+                                        >
+                                            Not configured
+                                        </option>
+                                        {% for adapter in receiver_adapters %}
+                                            <option
+                                                value="{{ adapter.id }}"
+                                                {% if profile.media.audio.receiver_adapter == adapter.id %}selected{% endif %}
+                                            >
+                                                {{ adapter.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="receiver-host">
+                                        Receiver IP address or host name
+                                    </label>
+                                    <input
+                                        id="receiver-host"
+                                        name="receiver_host"
+                                        type="text"
+                                        maxlength="253"
+                                        placeholder="For example: 192.168.1.50"
+                                        value="{{ profile.media.audio.receiver_host }}"
+                                    >
+                                    <p class="hint">
+                                        Optional. Orion currently makes only
+                                        read-only status requests to configured
+                                        receivers.
+                                    </p>
+                                </div>
+                            </div>
+                        </details>
                         <div class="field-full">
                             <label for="audio-format">Audio handling</label>
                             <input
@@ -533,6 +704,46 @@
                                 </p>
                             {% endfor %}
                         </div>
+                        {% if onboarding and onboarding.discovered_services %}
+                            <h3>Found on this computer</h3>
+                            <p class="hint">
+                                {% if onboarding.completed %}
+                                    Select any additional service Orion should
+                                    monitor.
+                                {% else %}
+                                    Known cinema services are preselected. Uncheck
+                                    anything Orion should not monitor.
+                                {% endif %}
+                            </p>
+                            <div class="discovered-list">
+                                {% for service in onboarding.discovered_services %}
+                                    <label class="discovered-service">
+                                        <input
+                                            type="checkbox"
+                                            name="discovered_services"
+                                            value="{{ service.id }}"
+                                            {% if service.recommended and not onboarding.completed %}checked{% endif %}
+                                        >
+                                        <span class="discovered-copy">
+                                            <strong>{{ service.name }}</strong>
+                                            <span>
+                                                {{ service.image or "Image unavailable" }} ·
+                                                {{ service.url }}
+                                            </span>
+                                        </span>
+                                        {% if service.recommended %}
+                                            <span class="recommended">Recommended</span>
+                                        {% endif %}
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        {% elif onboarding and onboarding.discovery_errors %}
+                            <p class="hint">
+                                Docker discovery is unavailable right now.
+                                You can still confirm the rest of Orion and
+                                add services later from the homepage.
+                            </p>
+                        {% endif %}
                         <div class="actions">
                             <a
                                 class="secondary"
@@ -546,7 +757,11 @@
 
                 <div class="actions">
                     <button class="button" type="submit">
-                        Save local profile
+                        {% if onboarding and not onboarding.completed %}
+                            Confirm setup
+                        {% else %}
+                            Save changes
+                        {% endif %}
                     </button>
                     <span class="hint">
                         Orion creates a backup before applying changes.
