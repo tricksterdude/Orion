@@ -189,6 +189,9 @@ try:
     assert "Private configuration" in page
     assert "Settings" in page
     assert 'href="/settings"' in page
+    assert 'href="/setup"' in page
+    assert "Finish setting up Orion" in page
+    assert "Review detected setup" in page
     assert "TMDb not configured" in page
     assert "Profile needs review" in page
 

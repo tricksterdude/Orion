@@ -130,6 +130,62 @@
                 transform 160ms ease;
         }
 
+        .quick-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .quick-nav a {
+            padding: 10px 16px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: rgba(13, 23, 40, 0.72);
+            color: var(--muted);
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .quick-nav a:hover,
+        .quick-nav a:focus-visible {
+            border-color: var(--cyan);
+            color: var(--cyan);
+        }
+
+        .setup-callout {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 26px;
+            margin-top: 32px;
+            padding: 24px 28px;
+            border: 1px solid rgba(255, 209, 102, 0.46);
+            border-radius: 22px;
+            background: rgba(255, 209, 102, 0.08);
+        }
+
+        .setup-callout h2 {
+            margin: 0 0 7px;
+            font-size: 24px;
+        }
+
+        .setup-callout p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .setup-callout a {
+            flex-shrink: 0;
+            padding: 13px 20px;
+            border: 1px solid var(--yellow);
+            border-radius: 999px;
+            color: var(--yellow);
+            font-weight: 850;
+            text-decoration: none;
+        }
+
         .orion-status:hover {
             border-color: currentColor;
             transform: translateY(-2px);
@@ -842,7 +898,8 @@
             }
 
             .audio-guidance-header,
-            .audio-guidance-action {
+            .audio-guidance-action,
+            .setup-callout {
                 align-items: flex-start;
                 flex-direction: column;
             }
@@ -867,6 +924,12 @@
                 Local playback monitoring, automatic display
                 switching and cinema-session history.
             </p>
+
+            <nav class="quick-nav" aria-label="Orion shortcuts">
+                <a href="{{ url_for('home.setup_route') }}">Setup</a>
+                <a href="{{ url_for('home.diagnostics_route') }}">Diagnostics</a>
+                <a href="{{ url_for('history.history_view_route') }}">History</a>
+            </nav>
 
             <a
                 class="
@@ -920,6 +983,21 @@
                 </div>
             {% endif %}
         </header>
+
+        {% if not setup_profile.completed %}
+            <section class="setup-callout" aria-labelledby="setup-callout-title">
+                <div>
+                    <h2 id="setup-callout-title">Finish setting up Orion</h2>
+                    <p>
+                        Orion can detect most of this cinema PC for you.
+                        Review everything on one page and confirm it once.
+                    </p>
+                </div>
+                <a href="{{ url_for('home.setup_route') }}">
+                    Review detected setup →
+                </a>
+            </section>
+        {% endif %}
 
         <section
             id="audio-guidance"

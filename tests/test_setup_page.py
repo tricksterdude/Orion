@@ -100,14 +100,105 @@ class FakeDisplay:
         return FakeMode()
 
 
+class FakeOnboarding:
+
+    def snapshot(
+        self,
+        profile,
+        completed=False,
+        playback_active=False,
+    ):
+
+        return {
+            "profile": profile,
+            "completed": completed,
+            "display": {
+                "available": True,
+                "resolution": "3840x2160",
+                "refresh": 120,
+                "message": "3840x2160 at 120 Hz",
+            },
+            "audio": {
+                "available": True,
+                "name": "DENON-AVR HDMI",
+                "form_factor": "HDMI/display audio",
+                "message": "DENON-AVR HDMI",
+            },
+            "stremio": {
+                "state": "ready",
+                "ready": True,
+                "message": "Playback detection is ready.",
+            },
+            "areas": [
+                {
+                    "id": "display",
+                    "name": "Display",
+                    "ready": True,
+                    "detail": "3840x2160 at 120 Hz",
+                },
+                {
+                    "id": "audio",
+                    "name": "Audio output",
+                    "ready": True,
+                    "detail": "DENON-AVR HDMI",
+                },
+                {
+                    "id": "playback",
+                    "name": "Playback",
+                    "ready": True,
+                    "detail": "AIOStreams",
+                },
+                {
+                    "id": "services",
+                    "name": "Docker services",
+                    "ready": True,
+                    "detail": "1 configured",
+                },
+            ],
+            "detected_count": 4,
+            "area_count": 4,
+            "discovered_services": [
+                {
+                    "id": "usenetstreamer-7001",
+                    "name": "usenetstreamer",
+                    "container": "usenetstreamer",
+                    "image": "gavpyro/usenetstreamer:latest",
+                    "port": 7001,
+                    "url": "http://localhost:7001",
+                    "recommended": True,
+                }
+            ],
+            "discovery_errors": [],
+            "detected_providers": ["AIOStreams"],
+        }
+
+    def merge_services(self, configured, candidate_ids):
+
+        services = list(configured)
+
+        if "usenetstreamer-7001" in candidate_ids:
+            services.append(
+                {
+                    "name": "usenetstreamer",
+                    "container": "usenetstreamer",
+                    "port": 7001,
+                    "url": "http://localhost:7001",
+                }
+            )
+
+        return services
+
+
 original_manager = routes.setup_profile_manager
 original_display = routes.DisplayAdapter
 original_reload = routes.service_status.reload
+original_onboarding = routes.onboarding_assistant
 
 manager = FakeProfileManager()
 routes.setup_profile_manager = manager
 routes.DisplayAdapter = FakeDisplay
 routes.service_status.reload = lambda: None
+routes.onboarding_assistant = FakeOnboarding()
 
 try:
     server = OrionAPIServer()
@@ -118,6 +209,19 @@ try:
 
     assert response.status_code == 200
     assert "System Setup · Orion" in page
+    assert "Set up Orion" in page
+    assert "Detected for you" not in page
+    assert "Current setup" in page
+    assert "4/4 areas ready" in page
+    assert "DENON-AVR HDMI" in page
+    assert "Found on this computer" in page
+    assert "usenetstreamer" in page
+    assert "Recommended" in page
+    candidate_control = page.split(
+        'value="usenetstreamer-7001"',
+        1,
+    )[1].split(">", 1)[0]
+    assert "checked" not in candidate_control
     assert "Living room display" in page
     assert "3840x2160" in page
     assert "120 Hz" in page
@@ -156,11 +260,17 @@ try:
                 "AIOStreams",
                 "UsenetStreamer",
             ],
+            "discovered_services": [
+                "usenetstreamer-7001",
+            ],
         },
     )
 
     assert saved.status_code == 302
-    assert manager.saved["services"] == PROFILE["services"]
+    assert manager.saved["services"][0] == PROFILE["services"][0]
+    assert manager.saved["services"][1][
+        "container"
+    ] == "usenetstreamer"
     assert manager.saved["providers"] == [
         "AIOStreams",
         "UsenetStreamer",
@@ -242,6 +352,7 @@ finally:
     routes.setup_profile_manager = original_manager
     routes.DisplayAdapter = original_display
     routes.service_status.reload = original_reload
+    routes.onboarding_assistant = original_onboarding
 
 print()
 print("✓ Orion setup page test passed")

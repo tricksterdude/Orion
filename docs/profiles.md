@@ -20,9 +20,17 @@ defaults.
 
 ## Guided setup
 
-Open **Settings → Review setup**. Orion shows the current Windows resolution
-and refresh rate alongside the stored profile. Confirm that **Desktop Hz** is
-the normal non-playback refresh rate that Orion must restore after playback.
+Open **Setup** directly from the homepage. Orion detects the current Windows
+resolution and refresh rate, default audio output, Stremio readiness, known
+playback providers and published Docker services. On a new installation it
+pre-fills safe detected values and preselects recognised cinema containers so
+the whole local profile can be confirmed once. Existing completed profiles are
+never overwritten by later detection.
+
+Confirm that **Desktop Hz** is the normal non-playback refresh rate that Orion
+must restore after playback. If playback is active while setup is opened,
+Orion preserves the stored desktop baseline rather than treating the temporary
+cinema refresh rate as a new default.
 Movie and television refresh targets are not profile settings: Orion measures
 each stream's FPS and selects the closest supported display mode for that
 playback session.
@@ -38,6 +46,8 @@ controls or change receiver state.
 
 Docker services continue to be discovered and added from the homepage. Their
 container names, ports and addresses are included in the local profile.
+Unknown published containers remain unselected during onboarding and can be
+added deliberately later.
 
 ## Export and import
 

@@ -22,6 +22,8 @@ the Docker services that support the cinema system.
 ### Operations
 
 - Responsive local dashboard and per-service pages
+- One-page setup that pre-fills safely detected display, audio, playback and
+  Docker choices
 - Docker service discovery and safe registration
 - Service health, start, stop and restart controls
 - Container update detection and controlled one-click updates
@@ -32,7 +34,7 @@ the Docker services that support the cinema system.
 ### Safety
 
 - Local-only web server on `127.0.0.1`
-- Per-process form tokens for actions that change state
+- Same-site or per-process form tokens for actions that change state
 - Atomic configuration updates with backups where appropriate
 - Windows-protected storage for private settings
 - Display recovery checkpoints before temporary mode changes
@@ -47,6 +49,7 @@ version numbers.
 - ✅ Move private values out of tracked configuration files
 - ✅ Manage encrypted credentials from Orion’s Settings page
 - ✅ Add a guided local system-setup screen
+- ✅ Pre-fill safe detected choices and expose setup directly from the homepage
 - ✅ Keep installation-specific service, provider and media settings outside
   tracked files
 - ✅ Add validated import/export for non-secret system profiles

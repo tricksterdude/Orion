@@ -38,9 +38,11 @@ from app.api.service_registry import ServiceRegistry
 from app.api.service_status import ServiceStatus
 from app.audio.guidance_status import audio_guidance_status
 from app.audio.spatial_control import SpatialAudioController
+from app.audio.windows_output import WindowsAudioOutput
 from app.audio.windows_settings import WindowsSoundSettings
 from app.display.adapter import DisplayAdapter
 from app.media.title import friendly_media_title
+from app.onboarding import OnboardingAssistant, OnboardingError
 from app.playback.history import PlaybackHistory
 from app.recovery_status import display_recovery_status
 from app.receivers.manager import ReceiverManager
@@ -88,6 +90,12 @@ secure_settings_store = SecureSettingsStore()
 setup_profile_manager = SetupProfileManager()
 windows_sound_settings = WindowsSoundSettings()
 spatial_audio_controller = SpatialAudioController()
+onboarding_assistant = OnboardingAssistant(
+    display=DisplayAdapter(),
+    audio_output=WindowsAudioOutput(),
+    stremio=stremio_controller,
+    service_discovery=service_discovery,
+)
 
 container_update_token = (
     secrets.token_urlsafe(32)
@@ -104,6 +112,8 @@ service_registration_token = (
 history_management_token = (
     secrets.token_urlsafe(32)
 )
+
+history_token_cookie = "orion_history_token"
 
 service_control_token = (
     secrets.token_urlsafe(32)
@@ -362,30 +372,34 @@ def setup_route():
         }
 
     try:
-        profile = setup_profile_manager.snapshot()
+        current_profile = setup_profile_manager.snapshot()
+        onboarding = onboarding_assistant.snapshot(
+            current_profile,
+            completed=setup_profile_manager.completed(),
+            playback_active=bool(
+                audio_guidance_status.get().get("active")
+            ),
+        )
+        profile = onboarding["profile"]
         profile_error = None
-    except SetupProfileError as error:
+    except (SetupProfileError, OnboardingError) as error:
         profile = None
+        onboarding = None
         profile_error = str(error)
 
-    detected_display = None
-
-    try:
-        mode = DisplayAdapter().current_mode()
-
-        if mode is not None:
-            detected_display = {
-                "resolution": f"{mode.width}x{mode.height}",
-                "refresh": mode.refresh,
-            }
-    except Exception:
-        pass
+    detected_display = (
+        onboarding["display"]
+        if onboarding
+        and onboarding["display"]["available"]
+        else None
+    )
 
     response = make_response(
         render_template(
             "setup.html",
             profile=profile,
             profile_error=profile_error,
+            onboarding=onboarding,
             detected_display=detected_display,
             supported_providers=(
                 setup_profile_manager.SUPPORTED_PROVIDERS
@@ -416,6 +430,10 @@ def setup_save_route():
 
     try:
         current = setup_profile_manager.snapshot()
+        services = onboarding_assistant.merge_services(
+            current["services"],
+            request.form.getlist("discovered_services"),
+        )
         profile = {
             "version": setup_profile_manager.VERSION,
             "media": {
@@ -470,7 +488,7 @@ def setup_save_route():
                     ),
                 },
             },
-            "services": current["services"],
+            "services": services,
             "providers": request.form.getlist(
                 "providers"
             ),
@@ -482,7 +500,7 @@ def setup_save_route():
             "The local Orion profile was saved. Restart Orion "
             "before the next playback session."
         )
-    except SetupProfileError as error:
+    except (SetupProfileError, OnboardingError) as error:
         status = "failed"
         message = str(error)
 
@@ -1199,28 +1217,63 @@ def history_view_route():
                 )
             )
 
-    return render_template(
-        "playback_history.html",
-        sessions=sessions,
-        history_management_token=(
-            history_management_token
-        ),
-        history_result=history_result,
+    browser_token = request.cookies.get(
+        history_token_cookie
+    )
+
+    if not browser_token or len(browser_token) > 200:
+        browser_token = history_management_token
+
+    response = make_response(
+        render_template(
+            "playback_history.html",
+            sessions=sessions,
+            history_management_token=browser_token,
+            history_result=history_result,
+        )
+    )
+    response.headers["Cache-Control"] = (
+        "no-store, max-age=0"
+    )
+    response.set_cookie(
+        history_token_cookie,
+        browser_token,
+        max_age=60 * 60 * 24 * 30,
+        httponly=True,
+        samesite="Strict",
+        path="/history",
+    )
+
+    return response
+
+
+def _valid_history_token():
+
+    submitted_token = request.form.get(
+        "token",
+        "",
+    )
+    browser_token = request.cookies.get(
+        history_token_cookie,
+        "",
+    )
+
+    return bool(
+        submitted_token
+        and browser_token
+        and len(submitted_token) <= 200
+        and len(browser_token) <= 200
+        and hmac.compare_digest(
+            submitted_token,
+            browser_token,
+        )
     )
 
 
 @history.post("/history/<session_id>/delete")
 def history_delete_route(session_id):
 
-    submitted_token = request.form.get(
-        "token",
-        "",
-    )
-
-    if not hmac.compare_digest(
-        submitted_token,
-        history_management_token,
-    ):
+    if not _valid_history_token():
 
         abort(403)
 
@@ -1253,15 +1306,7 @@ def history_delete_route(session_id):
 @history.post("/history/delete-all")
 def history_delete_all_route():
 
-    submitted_token = request.form.get(
-        "token",
-        "",
-    )
-
-    if not hmac.compare_digest(
-        submitted_token,
-        history_management_token,
-    ):
+    if not _valid_history_token():
 
         abort(403)
 
