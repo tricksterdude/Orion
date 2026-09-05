@@ -492,6 +492,7 @@
             {% set target = cinema.target_mode or {} %}
             {% set audio_output = session.audio_output or {} %}
             {% set audio_processing = session.audio_processing or {} %}
+            {% set audio_control = session.audio_control or {} %}
             {% set receiver = session.receiver or {} %}
 
             <article class="session">
@@ -633,11 +634,11 @@
                                     <span class="no">not detected</span>
                                 {% endif %}
                             {% endif %}
-                            {% if session.audio_control.status == 'switched' %}
+                            {% if audio_control.status == 'switched' %}
                                 <br><span class="yes">
                                     Spatial format switched automatically
                                 </span>
-                            {% elif session.audio_control.status == 'failed' %}
+                            {% elif audio_control.status == 'failed' %}
                                 <br><span class="status-bad">
                                     Automatic spatial switch failed
                                 </span>

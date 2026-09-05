@@ -97,6 +97,15 @@ try:
             session
         )
 
+        legacy_session = dict(session)
+        legacy_session["session_id"] = "legacy-page-test"
+        legacy_session.pop("audio_control")
+        legacy_session.pop("audio_restored")
+
+        assert test_history._append(
+            legacy_session
+        )
+
         routes.history_store = (
             test_history
         )
@@ -171,7 +180,9 @@ try:
         )
 
         assert delete_response.status_code == 302
-        assert test_history.read() == []
+        remaining = test_history.read()
+        assert len(remaining) == 1
+        assert remaining[0]["session_id"] == "legacy-page-test"
 
         print("✓ Individual history deletion secured")
 
