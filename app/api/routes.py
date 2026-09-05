@@ -36,6 +36,9 @@ from app.api.service_controller import ServiceController
 from app.api.service_names import service_slug
 from app.api.service_registry import ServiceRegistry
 from app.api.service_status import ServiceStatus
+from app.audio.guidance_status import audio_guidance_status
+from app.audio.spatial_control import SpatialAudioController
+from app.audio.windows_settings import WindowsSoundSettings
 from app.display.adapter import DisplayAdapter
 from app.media.title import friendly_media_title
 from app.playback.history import PlaybackHistory
@@ -83,6 +86,8 @@ system_diagnostics = SystemDiagnostics(
 )
 secure_settings_store = SecureSettingsStore()
 setup_profile_manager = SetupProfileManager()
+windows_sound_settings = WindowsSoundSettings()
+spatial_audio_controller = SpatialAudioController()
 
 container_update_token = (
     secrets.token_urlsafe(32)
@@ -109,6 +114,10 @@ template_update_token = (
 )
 
 settings_management_token = (
+    secrets.token_urlsafe(32)
+)
+
+audio_guidance_token = (
     secrets.token_urlsafe(32)
 )
 
@@ -257,6 +266,49 @@ def home_route():
         diagnostics=diagnostics_snapshot,
         tmdb_setting=_tmdb_setting_status(),
         setup_profile=_setup_profile_status(),
+        audio_guidance=audio_guidance_status.get(),
+        audio_guidance_token=audio_guidance_token,
+    )
+
+
+@home.get("/audio-guidance/status")
+def audio_guidance_status_route():
+
+    response = make_response(
+        audio_guidance_status.get()
+    )
+    response.headers["Cache-Control"] = "no-store"
+
+    return response
+
+
+@home.post("/audio-guidance/open-settings")
+def audio_guidance_settings_route():
+
+    submitted_token = request.form.get(
+        "token",
+        "",
+    )
+
+    if not hmac.compare_digest(
+        submitted_token,
+        audio_guidance_token,
+    ):
+
+        abort(403)
+
+    result = windows_sound_settings.open()
+
+    return redirect(
+        url_for(
+            "home.home_route",
+            update_status=(
+                "updated"
+                if result["ok"]
+                else "failed"
+            ),
+            update_message=result["message"],
+        )
     )
 
 
@@ -339,6 +391,7 @@ def setup_route():
                 setup_profile_manager.SUPPORTED_PROVIDERS
             ),
             receiver_adapters=ReceiverManager.options(),
+            spatial_audio_setup=spatial_audio_controller.status(),
             settings_management_token=(
                 settings_management_token
             ),
@@ -398,6 +451,10 @@ def setup_save_route():
                     "receiver_host": request.form.get(
                         "receiver_host",
                         "",
+                    ),
+                    "spatial_control": request.form.get(
+                        "spatial_control",
+                        "guided",
                     ),
                 },
                 "playback": {

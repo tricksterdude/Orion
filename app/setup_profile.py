@@ -155,6 +155,19 @@ class SetupProfileManager:
 
             raise SetupProfileError(str(error))
 
+        spatial_control = str(
+            audio.get("spatial_control") or "guided"
+        ).strip()
+
+        if spatial_control not in {
+            "guided",
+            "automatic",
+        }:
+
+            raise SetupProfileError(
+                "The spatial-audio control mode is invalid."
+            )
+
         return {
             "display": {
                 "name": cls._text(
@@ -181,6 +194,7 @@ class SetupProfileManager:
                 "preferred_format": "Automatic",
                 "receiver_adapter": receiver_adapter,
                 "receiver_host": receiver_host,
+                "spatial_control": spatial_control,
             },
             "playback": {
                 "player": cls._text(

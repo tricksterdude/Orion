@@ -3,6 +3,8 @@ from queue import Empty, Queue
 from threading import Event, Thread
 
 from app.api.server import OrionAPIServer
+from app.audio.guidance_status import audio_guidance_status
+from app.audio.spatial_control import SpatialAudioController
 from app.display.restore import DisplayRestore
 from app.managers.provider_manager import ProviderManager
 from app.media_manager import MediaManager
@@ -31,6 +33,7 @@ class OrionRuntime:
         self.media = MediaSession()
         self.engine = OrionEngine()
         self.history = PlaybackHistory()
+        self.spatial_audio = SpatialAudioController()
         self.display_checkpoint_ready = False
 
         self.playback_requests = Queue()
@@ -144,6 +147,30 @@ class OrionRuntime:
 
         result = self.restore.recover_pending()
 
+        spatial_audio = getattr(
+            self,
+            "spatial_audio",
+            None,
+        )
+
+        if spatial_audio is not None:
+
+            audio_recovery = spatial_audio.recover_pending()
+
+            if audio_recovery["status"] == "restored":
+
+                audio_guidance_status.clear()
+                print("✓ Interrupted spatial-audio session recovered")
+                print(audio_recovery["message"])
+                print()
+
+            elif audio_recovery["status"] == "failed":
+
+                audio_guidance_status.recovery_failed()
+                print("✗ Spatial-audio recovery requires attention")
+                print(audio_recovery["message"])
+                print()
+
         display_recovery_status.set(result)
         self.display_checkpoint_ready = False
 
@@ -169,11 +196,27 @@ class OrionRuntime:
 
     def begin_cinema_session(self, request):
 
+        audio_control = {
+            "status": "guided",
+            "changed": False,
+            "message": "Automatic spatial-audio switching is unavailable.",
+        }
+        spatial_audio = getattr(
+            self,
+            "spatial_audio",
+            None,
+        )
+
+        if spatial_audio is not None:
+
+            audio_control = spatial_audio.begin(request)
+
         if request.fps is None:
 
             self.history.attach_metadata(
                 request,
             )
+            self._attach_audio_control(audio_control)
 
             print(
                 "✗ Playback metadata has "
@@ -187,6 +230,7 @@ class OrionRuntime:
             self.history.attach_metadata(
                 request,
             )
+            self._attach_audio_control(audio_control)
 
             print(
                 "✗ Display switching skipped because "
@@ -214,10 +258,23 @@ class OrionRuntime:
             request,
             result,
         )
+        self._attach_audio_control(audio_control)
 
         print()
 
         return result["switched"]
+
+    def _attach_audio_control(self, result):
+
+        attach = getattr(
+            self.history,
+            "attach_audio_control",
+            None,
+        )
+
+        if attach is not None:
+
+            attach(result)
 
     def stop_playback_session(self):
 
@@ -236,6 +293,26 @@ class OrionRuntime:
             restored = True
 
         self.display_checkpoint_ready = False
+
+        audio_restored = True
+        spatial_audio = getattr(
+            self,
+            "spatial_audio",
+            None,
+        )
+
+        if spatial_audio is not None:
+
+            audio_restored = spatial_audio.restore()
+
+        if not audio_restored:
+
+            print(
+                "✗ The previous Windows spatial-audio format could not be restored"
+            )
+            print(
+                "The recovery checkpoint was retained for the next Orion startup."
+            )
 
         if restored and checkpoint_was_ready:
 
@@ -267,6 +344,18 @@ class OrionRuntime:
                         "Orion will retry at startup."
                     ),
                 }
+            )
+
+        attach_audio_restoration = getattr(
+            self.history,
+            "attach_audio_restoration",
+            None,
+        )
+
+        if attach_audio_restoration is not None:
+
+            attach_audio_restoration(
+                audio_restored
             )
 
         self.history.finish(restored)

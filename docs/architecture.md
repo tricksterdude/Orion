@@ -52,8 +52,10 @@ audio codec/profile, channel layout, sample rate and bitrate. The Windows
 Core Audio observer reports the active default multimedia output without
 changing it. A vendor-neutral receiver boundary supports optional read-only
 Denon/Marantz monitoring while keeping its network protocol out of cinema
-logic. Stronger signal-format and HDR/Dolby Vision identification remain
-later analysis layers.
+logic. An opt-in spatial-audio coordinator can use separately installed
+SoundVolume helpers to checkpoint, switch, verify and restore the Windows
+endpoint's Atmos/DTS:X GUID. Guided mode remains the default. Stronger
+signal-format and HDR/Dolby Vision identification remain later analysis layers.
 
 ### Cinema and display
 

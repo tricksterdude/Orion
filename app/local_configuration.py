@@ -36,6 +36,7 @@ class LocalConfiguration:
                     "preferred_format": "Automatic",
                     "receiver_adapter": "none",
                     "receiver_host": "",
+                    "spatial_control": "guided",
                 },
                 "playback": {
                     "player": "Stremio",

@@ -65,8 +65,12 @@ version numbers.
   monitoring
 - ✅ Compare expected Atmos or DTS:X content with the receiver's reported
   sound mode when network monitoring is configured
-- Keep Windows processor selection guided: Microsoft leaves the active
-  spatial format under user control and does not publish a supported setter
+- ✅ Show live mismatch guidance and open the supported Windows sound
+  settings page from a protected Orion action
+- ✅ Offer opt-in Atmos/DTS:X switching through separately installed NirSoft
+  helpers, with exact-GUID verification and crash-safe restoration
+- Keep guided mode as the portable default because Microsoft does not publish
+  a supported application setter for the endpoint spatial format
 
 ### 3. Vendor-neutral AVR control
 

@@ -193,6 +193,36 @@ mismatch = manager.observe(
 
 assert matching["matches_expected_audio"] is True
 assert mismatch["matches_expected_audio"] is False
+assert matching["match_quality"] == "exact"
+assert mismatch["match_quality"] == "mismatch"
+
+
+class DolbyCompatibleAdapter(FakeAdapter):
+
+    def status(self):
+
+        return SimpleNamespace(
+            as_dict=lambda: {
+                "adapter": "denon_marantz",
+                "name": self.adapter_name,
+                "host": self.host,
+                "available": True,
+                "sound_mode": "DOLBY AUDIO-DSUR",
+            }
+        )
+
+
+compatible = ReceiverManager(
+    configuration=FakeConfiguration(),
+    adapter_factories={
+        "denon_marantz": DolbyCompatibleAdapter,
+    },
+).observe(
+    SimpleNamespace(immersive_audio="Dolby Atmos")
+)
+
+assert compatible["matches_expected_audio"] is True
+assert compatible["match_quality"] == "compatible"
 
 disabled = ReceiverManager(
     configuration=FakeConfiguration(adapter="none", host=""),
@@ -201,6 +231,7 @@ disabled = ReceiverManager(
 assert disabled is None
 
 print("✓ Expected immersive audio compared with receiver sound mode")
+print("✓ Dolby family recognised without assuming Atmos speakers")
 print("✓ Unconfigured receiver monitoring remains disabled")
 print()
 print("✓ AV receiver observation test passed")

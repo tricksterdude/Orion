@@ -74,7 +74,13 @@ try:
                 "selected_input": "GAME",
                 "expected_immersive_audio": "Dolby Atmos",
                 "matches_expected_audio": True,
+                "match_quality": "exact",
             },
+            "audio_control": {
+                "status": "switched",
+                "changed": True,
+            },
+            "audio_restored": True,
             "cinema": {
                 "current_mode": {
                     "refresh": 120,
@@ -121,7 +127,9 @@ try:
         assert "Dolby Access" in page
         assert "Denon / Marantz" in page
         assert "DOLBY ATMOS" in page
-        assert "Matches stream audio" in page
+        assert "Exact immersive mode" in page
+        assert "Spatial format switched automatically" in page
+        assert "Previous spatial format restored" in page
         assert "available" in page
         assert "Display restored" in page
         assert 'href="/"' in page

@@ -30,6 +30,7 @@ PROFILE = {
             "preferred_format": "Automatic",
             "receiver_adapter": "denon_marantz",
             "receiver_host": "192.168.1.50",
+            "spatial_control": "automatic",
         },
         "playback": {
             "player": "Stremio",
@@ -83,12 +84,25 @@ with TemporaryDirectory() as directory:
     legacy = json.loads(json.dumps(PROFILE))
     legacy["media"]["audio"].pop("receiver_adapter")
     legacy["media"]["audio"].pop("receiver_host")
+    legacy["media"]["audio"].pop("spatial_control")
     migrated = manager.validate(legacy)
 
     assert migrated["media"]["audio"]["receiver_adapter"] == "none"
     assert migrated["media"]["audio"]["receiver_host"] == ""
+    assert migrated["media"]["audio"]["spatial_control"] == "guided"
 
     print("✓ Earlier profiles keep receiver networking disabled")
+
+    invalid_spatial = json.loads(json.dumps(PROFILE))
+    invalid_spatial["media"]["audio"]["spatial_control"] = "forced"
+
+    try:
+        manager.validate(invalid_spatial)
+        raise AssertionError("Invalid spatial-audio control was accepted")
+    except SetupProfileError as error:
+        assert "spatial-audio" in str(error).casefold()
+
+    print("✓ Spatial-audio automation is explicitly allow-listed")
 
     unsafe_receiver = json.loads(json.dumps(PROFILE))
     unsafe_receiver["media"]["audio"]["receiver_host"] = "example.com"

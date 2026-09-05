@@ -110,24 +110,54 @@ class ReceiverManager:
         ).strip()
         observed = str(
             result.get("sound_mode") or ""
-        ).strip()
+        ).strip().upper()
         matches = None
+        match_quality = None
 
         if expected and observed:
 
-            expected_marker = (
-                "ATMOS"
-                if expected == "Dolby Atmos"
-                else "DTS:X"
-                if expected == "DTS:X"
-                else ""
-            )
+            if expected == "Dolby Atmos":
 
-            if expected_marker:
+                if "ATMOS" in observed:
 
-                matches = expected_marker in observed.upper()
+                    matches = True
+                    match_quality = "exact"
+
+                elif any(
+                    marker in observed
+                    for marker in ("DOLBY", "DSUR")
+                ):
+
+                    matches = True
+                    match_quality = "compatible"
+
+                elif "DTS" in observed:
+
+                    matches = False
+                    match_quality = "mismatch"
+
+            elif expected == "DTS:X":
+
+                if "DTS:X" in observed:
+
+                    matches = True
+                    match_quality = "exact"
+
+                elif "DTS" in observed:
+
+                    matches = True
+                    match_quality = "compatible"
+
+                elif any(
+                    marker in observed
+                    for marker in ("DOLBY", "DSUR")
+                ):
+
+                    matches = False
+                    match_quality = "mismatch"
 
         result["expected_immersive_audio"] = expected or None
         result["matches_expected_audio"] = matches
+        result["match_quality"] = match_quality
 
         return result
