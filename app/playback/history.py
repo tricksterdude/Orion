@@ -15,6 +15,8 @@ from app.receivers.manager import ReceiverManager
 class PlaybackHistory:
 
     MAX_ENTRIES = 15
+    RECEIVER_SETTLE_SECONDS = 3.0
+    RECEIVER_REFRESH_SECONDS = 10.0
 
     def __init__(
         self,
@@ -36,6 +38,9 @@ class PlaybackHistory:
         self.receiver_manager = (
             receiver_manager or ReceiverManager()
         )
+        self._receiver_request = None
+        self._receiver_attached_monotonic = None
+        self._receiver_refreshed_monotonic = None
         self._lock = threading.Lock()
 
     @staticmethod
@@ -62,6 +67,9 @@ class PlaybackHistory:
     def start(self):
 
         self.started_monotonic = time.monotonic()
+        self._receiver_request = None
+        self._receiver_attached_monotonic = None
+        self._receiver_refreshed_monotonic = None
 
         self.current = {
             "session_id": str(uuid4()),
@@ -89,6 +97,8 @@ class PlaybackHistory:
         self.current["playback"] = asdict(
             request
         )
+        self._receiver_request = request
+        self._receiver_attached_monotonic = time.monotonic()
 
         try:
 
@@ -131,6 +141,8 @@ class PlaybackHistory:
                 "error": "Receiver status was not available.",
             }
 
+        self._receiver_refreshed_monotonic = time.monotonic()
+
         if cinema_result is None:
 
             self.current["cinema"] = None
@@ -154,6 +166,54 @@ class PlaybackHistory:
             ),
         }
 
+    def refresh_receiver(self):
+
+        if (
+            self.current is None
+            or self._receiver_request is None
+            or self._receiver_attached_monotonic is None
+        ):
+
+            return False
+
+        now = time.monotonic()
+
+        if (
+            now - self._receiver_attached_monotonic
+            < self.RECEIVER_SETTLE_SECONDS
+        ):
+
+            return False
+
+        if (
+            self._receiver_refreshed_monotonic is not None
+            and now - self._receiver_refreshed_monotonic
+            < self.RECEIVER_REFRESH_SECONDS
+        ):
+
+            return False
+
+        self._receiver_refreshed_monotonic = now
+
+        try:
+
+            observed = self.receiver_manager.observe(
+                self._receiver_request
+            )
+
+        # Receiver monitoring remains optional and read-only.
+        except Exception:
+
+            return False
+
+        if not observed:
+
+            return False
+
+        self.current["receiver"] = observed
+
+        return True
+
     def finish(self, restored):
 
         if self.current is None:
@@ -175,6 +235,9 @@ class PlaybackHistory:
 
         self.current = None
         self.started_monotonic = None
+        self._receiver_request = None
+        self._receiver_attached_monotonic = None
+        self._receiver_refreshed_monotonic = None
 
         return saved
 

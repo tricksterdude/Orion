@@ -42,6 +42,8 @@ The format is based on **Keep a Changelog** and follows **Semantic Versioning** 
 
 ### Fixed
 
+- AVR sound mode is refreshed during active playback so history records the
+  settled listening mode instead of an initial stereo state
 - Removed the TMDb API key from tracked application configuration
 - Missing TMDb credentials no longer cause playback metadata lookup errors
 
